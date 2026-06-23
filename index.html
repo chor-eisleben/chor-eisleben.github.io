@@ -1223,7 +1223,7 @@ applyFontSize();
 const ADMIN_PW='Asf06217';
 const TYP_LABEL={"konzert": "🎵 Konzert", "fest": "🎪 Fest", "chorlager": "🏕️ Chorlager", "gottesdienst": "⛪ Gottesdienst", "probe": "🎹 Probe", "sonstiges": "📌 Sonstiges"};
 const TYP_COLOR={"konzert": "#2563b5", "fest": "#e67e22", "chorlager": "#27ae60", "gottesdienst": "#8e44ad", "probe": "#c0392b", "sonstiges": "#7f8c8d"};
-const INIT_MITGLIEDER=[{"nr": 1, "nachname": "Wolff", "vorname": "Martin", "telefon": "", "handy": "", "email": "spiele@martinwolff.eu", "geburtstag": "29.04.98", "adresse": "", "plz": "", "username": "MW290498"}];
+const INIT_MITGLIEDER=[{"nr": 1, "nachname": "Wolff", "vorname": "Martin", "telefon": "", "handy": "", "email": "martin@martinwolff.eu", "geburtstag": "29.04.98", "adresse": "", "plz": "", "username": "MW290498"}];
 const INIT_TERMINE=[];
 
 let D=null, termine=[], kommentare=[], probenplan=[], mitglieder=[], liedwuensche=[], plakate=[], probenstatus={}, benachrichtigungen=[], anwesenheit={}, anwWork=null, userprofilesCache={}, abwesenheiten={};
@@ -1789,7 +1789,7 @@ async function loadBeitraege(){
 }
 // ===== ZUGRIFF BEITRÄGE: nur Kassenwart (Martin Wolff) =====
 const BEITRAG_OWNER_USERNAMES = ['MW290498'];
-const BEITRAG_OWNER_EMAILS = ['spiele@martinwolff.eu'];
+const BEITRAG_OWNER_EMAILS = ['martin@martinwolff.eu','spiele@martinwolff.eu'];
 function isBeitragOwner(){
   const un = currentUserProfile && currentUserProfile.username;
   const em = (currentUser && currentUser.email || '').toLowerCase();
