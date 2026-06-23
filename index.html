@@ -2507,8 +2507,7 @@ function renderMitglieder(){
   const cnt=document.getElementById('m-count');
   if(cnt) cnt.textContent='('+filtered.length+' von '+mitglieder.length+')';
   const el=document.getElementById('mitglieder-list');if(!el)return;
-  if(!filtered.length){el.innerHTML='<div class="empty">Keine Treffer.</div>';return;}
-  el.innerHTML=filtered.map(m=>{
+  const memberHtml=filtered.map(m=>{
     const initials=(m.vorname.charAt(0)+(m.nachname.charAt(0)||'')).toUpperCase();
     const colors=['#2563b5','#27ae60','#8e44ad','#e67e22','#c0392b','#16a085'];
     const color=colors[(m.vorname.charCodeAt(0)||0)%colors.length];
@@ -2528,6 +2527,29 @@ function renderMitglieder(){
       ${uiEdit('mitglieder')?`<div style="display:flex;flex-direction:column;gap:4px"><button class="btn btn-gray btn-sm" onclick="openEditMitglied('${m.nr||m.id}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteMitglied('${m.nr||m.id}')">✕</button></div>`:''}
     </div>`;
   }).join('');
+  // Registrierte Nutzerkonten, die (noch) keinem Mitglied zugeordnet sind
+  const extraUsers=Object.entries(userprofilesCache||{})
+    .map(([k,v])=>(v&&typeof v==='object')?Object.assign({},v,{uid:v.uid||k}):null)
+    .filter(u=>u&&(u.vorname||u.nachname||u.username||u.email)&&!findMemberForUser(u))
+    .filter(u=>{const s=((u.vorname||'')+' '+(u.nachname||'')+' '+(u.username||'')+' '+(u.email||'')).toLowerCase();return s.includes(q);})
+    .sort((a,b)=>(a.nachname||a.username||'').localeCompare(b.nachname||b.username||''));
+  const extraHtml=extraUsers.length?(
+    `<div style="margin:16px 0 8px;font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#b9770e">⚠️ Registriert, noch kein Mitglied (${extraUsers.length})</div>`+
+    extraUsers.map(u=>{
+      const nm=((u.vorname||'')+' '+(u.nachname||'')).trim()||u.username||(u.email?u.email.split('@')[0]:'')||'Unbekannt';
+      const initials=((u.vorname||u.username||u.email||'?').charAt(0)+((u.nachname||'').charAt(0)||'')).toUpperCase();
+      return`<div class="mitglied-card" style="border:1.5px dashed #f0b860;background:#fffdf7">
+        <div class="mitglied-avatar" style="background:#b9770e">${esc(initials)}</div>
+        <div class="mitglied-info">
+          <div class="mitglied-name">${esc(nm)} <span style="background:#fdebd0;color:#7d5a10;font-size:.66rem;font-weight:700;padding:1px 7px;border-radius:8px;margin-left:2px">Konto</span>${u.isAdmin?' <span style="background:#e74c3c;color:#fff;font-size:.66rem;font-weight:700;padding:1px 7px;border-radius:8px">Admin</span>':''}</div>
+          <div class="mitglied-detail">${u.username?`👤 ${esc(u.username)} `:''}${u.email?`✉️ <a href="mailto:${u.email}">${esc(u.email)}</a>`:''}</div>
+        </div>
+        ${uiEdit('mitglieder')?`<button class="btn btn-success btn-sm" onclick="createMemberFromUser('${u.uid}')">➕ Mitglied</button>`:''}
+      </div>`;
+    }).join('')
+  ):'';
+  if(!filtered.length&&!extraUsers.length){el.innerHTML='<div class="empty">Keine Treffer.</div>';return;}
+  el.innerHTML=memberHtml+extraHtml;
 }
 
 async function addMitglied(){
