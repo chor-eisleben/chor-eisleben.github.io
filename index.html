@@ -1223,7 +1223,9 @@ applyFontSize();
 const ADMIN_PW='Asf06217';
 const TYP_LABEL={"konzert": "🎵 Konzert", "fest": "🎪 Fest", "chorlager": "🏕️ Chorlager", "gottesdienst": "⛪ Gottesdienst", "probe": "🎹 Probe", "sonstiges": "📌 Sonstiges"};
 const TYP_COLOR={"konzert": "#2563b5", "fest": "#e67e22", "chorlager": "#27ae60", "gottesdienst": "#8e44ad", "probe": "#c0392b", "sonstiges": "#7f8c8d"};
-const INIT_MITGLIEDER=[{"nr": 1, "nachname": "Wolff", "vorname": "Martin", "telefon": "", "handy": "", "email": "martin@martinwolff.eu", "geburtstag": "29.04.98", "adresse": "", "plz": "", "username": "MW290498"}];
+// Mitgliederdaten bewusst NICHT im öffentlichen Code (Datenschutz/DSGVO) — Roster liegt nur
+// in der login-geschützten Datenbank (/mitglieder, Regel auth!=null). Daher leerer Seed.
+const INIT_MITGLIEDER=[];
 const INIT_TERMINE=[];
 
 let D=null, termine=[], kommentare=[], probenplan=[], mitglieder=[], liedwuensche=[], plakate=[], probenstatus={}, benachrichtigungen=[], anwesenheit={}, anwWork=null, userprofilesCache={}, abwesenheiten={};
