@@ -3219,8 +3219,10 @@ async function createAllAccounts() {
   const btn = document.getElementById('create-all-btn');
   btn.disabled = true; btn.textContent = '⏳ Erstelle Konten…';
   const results = [];
-  for(const m of INIT_MITGLIEDER) {
+  const quelle = (mitglieder && mitglieder.length) ? mitglieder : INIT_MITGLIEDER;
+  for(const m of quelle) {
     if(!m.email) { results.push({name: m.vorname+' '+m.nachname, error:'Keine E-Mail'}); continue; }
+    if(!m.username) { results.push({name: m.vorname+' '+m.nachname, error:'Kein Benutzername'}); continue; }
     const r = await createUserAccount(m);
     results.push({name: m.vorname+' '+m.nachname, username: m.username, ...r});
   }
