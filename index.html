@@ -816,6 +816,12 @@ html.fs-sehrgross{font-size:20.5px}
     </div>
     <div class="konsole-pane" id="kp-benutzer">
     <div class="konsole-section">
+      <div class="konsole-title">📥 Mitglieder importieren</div>
+      <div style="font-size:.8rem;color:#888;margin-bottom:8px">JSON-Datei mit der Mitgliederliste wählen. <strong>Ersetzt</strong> die bestehende Liste. Format: Liste von Objekten mit nachname, vorname, email, handy, telefon, geburtstag, adresse, plz, stimme, username.</div>
+      <input type="file" id="member-import-file" accept=".json,application/json" style="font-size:.85rem;margin-bottom:8px">
+      <div><button class="btn btn-primary" onclick="importMembersFromFile()">📥 Aus Datei importieren</button> <span id="member-import-result" style="font-size:.82rem;margin-left:6px"></span></div>
+    </div>
+    <div class="konsole-section">
       <div class="konsole-title">👥 Benutzerverwaltung</div>
       <div style="margin-bottom:10px">
         <button id="create-all-btn" class="btn btn-primary" onclick="createAllAccounts()">👥 Alle Mitglieder-Konten erstellen</button>
@@ -3174,6 +3180,39 @@ async function deleteUserAccount(uid, username) {
   await dbFetch(DB+'/userprofiles/'+uid+'.json', {method:'DELETE'});
   await dbFetch(DB+'/usernames/'+username.toLowerCase()+'.json', {method:'DELETE'});
   renderUserVerwaltung();
+}
+
+// Mitglieder aus einer JSON-Datei importieren (Admin). Daten gehen direkt in die
+// geschützte DB (/mitglieder) — kommen NICHT in den öffentlichen Code.
+async function importMembersFromFile() {
+  const res = document.getElementById('member-import-result');
+  const setRes = (msg,col) => { if(res){ res.style.color=col||'#888'; res.textContent=msg; } };
+  const inp = document.getElementById('member-import-file');
+  const f = inp && inp.files && inp.files[0];
+  if(!f){ setRes('Bitte zuerst eine JSON-Datei wählen.','#e74c3c'); return; }
+  let arr;
+  try {
+    const text = await f.text();
+    arr = JSON.parse(text);
+  } catch(e){ setRes('Datei ist kein gültiges JSON.','#e74c3c'); return; }
+  if(!Array.isArray(arr)){ setRes('JSON muss eine Liste (Array) von Mitgliedern sein.','#e74c3c'); return; }
+  // Mindest-Normalisierung + nr vergeben falls fehlt
+  const clean = arr.map((m,i)=>({
+    nr: m.nr || (i+1),
+    nachname: m.nachname||'', vorname: m.vorname||'',
+    telefon: m.telefon||'', handy: m.handy||'', email: m.email||'',
+    geburtstag: m.geburtstag||'', adresse: m.adresse||'', plz: m.plz||'',
+    stimme: m.stimme||'', username: m.username||''
+  }));
+  if(!confirm(clean.length+' Mitglieder importieren?\n\nDie bestehende Mitgliederliste wird komplett ersetzt.')) { setRes('Abgebrochen.','#888'); return; }
+  setRes('⏳ Importiere…','#888');
+  try {
+    const r = await dbFetch(DB+'/mitglieder.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(clean)});
+    if(r && r.ok===false) throw new Error('Schreibzugriff verweigert (als Admin angemeldet?)');
+    mitglieder = clean;
+    if(typeof renderMitglieder==='function') renderMitglieder();
+    setRes('✅ '+clean.length+' Mitglieder importiert.','#27ae60');
+  } catch(e){ setRes('Fehler: '+e.message,'#e74c3c'); }
 }
 
 async function createAllAccounts() {
