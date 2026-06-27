@@ -243,6 +243,27 @@ html.fs-sehrgross{font-size:20.5px}
 .kasse-amt{font-weight:800;font-size:.92rem;font-variant-numeric:tabular-nums;white-space:nowrap}
 .kasse-amt.pos{color:#22a559}.kasse-amt.neg{color:#e74c3c}
 
+/* ===== SETLISTE / ABLAUF-EDITOR ===== */
+.sl-row{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:8px 10px;border:1px solid var(--line);border-radius:9px;margin-bottom:6px;background:#fff;font-size:.86rem}
+.sl-row.mod{background:#faf5ff;border-color:#e6d6f2}
+.sl-label{min-width:0;flex:1;word-break:break-word;line-height:1.35}
+.sl-actions{display:flex;gap:4px;flex-shrink:0}
+.sl-actions .btn-sm{padding:6px 9px}
+.sl-actions .btn-sm:disabled{opacity:.35;cursor:default}
+
+/* ===== EINKLAPPBARE TERMIN-SEKTIONEN (Setliste / Rückmeldungen) ===== */
+.t-coll{margin:7px 0;border:1px solid var(--line);border-radius:10px;background:#fafbfc;overflow:hidden}
+.t-coll>summary{cursor:pointer;list-style:none;padding:9px 12px;font-size:.8rem;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:5px;user-select:none}
+.t-coll>summary::-webkit-details-marker{display:none}
+.t-coll>summary::after{content:'▾';margin-left:auto;color:#9aa7b4;transition:transform .15s}
+.t-coll[open]>summary::after{transform:rotate(180deg)}
+.t-coll>summary:hover{color:var(--primary)}
+.t-coll>div{padding:2px 12px 11px}
+.satb-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.satb-cell{flex:1;min-width:82px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+.satb-name{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.satb-nums{font-size:.84rem;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap}
+
 /* ===== HANDY-OPTIMIERUNG ===== */
 @media(max-width:640px){
   body{padding-bottom:calc(env(safe-area-inset-bottom) + 60px)}
@@ -543,7 +564,7 @@ html.fs-sehrgross{font-size:20.5px}
 <div class="page" id="p-mitglieder">
   <div class="sub-tabs">
     <button id="mtab-mitglieder" class="stab active" onclick="setMitgliederTab('mitglieder')">👥 Mitglieder</button>
-    <button id="mtab-beitraege" class="stab" onclick="setMitgliederTab('beitraege')">💶 Beiträge</button>
+    <button id="mtab-beitraege" class="stab" style="display:none" onclick="setMitgliederTab('beitraege')">💶 Beiträge</button>
     <button id="mtab-kasse" class="stab" onclick="setMitgliederTab('kasse')">💰 Chorkasse</button>
   </div>
   <div id="mv-mitglieder">
@@ -785,6 +806,14 @@ html.fs-sehrgross{font-size:20.5px}
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-gray" onclick="exportData()">⬇️ Alle Daten exportieren (JSON)</button>
         <button class="btn btn-danger btn-sm" onclick="clearAllKommentare()">🗑️ Alle Kommentare löschen</button>
+      </div>
+    </div>
+    <div class="konsole-section">
+      <div class="konsole-title">🧹 Doppelte Stimmen bereinigen</div>
+      <div style="font-size:.83rem;color:#666;margin-bottom:10px">Führt bei allen Terminen mehrfache Stimm-Einträge derselben Person (getippter Name + Benutzername + Anzeigename) zu <strong>einem</strong> Eintrag zusammen. <strong>Tipp:</strong> vorher „Alle Daten exportieren" als Sicherung.</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" onclick="bereinigeStimmen()">🧹 Jetzt bereinigen</button>
+        <span id="cleanup-votes-result" style="font-size:.82rem;min-height:16px"></span>
       </div>
     </div>
     </div>
@@ -1087,14 +1116,23 @@ html.fs-sehrgross{font-size:20.5px}
 
 <!-- SETLISTE MODAL -->
 <div class="modal-overlay" id="modal-setliste">
-  <div class="modal" style="max-width:540px">
-    <h3>🎵 Setliste bearbeiten</h3>
-    <p style="font-size:.82rem;color:#888;margin-bottom:12px">Wähle Lieder aus der Saison oder gib eigene Titel ein:</p>
-    <div id="setliste-song-picker" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;max-height:180px;overflow-y:auto;border:1px solid #eee;border-radius:6px;padding:8px"></div>
-    <div id="setliste-custom-list" style="margin-bottom:10px"></div>
-    <div style="display:flex;gap:6px;margin-bottom:10px">
-      <input type="text" id="setliste-custom-input" class="fl-input" placeholder="Eigenen Titel hinzufügen…" style="flex:1">
-      <button class="btn btn-primary btn-sm" onclick="addCustomSetlisteSong()">＋</button>
+  <div class="modal" style="max-width:560px">
+    <h3>🎵 Ablauf / Setliste – <span id="sl-titel"></span></h3>
+    <p style="font-size:.8rem;color:#888;margin-bottom:10px">Reihenfolge mit ↑/↓ ändern. Lieder, Moderationen und eigene Titel beliebig mischen.</p>
+    <div id="sl-list" style="margin-bottom:12px;max-height:42vh;overflow-y:auto"></div>
+    <div style="border-top:1px solid var(--line);padding-top:12px">
+      <div class="form-row" style="margin-bottom:8px">
+        <select id="sl-song-select" class="fl-input" style="flex:1;min-width:150px;margin-bottom:0"></select>
+        <button class="btn btn-primary btn-sm" type="button" onclick="slAddSong()">🎵 Lied einfügen</button>
+      </div>
+      <div class="form-row" style="margin-bottom:8px">
+        <input type="text" id="sl-mod-input" class="fl-input" placeholder="Moderation / Ansage (z. B. Begrüßung)" style="flex:1;min-width:150px;margin-bottom:0" onkeydown="if(event.key==='Enter'){event.preventDefault();slAddMod();}">
+        <button class="btn btn-sm" type="button" style="background:#8e44ad;color:#fff" onclick="slAddMod()">🎤 Moderation</button>
+      </div>
+      <div class="form-row">
+        <input type="text" id="sl-custom-input" class="fl-input" placeholder="Eigener Titel (nicht aus der Liederliste)" style="flex:1;min-width:150px;margin-bottom:0" onkeydown="if(event.key==='Enter'){event.preventDefault();slAddCustom();}">
+        <button class="btn btn-gray btn-sm" type="button" onclick="slAddCustom()">＋ Titel</button>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal()">Abbrechen</button>
@@ -1229,9 +1267,7 @@ applyFontSize();
 const ADMIN_PW='Asf06217';
 const TYP_LABEL={"konzert": "🎵 Konzert", "fest": "🎪 Fest", "chorlager": "🏕️ Chorlager", "gottesdienst": "⛪ Gottesdienst", "probe": "🎹 Probe", "sonstiges": "📌 Sonstiges"};
 const TYP_COLOR={"konzert": "#2563b5", "fest": "#e67e22", "chorlager": "#27ae60", "gottesdienst": "#8e44ad", "probe": "#c0392b", "sonstiges": "#7f8c8d"};
-// Mitgliederdaten bewusst NICHT im öffentlichen Code (Datenschutz/DSGVO) — Roster liegt nur
-// in der login-geschützten Datenbank (/mitglieder, Regel auth!=null). Daher leerer Seed.
-const INIT_MITGLIEDER=[];
+const INIT_MITGLIEDER=[]; // Mitgliederdaten liegen in der Datenbank (login-geschuetzt), nicht im oeffentlichen Code
 const INIT_TERMINE=[];
 
 let D=null, termine=[], kommentare=[], probenplan=[], mitglieder=[], liedwuensche=[], plakate=[], probenstatus={}, benachrichtigungen=[], anwesenheit={}, anwWork=null, userprofilesCache={}, abwesenheiten={};
@@ -1800,8 +1836,9 @@ const BEITRAG_OWNER_USERNAMES = ['MW290498'];
 const BEITRAG_OWNER_EMAILS = ['martin@martinwolff.eu','spiele@martinwolff.eu'];
 function isBeitragOwner(){
   const un = currentUserProfile && currentUserProfile.username;
-  const em = (currentUser && currentUser.email || '').toLowerCase();
-  return BEITRAG_OWNER_USERNAMES.includes(un) || BEITRAG_OWNER_EMAILS.includes(em);
+  const em1 = (currentUser && currentUser.email || '').toLowerCase();
+  const em2 = (currentUserProfile && currentUserProfile.email || '').toLowerCase();
+  return BEITRAG_OWNER_USERNAMES.includes(un) || BEITRAG_OWNER_EMAILS.includes(em1) || BEITRAG_OWNER_EMAILS.includes(em2);
 }
 // Beiträge-Tab nur für den Kassenwart zeigen; andere ggf. von der Ansicht wegleiten
 function applyBeitragAccess(){
@@ -2211,23 +2248,80 @@ function renderTermine(){
   if(upEl) upEl.innerHTML=upcoming.length?upcoming.map(t=>terminHtml(t)).join(''):'<div class="empty">Keine bevorstehenden Termine.</div>';
   if(pastEl) pastEl.innerHTML=past.length?[...past].reverse().map(t=>terminHtml(t,true)).join(''):'<div class="empty">Keine vergangenen Termine.</div>';
 }
+// ===== Termin-Rückmeldungen: jede Person genau EINMAL (Entdopplung über alle Namens-Varianten) =====
+const SATB_VOICES=['Sopran','Alt','Tenor','Bass'];
+function terminVoteBreakdown(t){
+  const abs=t.abstimmungen||{};
+  const urlaubNorm=new Set((absentNamesForDate(t.datum)||[]).map(_norm));
+  const ja=[], nein=[], vl=[], notVoted=[];
+  const usedKeys=new Set();
+  const stat={}; SATB_VOICES.concat(['—']).forEach(v=>stat[v]={ja:0,nein:0,vl:0,total:0});
+  // 1) Mitglieder: alle Namens-Varianten (Benutzername, voller Name, Anzeigename) zusammenführen -> eine Stimme
+  (mitglieder||[]).forEach(m=>{
+    const cands=[]; if(m.username)cands.push(_norm(m.username));
+    const fn=memberName(m); if(fn)cands.push(_norm(fn));
+    const an=_anzeigeForUsername(m.username); if(an)cands.push(_norm(an));
+    let v=null;
+    for(const k of Object.keys(abs)){ if(cands.includes(_norm(k))){ v=abs[k]; usedKeys.add(_norm(k)); } }
+    if(v===null && cands.some(c=>urlaubNorm.has(c))) v='nein';
+    const nm=memberName(m)||('Nr. '+(m.nr||'?'));
+    const voice=SATB_VOICES.includes(m.stimme)?m.stimme:'—';
+    stat[voice].total++;
+    if(v==='ja'){ ja.push(nm); stat[voice].ja++; }
+    else if(v==='nein'){ nein.push(nm); stat[voice].nein++; }
+    else if(v==='vielleicht'){ vl.push(nm); stat[voice].vl++; }
+    else notVoted.push(m);
+  });
+  // 2) Gäste (Stimmen ohne Mitglieds-Zuordnung), entdoppelt nach angezeigtem Namen
+  const seen=new Set();
+  for(const [k,v] of Object.entries(abs)){
+    if(usedKeys.has(_norm(k))) continue;
+    const nm=prettyName(k); const nn=_norm(nm);
+    if(!nn || seen.has(nn)) continue; seen.add(nn);
+    if(v==='ja')ja.push(nm); else if(v==='nein')nein.push(nm); else if(v==='vielleicht')vl.push(nm);
+  }
+  return {ja, nein, vl, notVoted, stat};
+}
+function rueckmeldungenHtml(t, bd){
+  const cell=(name,s)=>!s.total?'':`<div class="satb-cell"><div class="satb-name">${name}</div><div class="satb-nums"><span style="color:#22a559">✅ ${s.ja}</span>${s.vl?` <span style="color:#f39c12">❓${s.vl}</span>`:''}${s.nein?` <span style="color:#e74c3c">❌${s.nein}</span>`:''} <span style="color:#bbb">/ ${s.total}</span></div></div>`;
+  const cells=SATB_VOICES.map(v=>cell(v,bd.stat[v])).join('')+cell('o. Stimme',bd.stat['—']);
+  const tally=(bd.ja.length||bd.nein.length||bd.vl.length)?`<div class="tally">${bd.ja.length?`<span style="color:#27ae60">✅ ${bd.ja.length}: ${esc(bd.ja.join(', '))}</span><br>`:''}${bd.nein.length?`<span style="color:#e74c3c">❌ ${bd.nein.length}: ${esc(bd.nein.join(', '))}</span><br>`:''}${bd.vl.length?`<span style="color:#f39c12">❓ ${bd.vl.length}: ${esc(bd.vl.join(', '))}</span>`:''}</div>`:'';
+  const offen=bd.notVoted.length
+    ? `<div style="font-size:.78rem;color:#7d6608;margin-top:8px"><strong>⏳ Noch nicht abgestimmt (${bd.notVoted.length}):</strong> ${esc(bd.notVoted.map(m=>memberName(m)||('Nr. '+(m.nr||'?'))).join(', '))}</div>`
+    : `<div style="font-size:.78rem;color:#22a559;margin-top:8px">✅ Alle haben abgestimmt.</div>`;
+  // Admin: einzelne Stimm-Einträge (roh) verwalten/löschen
+  const abs=t.abstimmungen||{};
+  const absKeys=Object.keys(abs);
+  const ICON={ja:'✅',nein:'❌',vielleicht:'❓'};
+  const manage = (uiEdit('termine') && absKeys.length) ? `<div style="margin-top:11px;border-top:1px dashed #e0c4c0;padding-top:8px">
+      <div style="font-size:.72rem;font-weight:700;color:#c0392b;text-transform:uppercase;letter-spacing:.03em;margin-bottom:5px">🔧 Stimmen verwalten · ${absKeys.length} Eintrag${absKeys.length===1?'':'e'}</div>
+      ${absKeys.map(k=>{const pn=prettyName(k); const raw=(_norm(pn)!==_norm(k))?` <span style="color:#bbb">(${esc(k)})</span>`:''; return `<div style="display:flex;align-items:center;gap:8px;justify-content:space-between;padding:3px 0;font-size:.81rem"><span>${ICON[abs[k]]||'•'} ${esc(pn)}${raw}</span><button class="btn btn-danger btn-sm" title="Diese Stimme löschen" onclick="deleteVote('${esc(t.id)}', decodeURIComponent('${encodeURIComponent(k)}'))">✕</button></div>`;}).join('')}
+    </div>` : '';
+  return `<details class="t-coll"><summary>📊 Rückmeldungen · <span style="color:#22a559">✅${bd.ja.length}</span> <span style="color:#e74c3c">❌${bd.nein.length}</span> <span style="color:#f39c12">❓${bd.vl.length}</span> · ${bd.notVoted.length} offen</summary><div><div class="satb-grid">${cells}</div>${tally}${offen}${manage}</div></details>`;
+}
+async function deleteVote(terminId, key){
+  if(!(adminMode || uiEdit('termine'))) return;
+  const t=(termine||[]).find(x=>x.id===terminId);
+  if(!t || !t.abstimmungen || !(key in t.abstimmungen)) return;
+  if(!confirm('Stimme von „'+(prettyName(key)||key)+'" wirklich löschen?')) return;
+  delete t.abstimmungen[key];
+  await dbFetch(DB+'/termine.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(termine)}).catch(e=>console.warn(e));
+  renderTermine();
+}
 function terminHtml(t,past=false){
   const color=TYP_COLOR[t.typ]||'#888';
   const label=TYP_LABEL[t.typ]||t.typ;
   const dateStr=t.datum_ende?fmt(t.datum)+' – '+fmt(t.datum_ende):fmt(t.datum);
-  const abs=t.abstimmungen||{};
-  const urlaubT=absentNamesForDate(t.datum);
-  const jaL=Object.entries(abs).filter(([,v])=>v==='ja').map(([k])=>k).filter(n=>!urlaubT.includes(n));
-  const nL=[...new Set([...Object.entries(abs).filter(([,v])=>v==='nein').map(([k])=>k), ...urlaubT])];
-  const vL=Object.entries(abs).filter(([,v])=>v==='vielleicht').map(([k])=>k).filter(n=>!urlaubT.includes(n));
+  const bd=terminVoteBreakdown(t);
+  const showRueck = !past || bd.ja.length || bd.nein.length || bd.vl.length;
   return`<div class="termin-card" style="border-left-color:${color};${past?'opacity:.6':''}">
     <span class="t-badge" style="background:${color}">${label}</span>
     <div class="t-title">${esc(t.titel)}</div>
     <div class="t-meta">📅 ${dateStr}${t.uhrzeit?' &nbsp;🕐 '+esc(t.uhrzeit):''}</div>
     ${t.beschreibung?`<div style="font-size:.78rem;color:#888;margin-bottom:5px">ℹ️ ${esc(t.beschreibung)}</div>`:''}
     ${t.frist&&!past?`<div style="font-size:.78rem;color:${t.frist<localToday()?'#e74c3c':'#7d6608'};margin-bottom:5px">⏳ Bitte bis <strong>${fmt(t.frist)}</strong> zurückmelden${t.frist<localToday()?' (Frist abgelaufen)':''}</div>`:''}
-    ${t.setliste&&t.setliste.length?`<div style="margin-bottom:8px"><div style="font-size:.76rem;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:3px">Setliste</div>${t.setliste.map((s,i)=>`<div style="font-size:.82rem;color:#555">🎵 ${i+1}. ${esc(s)}</div>`).join('')}</div>`:''}
-    ${jaL.length||nL.length||vL.length?`<div class="tally">${jaL.length?`<span style="color:#27ae60">✅ ${jaL.length}: ${esc(prettyNames(jaL).join(', '))}</span><br>`:''}${nL.length?`<span style="color:#e74c3c">❌ ${nL.length}: ${esc(prettyNames(nL).join(', '))}</span><br>`:''}${vL.length?`<span style="color:#f39c12">❓ ${vL.length}: ${esc(prettyNames(vL).join(', '))}</span>`:''}</div>`:''}
+    ${setlisteHtml(t)}
+    ${showRueck?rueckmeldungenHtml(t, bd):''}
     ${!past?`<div class="vote-row" id="vrow-${t.id}">${buildVoteRow(t)}</div>`:''}
     <div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap;align-items:center">
       <button class="btn btn-sm" style="background:transparent;border:1px solid #8e44ad;color:#8e44ad;font-size:.72rem" onclick="exportTerminICS('${t.id}')">📥 .ics</button>
@@ -2722,6 +2816,37 @@ async function clearAllKommentare(){
   await dbFetch(DB+'/kommentare.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:'null'}).catch(e=>console.warn(e));
   kommentare=[];renderKommentare();renderKonsole();
 }
+// Einmalige Bereinigung: pro Termin mehrfache Stimm-Einträge derselben Person zu EINEM (unter Benutzername) zusammenführen
+async function bereinigeStimmen(){
+  if(!(adminMode || uiEdit('termine'))) return;
+  const res=document.getElementById('cleanup-votes-result');
+  let affected=0, removed=0; const staged=[];
+  (termine||[]).forEach(t=>{
+    const abs=t.abstimmungen||{}; const keys=Object.keys(abs); if(!keys.length) return;
+    const usedKeys=new Set(); const canon={};
+    (mitglieder||[]).forEach(m=>{
+      const cands=[]; if(m.username)cands.push(_norm(m.username));
+      const fn=memberName(m); if(fn)cands.push(_norm(fn));
+      const an=_anzeigeForUsername(m.username); if(an)cands.push(_norm(an));
+      const matched=keys.filter(k=>cands.includes(_norm(k))); if(!matched.length) return;
+      matched.forEach(k=>usedKeys.add(k));
+      const unKey=matched.find(k=>_norm(k)===_norm(m.username));
+      const vote = unKey ? abs[unKey] : abs[matched[matched.length-1]];
+      canon[m.username||matched[0]] = vote;
+    });
+    const newAbs={}; keys.forEach(k=>{ if(!usedKeys.has(k)) newAbs[k]=abs[k]; });   // Gäste behalten
+    Object.entries(canon).forEach(([k,v])=>{ newAbs[k]=v; });                        // Mitglieder kanonisch
+    if(JSON.stringify(newAbs)!==JSON.stringify(abs)){
+      staged.push([t,newAbs]); affected++; removed += keys.length - Object.keys(newAbs).length;
+    }
+  });
+  if(!affected){ if(res){res.style.color='#22a559'; res.textContent='✅ Keine doppelten Stimmen gefunden.';} return; }
+  if(!confirm(`In ${affected} Termin(en) werden ${removed} doppelte Stimm-Einträge zusammengeführt.\n\nVorher als Sicherung „Alle Daten exportieren"? Dann jetzt abbrechen, exportieren und erneut starten.\n\nJetzt bereinigen?`)) return;
+  staged.forEach(([t,newAbs])=>{ t.abstimmungen=newAbs; });
+  await dbFetch(DB+'/termine.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(termine)}).catch(e=>console.warn(e));
+  if(res){res.style.color='#22a559'; res.textContent=`✅ ${removed} Doppel-Einträge in ${affected} Termin(en) bereinigt.`;}
+  renderTermine();
+}
 function exportData(){
   const data={chorproben:D,termine,probenplan,mitglieder,kommentare,exportiert:new Date().toISOString()};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
@@ -2782,6 +2907,7 @@ async function loadUserProfile(uid, email) {
     document.getElementById('user-chip').style.display = 'flex';
     const _bell2=document.getElementById('bell-btn'); if(_bell2) _bell2.style.display='block';
     const lb=document.getElementById('logout-btn');if(lb)lb.style.display='block';
+    applyBeitragAccess();
     loadAll();
   }
 }
@@ -2861,38 +2987,27 @@ async function doRegister() {
     const cred = await window._fbCreateUser(window._fbAuth, email, pw);
     const uid = cred.user.uid;
 
-    // ---- ZUGANGSSCHUTZ: Nur E-Mails aus der Mitgliederliste dürfen ein Konto behalten ----
-    let istMitglied = INIT_MITGLIEDER.some(m => m.email && m.email.toLowerCase() === email);
-    if(!istMitglied){
-      try{
-        const mr = await dbFetch(DB+'/mitglieder.json');   // jetzt mit Token lesbar
-        if(mr.ok){ const liste = await mr.json(); if(Array.isArray(liste)) istMitglied = liste.some(m => m && m.email && String(m.email).toLowerCase() === email); }
-      }catch(_){}
-    }
-    if(!istMitglied){
-      // Konto sofort wieder entfernen und abweisen
+    // ---- ZUGANGSSCHUTZ + Mitglieds-Daten aus der (login-geschützten) Live-Liste ----
+    // Keine Personendaten im öffentlichen Code: Mitgliedschaft wird gegen /mitglieder geprüft (mit Token lesbar).
+    let mitgl = null;
+    try{
+      const mr = await dbFetch(DB+'/mitglieder.json');
+      if(mr.ok){ const liste = await mr.json(); if(Array.isArray(liste)) mitgl = liste.find(m => m && m.email && String(m.email).toLowerCase() === email); }
+    }catch(_){}
+    if(!mitgl){
+      // keine Mitglieds-E-Mail -> Konto sofort wieder entfernen und abweisen
       try{ await cred.user.delete(); }catch(_){ try{ await window._fbSignOut(window._fbAuth); }catch(__){} }
       currentUser = null; window._registering = false;
       errEl.textContent = 'Diese E-Mail ist nicht in der Mitgliederliste. Bitte wende dich an die Chorleitung.';
       if(btn){btn.textContent = 'Konto erstellen'; btn.disabled = false;}
       return;
     }
-
-    // Find matching Mitglied by email to assign username
-    const mitgl = INIT_MITGLIEDER.find(m => m.email && m.email.toLowerCase() === email);
-    
-    let username, vorname='', nachname='', geburtstag='';
-    if(mitgl) {
-      username = mitgl.username;
-      vorname = mitgl.vorname;
-      nachname = mitgl.nachname;
-      geburtstag = mitgl.geburtstag || '';
-    } else {
-      // Not in member list: use email prefix as base
+    let username = mitgl.username, vorname = mitgl.vorname||'', nachname = mitgl.nachname||'', geburtstag = mitgl.geburtstag||'';
+    if(!username){
       const base = email.split('@')[0].replace(/[^a-z0-9]/gi,'').toUpperCase();
-      username = base.substring(0,8) || 'USER' + Date.now().toString().slice(-4);
+      username = base.substring(0,8) || ('USER'+Date.now().toString().slice(-4));
     }
-    
+
     // Store profile
     const profile = { uid, username, email, vorname, nachname, geburtstag, isAdmin:false, erstellt:new Date().toISOString() };
     await dbFetch(DB+'/userprofiles/'+uid+'.json', {method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(profile)});
@@ -3196,7 +3311,6 @@ async function importMembersFromFile() {
     arr = JSON.parse(text);
   } catch(e){ setRes('Datei ist kein gültiges JSON.','#e74c3c'); return; }
   if(!Array.isArray(arr)){ setRes('JSON muss eine Liste (Array) von Mitgliedern sein.','#e74c3c'); return; }
-  // Mindest-Normalisierung + nr vergeben falls fehlt
   const clean = arr.map((m,i)=>({
     nr: m.nr || (i+1),
     nachname: m.nachname||'', vorname: m.vorname||'',
@@ -3219,10 +3333,8 @@ async function createAllAccounts() {
   const btn = document.getElementById('create-all-btn');
   btn.disabled = true; btn.textContent = '⏳ Erstelle Konten…';
   const results = [];
-  const quelle = (mitglieder && mitglieder.length) ? mitglieder : INIT_MITGLIEDER;
-  for(const m of quelle) {
+  for(const m of (mitglieder||[])) {
     if(!m.email) { results.push({name: m.vorname+' '+m.nachname, error:'Keine E-Mail'}); continue; }
-    if(!m.username) { results.push({name: m.vorname+' '+m.nachname, error:'Kein Benutzername'}); continue; }
     const r = await createUserAccount(m);
     results.push({name: m.vorname+' '+m.nachname, username: m.username, ...r});
   }
@@ -3309,7 +3421,8 @@ function terminToVEVENT(t){
   }
   const typLabels = {konzert:'🎵 Konzert',fest:'🎪 Fest',chorlager:'🏕️ Chorlager',gottesdienst:'⛪ Gottesdienst',probe:'🎹 Probe',sonstiges:'📌 Sonstiges'};
   const summary = (typLabels[t.typ]||'') + ' – ' + t.titel + ' (Regionalchor Eisleben)';
-  const desc = [t.beschreibung, t.uhrzeit?'Uhrzeit: '+t.uhrzeit:'', t.setliste?.length?'Setliste: '+t.setliste.join(', '):''].filter(Boolean).join('\\n');
+  const _sl = normSetliste(t.setliste).map(it => it.typ==='moderation' ? '['+it.text+']' : it.text);
+  const desc = [t.beschreibung, t.uhrzeit?'Uhrzeit: '+t.uhrzeit:'', _sl.length?'Setliste: '+_sl.join(', '):''].filter(Boolean).join('\\n');
   return [
     'BEGIN:VEVENT',
     'UID:'+uid,
@@ -3689,64 +3802,82 @@ function renderGeburtstage(){
   el.innerHTML = html;
 }
 
-// ===== SETLISTE EDIT =====
-let _editSetlisteId = null;
+// ===== SETLISTE / ABLAUF EDIT =====
+// Item-Modell: {typ:'lied'|'moderation', text}. Alte Setlisten (Strings) werden normalisiert.
+function normSetliste(arr){
+  return (arr||[]).map(it => (typeof it==='string') ? {typ:'lied', text:it} : {typ:(it&&it.typ==='moderation'?'moderation':'lied'), text:(it&&it.text)||''}).filter(it=>it.text);
+}
+// Anzeige des Ablaufs in der Termin-Karte (einklappbar, standardmäßig zu)
+function setlisteHtml(t){
+  const items = normSetliste(t&&t.setliste);
+  if(!items.length) return '';
+  let nr=0;
+  const rows = items.map(it => it.typ==='moderation'
+    ? `<div style="font-size:.8rem;color:#8e44ad;font-style:italic">🎤 ${esc(it.text)}</div>`
+    : `<div style="font-size:.82rem;color:#555">🎵 ${++nr}. ${esc(it.text)}</div>`).join('');
+  const songCount = items.filter(it=>it.typ!=='moderation').length;
+  const modCount = items.length - songCount;
+  const sub = `${songCount} Lied${songCount===1?'':'er'}${modCount?` · ${modCount} Mod.`:''}`;
+  return `<details class="t-coll"><summary>🎵 Ablauf / Setliste · ${sub}</summary><div>${rows}</div></details>`;
+}
+let _slId = null;
+let _slItems = [];
 function editSetliste(terminId){
   const t = termine.find(x=>x.id===terminId);
   if(!t) return;
-  _editSetlisteId = terminId;
-  
-  // Populate song picker from all seasons
-  const picker = document.getElementById('setliste-song-picker');
-  const allSongs = D?.seasons?.flatMap(s=>s.songs.map(song=>({...song,seasonName:s.name})))||[];
-  const currentList = t.setliste||[];
-  picker.innerHTML = allSongs.map(s=>{
-    const checked = currentList.includes(s.name);
-    return`<label style="display:inline-flex;align-items:center;gap:5px;background:${checked?'#d6eaf8':'#f0f4f8'};border:1.5px solid ${checked?'#2563b5':'transparent'};border-radius:20px;padding:4px 11px;cursor:pointer;font-size:.82rem;user-select:none">
-      <input type="checkbox" value="${esc(s.name)}" ${checked?'checked':''} style="accent-color:#2563b5">
-      ${esc(s.name)}
-    </label>`;
-  }).join('');
-  
-  // Show custom entries (not in song list)
-  const knownNames = allSongs.map(s=>s.name);
-  const customList = document.getElementById('setliste-custom-list');
-  const customs = currentList.filter(name=>!knownNames.includes(name));
-  customList.innerHTML = customs.map(name=>`
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
-      <span style="flex:1;font-size:.85rem;padding:4px 8px;background:#fef9e7;border-radius:5px">✏️ ${esc(name)}</span>
-      <button class="btn btn-danger btn-sm" onclick="removeCustomSetliste('${esc(name)}')">✕</button>
-    </div>`).join('');
-  
+  _slId = terminId;
+  _slItems = normSetliste(t.setliste);
+  document.getElementById('sl-titel').textContent = t.titel||'';
+  // Lied-Auswahl aus allen Saisons
+  const allSongs = (D&&D.seasons) ? D.seasons.flatMap(s=>(s.songs||[]).map(song=>song.name)) : [];
+  const uniq = [...new Set(allSongs.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'de'));
+  const sel = document.getElementById('sl-song-select');
+  if(sel) sel.innerHTML = '<option value="">— Lied wählen —</option>' + uniq.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  ['sl-mod-input','sl-custom-input'].forEach(id=>{const e=document.getElementById(id); if(e) e.value='';});
+  slRender();
   document.getElementById('modal-setliste').classList.add('open');
 }
-
-function addCustomSetlisteSong(){
-  const inp = document.getElementById('setliste-custom-input');
-  const val = inp.value.trim();
-  if(!val) return;
-  const customList = document.getElementById('setliste-custom-list');
-  customList.innerHTML += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
-    <span style="flex:1;font-size:.85rem;padding:4px 8px;background:#fef9e7;border-radius:5px">✏️ ${esc(val)}</span>
-    <button class="btn btn-danger btn-sm" onclick="removeCustomSetliste('${esc(val)}')">✕</button>
-  </div>`;
-  inp.value='';
+function slRender(){
+  const el = document.getElementById('sl-list'); if(!el) return;
+  if(!_slItems.length){ el.innerHTML='<div class="empty" style="padding:14px">Noch leer – unten Lieder und Moderationen hinzufügen.</div>'; return; }
+  let nr=0;
+  el.innerHTML = _slItems.map((it,i)=>{
+    const isMod = it.typ==='moderation';
+    let label;
+    if(isMod){ label = `<span style="color:#8e44ad;font-weight:600">🎤 ${esc(it.text)}</span>`; }
+    else { nr++; label = `<span><strong style="color:var(--primary)">${nr}.</strong> 🎵 ${esc(it.text)}</span>`; }
+    return `<div class="sl-row${isMod?' mod':''}">
+      <div class="sl-label">${label}</div>
+      <div class="sl-actions">
+        <button class="btn btn-gray btn-sm" type="button" ${i===0?'disabled':''} onclick="slMove(${i},-1)" title="nach oben">↑</button>
+        <button class="btn btn-gray btn-sm" type="button" ${i===_slItems.length-1?'disabled':''} onclick="slMove(${i},1)" title="nach unten">↓</button>
+        <button class="btn btn-danger btn-sm" type="button" onclick="slRemove(${i})" title="entfernen">✕</button>
+      </div>
+    </div>`;
+  }).join('');
 }
-
-function removeCustomSetliste(name){
-  const customList = document.getElementById('setliste-custom-list');
-  customList.innerHTML = customList.innerHTML.replace(new RegExp(`<div[^>]*>\s*<span[^>]*>✏️ ${name}<\/span>.*?<\/div>`,'s'),'');
+function slAddSong(){
+  const sel=document.getElementById('sl-song-select'); const v=(sel&&sel.value||'').trim(); if(!v) return;
+  _slItems.push({typ:'lied', text:v}); if(sel) sel.value=''; slRender();
 }
-
+function slAddMod(){
+  const inp=document.getElementById('sl-mod-input'); const v=(inp&&inp.value||'').trim(); if(!v) return;
+  _slItems.push({typ:'moderation', text:v}); if(inp) inp.value=''; slRender();
+}
+function slAddCustom(){
+  const inp=document.getElementById('sl-custom-input'); const v=(inp&&inp.value||'').trim(); if(!v) return;
+  _slItems.push({typ:'lied', text:v}); if(inp) inp.value=''; slRender();
+}
+function slMove(i,dir){
+  const j=i+dir; if(j<0||j>=_slItems.length) return;
+  const tmp=_slItems[i]; _slItems[i]=_slItems[j]; _slItems[j]=tmp; slRender();
+}
+function slRemove(i){ _slItems.splice(i,1); slRender(); }
 async function saveSetliste(){
-  if(!_editSetlisteId) return;
-  const t = termine.find(x=>x.id===_editSetlisteId);
+  if(!_slId) return;
+  const t = termine.find(x=>x.id===_slId);
   if(!t) return;
-  // Get checked songs
-  const checked = [...document.querySelectorAll('#setliste-song-picker input:checked')].map(x=>x.value);
-  // Get custom entries
-  const customs = [...document.querySelectorAll('#setliste-custom-list span')].map(s=>s.textContent.replace('✏️ ','').trim()).filter(Boolean);
-  t.setliste = [...checked, ...customs];
+  t.setliste = _slItems.map(it=>({typ:it.typ, text:it.text}));
   await dbFetch(DB+'/termine.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(termine)});
   closeModal();
   renderTermine();
@@ -4113,8 +4244,8 @@ async function loadAll(){
     if(r1.ok){const d=await r1.json();if(d&&d.seasons){D=d;D.seasons=D.seasons.map(s=>Object.assign({},s,{songs:Array.isArray(s.songs)?s.songs:[]}));D.proben=Array.isArray(D.proben)?D.proben:[];}}
     if(r2.ok){const d=await r2.json();if(d&&Array.isArray(d)&&d.length)termine=d;else termine=INIT_TERMINE;}else termine=INIT_TERMINE;
     if(r3.ok){const d=await r3.json();if(d&&Array.isArray(d))probenplan=d;}
-    if(r4.ok){const d=await r4.json();if(d&&Array.isArray(d)&&d.length)mitglieder=d;else mitglieder=INIT_MITGLIEDER;}else mitglieder=INIT_MITGLIEDER;
-  }catch(e){termine=INIT_TERMINE;mitglieder=INIT_MITGLIEDER;console.warn(e);}
+    if(r4.ok){const d=await r4.json();if(d&&Array.isArray(d)&&d.length)mitglieder=d;else mitglieder=[];}else mitglieder=[];
+  }catch(e){termine=INIT_TERMINE;mitglieder=[];console.warn(e);}
   const d=new Date();
   document.getElementById('stand').textContent='Stand: '+d.toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'})+' · '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})+' Uhr';
   if(D){renderLieder();renderProben();populateLiedSelect();}
@@ -4148,8 +4279,7 @@ async function loadAll(){
   // Auto-delete on load
   const autoDays=parseInt(localStorage.getItem('auto_delete_days')||'0');
   if(autoDays>0&&kommentare.length){const cutoff=new Date();cutoff.setDate(cutoff.getDate()-autoDays);const toDelete=kommentare.filter(k=>new Date(k.datum)<cutoff);if(toDelete.length)Promise.all(toDelete.map(k=>k._key?dbFetch(DB+'/kommentare/'+k._key+'.json',{method:'DELETE'}):Promise.resolve())).then(()=>loadKommentare());}
-  // Save initial Mitglieder to Firebase if empty
-  if(mitglieder===INIT_MITGLIEDER){dbFetch(DB+'/mitglieder.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(INIT_MITGLIEDER)}).catch(e=>console.warn(e));}
+  // (Seed entfällt – Mitgliederdaten liegen in der Datenbank, nicht im öffentlichen Code)
 }
 
 // loadAll is called by onAuthChange when user logs in
