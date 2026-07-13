@@ -72,6 +72,8 @@ tr:hover td{background:#fafbfc}
 .vbtn-vl{background:#fef9e7;color:#9a6b00}.vbtn-vl:hover{background:#f39c12;color:white}
 .tally{font-size:.76rem;color:#888;margin-top:5px;line-height:1.6}
 .section-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#aaa;margin:12px 0 6px}
+.sheet-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#9aa5b1;margin:14px 4px 6px}
+.sheet-label:first-of-type{margin-top:2px}
 .kal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .kal-nav button{padding:4px 12px;border:1.5px solid #ddd;border-radius:6px;background:white;cursor:pointer;font-size:.9rem}
 .kal-nav button:hover{background:#f0f0f0}
@@ -113,6 +115,13 @@ textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgb
 @media(hover:none){.del-btn{opacity:1}}
 .admin-section{background:#fff8f8;border:1.5px dashed #e74c3c;border-radius:8px;padding:14px;margin-bottom:12px}
 .admin-section .admin-label{font-size:.72rem;font-weight:700;text-transform:uppercase;color:#e74c3c;letter-spacing:.06em;margin-bottom:8px}
+/* Einklappbare Admin-Kästen: Label ist der Schalter */
+.admin-section .admin-label.coll-toggle{cursor:pointer;user-select:none;display:flex;align-items:center;gap:7px}
+.admin-section .admin-label.coll-toggle::before{content:'▸';font-size:.85rem;transition:transform .15s;display:inline-block}
+.admin-section:not(.collapsed) .admin-label.coll-toggle::before{transform:rotate(90deg)}
+.admin-section.collapsed{padding:9px 14px}
+.admin-section.collapsed .admin-label{margin-bottom:0}
+.admin-section.collapsed>*:not(.admin-label){display:none!important}
 .loading{text-align:center;padding:40px;color:#aaa;font-size:.9rem}
 .empty{text-align:center;padding:30px;color:#bbb}
 .search-box{width:100%;padding:8px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:.9rem;margin-bottom:14px;font-family:inherit}
@@ -183,7 +192,7 @@ html.fs-sehrgross{font-size:20.5px}
 /* Mehr-Sheet */
 .sheet-overlay{display:none;position:fixed;inset:0;z-index:95;background:rgba(15,25,45,.42);align-items:flex-end}
 .sheet-overlay.open{display:flex;animation:fadeIn .18s ease}
-.sheet{background:#fff;width:100%;border-radius:22px 22px 0 0;padding:10px 14px calc(18px + env(safe-area-inset-bottom));box-shadow:var(--shadow-lg);animation:sheetUp .24s cubic-bezier(.2,.8,.2,1)}
+.sheet{background:#fff;width:100%;max-width:540px;margin:0 auto;border-radius:22px 22px 0 0;padding:10px 14px calc(18px + env(safe-area-inset-bottom));box-shadow:var(--shadow-lg);animation:sheetUp .24s cubic-bezier(.2,.8,.2,1)}
 @keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
 .sheet-grip{width:40px;height:4px;border-radius:2px;background:#d3dae3;margin:6px auto 12px}
 .sheet h4{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:6px 6px 8px}
@@ -324,10 +333,14 @@ html.fs-sehrgross{font-size:20.5px}
   // Map to window globals used by the app
   window._fbAuth = _auth;
   window._fbSignIn = (auth, email, pw) => auth.signInWithEmailAndPassword(email, pw);
+  window._fbSignInCustom = (auth, token) => auth.signInWithCustomToken(token);
   window._fbCreateUser = (auth, email, pw) => auth.createUserWithEmailAndPassword(email, pw);
   window._fbSignOut = (auth) => auth.signOut();
   window._fbUpdatePassword = (user, pw) => user.updatePassword(pw);
   window._fbResetPassword = (auth, email) => auth.sendPasswordResetEmail(email);
+  window._fbSendVerification = (user) => user.sendEmailVerification();
+  // Server-Endpoint für Benutzername-Login/Reset (E-Mail bleibt serverseitig)
+  window.USERNAME_AUTH_URL = 'https://europe-west1-chor-eisleben.cloudfunctions.net/usernameAuth';
   _auth.onAuthStateChanged((user) => {
     if(window.onAuthChange) window.onAuthChange(user);
   });
@@ -383,7 +396,7 @@ html.fs-sehrgross{font-size:20.5px}
   <div class="header-right">
     <span id="admin-badge" class="admin-badge" style="display:none">🔑 Admin</span>
     <button id="search-btn" onclick="openSearch()" title="Suche" style="display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:white;border-radius:8px;padding:3px 9px;cursor:pointer;font-size:1.05rem;line-height:1.4">🔍</button>
-    <button id="abw-btn" onclick="openAbwesenheit()" title="Meine Abwesenheit" style="display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:white;border-radius:8px;padding:3px 9px;cursor:pointer;font-size:1.05rem;line-height:1.4">🏖️</button>
+    <button id="editmode-icon-btn" onclick="setEditMode(!editMode)" title="Bearbeiten-Modus" style="display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:white;border-radius:8px;padding:3px 9px;cursor:pointer;font-size:1.05rem;line-height:1.4">✏️</button>
     <button id="bell-btn" onclick="openNotifications()" title="Benachrichtigungen" style="display:none;position:relative;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:white;border-radius:8px;padding:3px 9px;cursor:pointer;font-size:1.05rem;line-height:1.4">
       🔔<span id="bell-badge" style="display:none;position:absolute;top:-6px;right:-6px;background:#e74c3c;color:white;font-size:.6rem;font-weight:700;min-width:16px;height:16px;border-radius:8px;padding:0 4px;line-height:16px;text-align:center">0</span>
     </button>
@@ -391,32 +404,63 @@ html.fs-sehrgross{font-size:20.5px}
       <span id="user-display">👤</span>
       <span style="font-size:.7rem;opacity:.7">▾</span>
     </div>
-    <button onclick="doLogout()" title="Abmelden" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:white;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:.8rem;display:none" id="logout-btn">⇤</button>
   </div>
 </div>
 <div class="notice" id="notice-bar">ℹ️ Diese Seite wird von der Chorleitung gepflegt und lädt Änderungen automatisch.</div>
+<div id="offline-bar" style="display:none;background:#5d4037;color:#fff;text-align:center;padding:7px 12px;font-size:.82rem;font-weight:600">📴 Keine Internetverbindung — Anzeige ist evtl. nicht aktuell, Änderungen sind gerade nicht möglich.</div>
 
 <div class="main-tabs">
-  <div class="mtab active" onclick="showPage('lieder',this)">🎵 Lieder</div>
+  <div class="mtab active" onclick="showPage('start',this)">🏠 Start</div>
+  <div class="mtab" onclick="showPage('lieder',this)">🎵 Lieder</div>
   <div class="mtab" onclick="showPage('proben',this)">📅 Proben</div>
   <div class="mtab" onclick="showPage('termine',this)">📆 Termine</div>
   <div class="mtab" onclick="showPage('umfragen',this)">📊 Umfragen</div>
   <div class="mtab" onclick="showPage('mitglieder',this)">👥 Mitglieder</div>
   <div class="mtab" onclick="showPage('plakate',this)">📋 Plakate</div>
   <div class="mtab" onclick="showPage('kommentare',this)">💬 Kommentare <span id="k-count" style="background:rgba(41,128,185,.15);color:#2563b5;padding:1px 6px;border-radius:10px;font-size:.72rem;margin-left:3px"></span></div>
-  <div class="mtab admin-tab admin-only" onclick="showPage('anwesenheit',this)">📊 Anwesenheit</div>
-  <div class="mtab user-only" id="tab-einstellungen" style="display:none" onclick="showPage('einstellungen',this)">⚙️ Einstellungen</div>
+  <div class="mtab admin-tab admin-only" onclick="showPage('statistik',this)">📊 Auswertung</div>
   <div class="mtab admin-tab admin-only" onclick="showPage('konsole',this)">⚙️ Konsole</div>
+  <div class="mtab" onclick="openMoreSheet()">☰ Mehr</div>
 </div>
 
 <div class="content">
 
-<div class="page active" id="p-lieder">
+<div class="page active" id="p-start">
+  <div id="start-content"></div>
+</div>
+
+<div class="page" id="p-lieder">
+  <div class="sub-tabs">
+    <button id="ltab-lieder" class="stab active" onclick="setLiederPageTab('lieder')">🎵 Lieder</button>
+    <button id="ltab-wuensche" class="stab" onclick="setLiederPageTab('wuensche')">🎁 Wünsche <span id="lw-count" style="color:#aaa;font-weight:400"></span></button>
+  </div>
+  <div id="lv-lieder">
   <div class="stats" id="stats"></div>
+  <div class="admin-section admin-only" data-perm="lieder">
+    <div class="admin-label">🔑 Admin: Lied hinzufügen</div>
+    <div class="form-row">
+      <input class="fl-input" type="text" id="nl-name" placeholder="Liedtitel *" maxlength="120" style="flex:2;min-width:170px">
+      <select id="nl-saison" class="fl-input" style="flex:1;min-width:150px"></select>
+    </div>
+    <button class="btn btn-primary" onclick="addLied()">＋ Lied hinzufügen</button>
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid #e3e9f0">
+      <div style="font-size:.8rem;color:#666;margin-bottom:6px">Neue Saison anlegen (nötig, bevor die erste Saison Lieder aufnehmen kann):</div>
+      <div class="form-row">
+        <input class="fl-input" type="text" id="nl-newseason" placeholder="z. B. Sommer 2026" maxlength="60" style="flex:2;min-width:170px">
+        <select id="nl-newseason-type" class="fl-input" style="flex:1;min-width:150px">
+          <option value="sommer">☀️ Sommer</option>
+          <option value="weihnachten">🎄 Weihnachten</option>
+          <option value="repertoire">📚 Repertoire</option>
+        </select>
+      </div>
+      <button class="btn btn-success" onclick="addSaisonInApp()">＋ Saison anlegen</button>
+    </div>
+  </div>
   <div class="card">
     <div class="sub-tabs" id="saison-tabs"></div>
-    <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
-      <select id="sort-sel" onchange="renderLieder()" style="padding:5px 10px;border:1.5px solid #ddd;border-radius:6px;font-size:.82rem">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+      <input type="text" class="search-box" id="lied-search" placeholder="🔍 Lied suchen…" oninput="renderLieder()" style="flex:1;margin-bottom:0">
+      <select id="sort-sel" onchange="renderLieder()" style="padding:8px 10px;border:1.5px solid #ddd;border-radius:8px;font-size:.82rem;font-family:inherit">
         <option value="last">Letzte Probe zuerst</option>
         <option value="name">Name A–Z</option>
         <option value="count">Häufigkeit</option>
@@ -424,8 +468,10 @@ html.fs-sehrgross{font-size:20.5px}
     </div>
     <div id="lieder-list"></div>
   </div>
+  </div>
 
-  <div class="card" style="margin-top:12px">
+  <div id="lv-wuensche" style="display:none">
+  <div class="card">
     <div class="card-title">🎵 Liedwünsche</div>
     <div class="k-form-wrap" style="margin-bottom:12px">
       <div class="form-row">
@@ -449,6 +495,7 @@ html.fs-sehrgross{font-size:20.5px}
       <div id="lw-result" style="font-size:.82rem;min-height:16px;margin-top:6px"></div>
     </div>
     <div id="liedwunsch-list"></div>
+  </div>
   </div>
 </div>
 
@@ -564,8 +611,6 @@ html.fs-sehrgross{font-size:20.5px}
 <div class="page" id="p-mitglieder">
   <div class="sub-tabs">
     <button id="mtab-mitglieder" class="stab active" onclick="setMitgliederTab('mitglieder')">👥 Mitglieder</button>
-    <button id="mtab-beitraege" class="stab" style="display:none" onclick="setMitgliederTab('beitraege')">💶 Beiträge</button>
-    <button id="mtab-kasse" class="stab" onclick="setMitgliederTab('kasse')">💰 Chorkasse</button>
   </div>
   <div id="mv-mitglieder">
   <div class="admin-section admin-only" data-perm="mitglieder">
@@ -652,23 +697,36 @@ html.fs-sehrgross{font-size:20.5px}
 </div>
 
 <div class="page" id="p-plakate">
-  <div class="card k-form-wrap">
-    <div class="card-title" style="margin-bottom:10px">＋ Neuen Standort hinzufügen</div>
-    <div class="form-row">
-      <input class="fl-input" type="text" id="pl-ort" placeholder="Standort / Geschäft *" style="flex:2;min-width:160px">
-      <input class="fl-input" type="text" id="pl-anzahl" placeholder="Anzahl Plakate" style="flex:1;min-width:90px">
+  <details class="card k-form-wrap" style="margin-bottom:12px">
+    <summary style="cursor:pointer;font-weight:700;color:#1b3a6b;font-size:.92rem;user-select:none">＋ Neuen Standort hinzufügen</summary>
+    <div style="margin-top:12px">
+      <div style="font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#999;margin-bottom:5px">💡 Vorschläge antippen</div>
+      <div id="pl-vorschlaege" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px"></div>
+      <div class="form-row">
+        <input class="fl-input" type="text" id="pl-ort" placeholder="Standort / Geschäft *" style="flex:2;min-width:160px">
+        <input class="fl-input" type="text" id="pl-anzahl" placeholder="Anzahl Plakate" style="flex:1;min-width:90px">
+      </div>
+      <div class="form-row">
+        <select class="fl-input" id="pl-ortschaft" style="flex:1;min-width:150px" onchange="document.getElementById('pl-ortschaft-frei').style.display=this.value==='__frei__'?'':'none'"></select>
+        <input class="fl-input" type="text" id="pl-ortschaft-frei" placeholder="Ortschaft eingeben…" style="flex:1;min-width:140px;display:none">
+      </div>
+      <input class="fl-input" type="text" id="pl-adresse" placeholder="Adresse (optional, für Karten-Link)" style="margin-bottom:8px">
+      <input class="fl-input" type="text" id="pl-notiz" placeholder="Notiz (optional, z. B. Ansprechpartner)" style="margin-bottom:8px">
+      <button class="btn btn-primary" onclick="addPlakat()">＋ Standort hinzufügen</button>
     </div>
-    <input class="fl-input" type="text" id="pl-adresse" placeholder="Adresse (optional, für Karten-Link)" style="margin-bottom:8px">
-    <input class="fl-input" type="text" id="pl-notiz" placeholder="Notiz (optional, z. B. Ansprechpartner)" style="margin-bottom:8px">
-    <button class="btn btn-primary" onclick="addPlakat()">＋ Standort hinzufügen</button>
-  </div>
+  </details>
   <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:6px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px">
       <span class="card-title" style="margin-bottom:0">📋 Plakat-Standorte</span>
       <span id="plakate-stats" style="font-size:.8rem;color:#888"></span>
     </div>
+    <div id="plakate-progress" style="display:none;background:#eef1f5;border-radius:6px;height:8px;overflow:hidden;margin:8px 0 4px"><div id="plakate-progress-fill" style="height:100%;width:0%;background:#27ae60;border-radius:6px;transition:width .3s"></div></div>
     <div style="font-size:.82rem;color:#666;margin-bottom:12px">Trage dich auf einen Standort ein, wenn du das Plakat dorthin bringst.</div>
     <div id="plakate-list"></div>
+  </div>
+  <div class="card" id="plakate-ranking-card" style="margin-top:12px;display:none">
+    <div class="card-title">🏆 Wer verteilt wie viel?</div>
+    <div id="plakate-ranking"></div>
   </div>
 </div>
 
@@ -687,7 +745,15 @@ html.fs-sehrgross{font-size:20.5px}
   <div id="kommentare-list"></div>
 </div>
 
-<div class="page admin-only" id="p-anwesenheit">
+<div class="page admin-only" id="p-statistik">
+  <div class="sub-tabs">
+    <button id="atab-statistik" class="stab active" onclick="setAuswertungTab('statistik')">📈 Statistik</button>
+    <button id="atab-anwesenheit" class="stab" onclick="setAuswertungTab('anwesenheit')">✅ Anwesenheit</button>
+  </div>
+  <div id="av-statistik">
+    <div id="statistik-content"></div>
+  </div>
+  <div id="av-anwesenheit" style="display:none">
   <div class="card">
     <div class="card-title">✅ Anwesenheit erfassen</div>
     <div style="font-size:.83rem;color:#666;margin-bottom:10px">Wähle die Probe und tippe alle an, die <strong>fehlen</strong> (rot). Vorab-Abmeldungen sind schon markiert.</div>
@@ -710,6 +776,7 @@ html.fs-sehrgross{font-size:20.5px}
       </select>
     </div>
     <div id="anw-stats"></div>
+  </div>
   </div>
 </div>
 
@@ -835,12 +902,9 @@ html.fs-sehrgross{font-size:20.5px}
       <div id="auto-logout-result" style="font-size:.8rem;color:#27ae60;margin-top:6px"></div>
     </div>
     <div class="konsole-section">
-      <div class="konsole-title">🔑 Admin-Passwort ändern</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
-        <div><label style="display:block;font-size:.78rem;margin-bottom:3px;color:#666">Neues Passwort</label><input type="password" id="new-pw" class="fl-input" style="width:180px" placeholder="Neues Passwort"></div>
-        <button class="btn btn-primary btn-sm" onclick="changePw()">Speichern</button>
-      </div>
-      <div id="pw-result" style="font-size:.8rem;color:#27ae60;margin-top:6px"></div>
+      <div class="konsole-title">🔑 Admin-Zugang</div>
+      <div style="font-size:.83rem;color:#666">Das früher geteilte Admin-Passwort wurde aus Sicherheitsgründen abgeschafft. Admin-Rechte und Einzelberechtigungen vergibst du jetzt pro Person unter <strong>„Nutzer &amp; Rechte"</strong>. Wer dort Admin ist, kommt automatisch in den Bearbeiten-Modus.</div>
+      <div id="pw-result" style="font-size:.8rem;color:#2563b5;margin-top:6px"></div>
     </div>
     </div>
     <div class="konsole-pane" id="kp-benutzer">
@@ -954,10 +1018,10 @@ html.fs-sehrgross{font-size:20.5px}
 
 <!-- UNTERE TAB-LEISTE (mobil, Konzertmeister-Stil) -->
 <nav class="bottomnav bnav" id="bottomnav">
-  <button class="bnav-item active" data-page="lieder" onclick="bnav('lieder')"><span class="bnav-ic">🎵</span>Lieder</button>
+  <button class="bnav-item active" data-page="start" onclick="bnav('start')"><span class="bnav-ic">🏠</span>Start</button>
+  <button class="bnav-item" data-page="lieder" onclick="bnav('lieder')"><span class="bnav-ic">🎵</span>Lieder</button>
   <button class="bnav-item" data-page="proben" onclick="bnav('proben')"><span class="bnav-ic">📅</span>Proben</button>
   <button class="bnav-item" data-page="termine" onclick="bnav('termine')"><span class="bnav-ic">📆</span>Termine</button>
-  <button class="bnav-item" data-page="umfragen" onclick="bnav('umfragen')"><span class="bnav-ic">📊</span>Umfragen</button>
   <button class="bnav-item" data-page="__more__" onclick="openMoreSheet()"><span class="bnav-ic">☰</span>Mehr</button>
 </nav>
 
@@ -966,12 +1030,22 @@ html.fs-sehrgross{font-size:20.5px}
   <div class="sheet">
     <div class="sheet-grip"></div>
     <h4>Mehr</h4>
+    <div class="sheet-label">🎶 Chor</div>
     <div class="sheet-grid">
+      <button class="sheet-link" onclick="bnavMore('umfragen')"><span class="si">📊</span>Umfragen</button>
       <button class="sheet-link" onclick="bnavMore('mitglieder')"><span class="si">👥</span>Mitglieder</button>
       <button class="sheet-link" onclick="bnavMore('plakate')"><span class="si">📋</span>Plakate</button>
       <button class="sheet-link" onclick="bnavMore('kommentare')"><span class="si">💬</span>Kommentare</button>
+    </div>
+    <div class="sheet-label sheet-user" style="display:none">👤 Persönlich</div>
+    <div class="sheet-grid">
+      <button class="sheet-link sheet-user" style="display:none" onclick="closeMoreSheet();openAbwesenheit()"><span class="si">🏖️</span>Abwesenheit</button>
       <button class="sheet-link sheet-user" id="more-einst" style="display:none" onclick="bnavMore('einstellungen')"><span class="si">⚙️</span>Einstellungen</button>
-      <button class="sheet-link adm sheet-adm" style="display:none" onclick="bnavMore('anwesenheit')"><span class="si">📊</span>Anwesenheit</button>
+      <button class="sheet-link sheet-user" style="display:none" onclick="closeMoreSheet();doLogout()"><span class="si">⇤</span>Abmelden</button>
+    </div>
+    <div class="sheet-label adm sheet-adm" style="display:none">🔑 Verwaltung</div>
+    <div class="sheet-grid">
+      <button class="sheet-link adm sheet-adm" style="display:none" onclick="bnavMore('statistik')"><span class="si">📊</span>Auswertung</button>
       <button class="sheet-link adm sheet-adm" style="display:none" onclick="bnavMore('konsole')"><span class="si">🔑</span>Konsole</button>
     </div>
   </div>
@@ -1005,7 +1079,31 @@ html.fs-sehrgross{font-size:20.5px}
   <div class="modal">
     <h3>🔔 Benachrichtigungen</h3>
     <div id="notif-list" style="max-height:62vh;overflow-y:auto;margin:-4px -4px 0"></div>
-    <div class="modal-actions"><button class="btn btn-gray" onclick="closeModal()">Schließen</button></div>
+    <div class="modal-actions" style="justify-content:space-between">
+      <button id="notif-clear-all" class="btn btn-danger btn-sm" style="display:none" onclick="clearAllNotifications()">🗑️ Alle löschen</button>
+      <button class="btn btn-gray" onclick="closeModal()">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-plakat-edit">
+  <div class="modal">
+    <h3>✏️ Standort bearbeiten</h3>
+    <input type="hidden" id="ple-key">
+    <div class="form-row">
+      <input class="fl-input" type="text" id="ple-ort" placeholder="Standort / Geschäft *" style="flex:2;min-width:160px">
+      <input class="fl-input" type="text" id="ple-anzahl" placeholder="Anzahl" style="flex:1;min-width:80px">
+    </div>
+    <div class="form-row">
+      <select class="fl-input" id="ple-ortschaft" style="flex:1;min-width:150px" onchange="document.getElementById('ple-ortschaft-frei').style.display=this.value==='__frei__'?'':'none'"></select>
+      <input class="fl-input" type="text" id="ple-ortschaft-frei" placeholder="Ortschaft eingeben…" style="flex:1;min-width:140px;display:none">
+    </div>
+    <input class="fl-input" type="text" id="ple-adresse" placeholder="Adresse (optional)" style="margin-bottom:8px">
+    <input class="fl-input" type="text" id="ple-notiz" placeholder="Notiz (optional)" style="margin-bottom:8px">
+    <div class="modal-actions" style="justify-content:space-between">
+      <button class="btn btn-gray" onclick="closeModal()">Abbrechen</button>
+      <button class="btn btn-success" onclick="savePlakatEdit()">💾 Speichern</button>
+    </div>
   </div>
 </div>
 
@@ -1043,6 +1141,29 @@ html.fs-sehrgross{font-size:20.5px}
     </div>
     <div class="modal-actions" style="justify-content:space-between">
       <button class="btn btn-danger btn-sm" onclick="removeSongPdf()">🗑️ Noten entfernen</button>
+      <button class="btn btn-gray" onclick="closeModal()">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-movesong">
+  <div class="modal">
+    <h3>🎵 Lied verwalten – <span id="ms-songname"></span></h3>
+    <input type="hidden" id="ms-songid">
+    <div style="margin-bottom:6px">
+      <div style="font-size:.82rem;font-weight:600;color:#1b3a6b;margin-bottom:6px">Ziel-Saison</div>
+      <select id="ms-saison" class="fl-input"></select>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-primary btn-sm" style="flex:1" onclick="confirmMoveSong()">↔️ Verschieben</button>
+        <button class="btn btn-success btn-sm" style="flex:1" onclick="confirmCopySong()">📋 Kopieren</button>
+      </div>
+      <div style="font-size:.72rem;color:#888;margin-top:6px">Kopieren: das Lied ist dann in beiden Saisons, taucht in der „Alle"-Übersicht aber nur einmal auf.</div>
+    </div>
+    <div style="border-top:1px solid #eee;margin-top:14px;padding-top:12px">
+      <button class="btn btn-danger btn-sm" onclick="deleteSong()">🗑️ Lied ganz löschen</button>
+      <div style="font-size:.72rem;color:#888;margin-top:6px">Entfernt das Lied aus dieser Saison. Zum bloßen Ausblenden lieber 🗄️ Archivieren nutzen.</div>
+    </div>
+    <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal()">Schließen</button>
     </div>
   </div>
@@ -1134,9 +1255,12 @@ html.fs-sehrgross{font-size:20.5px}
         <button class="btn btn-gray btn-sm" type="button" onclick="slAddCustom()">＋ Titel</button>
       </div>
     </div>
-    <div class="modal-actions">
-      <button class="btn btn-gray" onclick="closeModal()">Abbrechen</button>
-      <button class="btn btn-success" onclick="saveSetliste()">💾 Speichern</button>
+    <div class="modal-actions" style="justify-content:space-between">
+      <button class="btn btn-sm" type="button" style="background:#eef1f5;color:#1d4e96" onclick="slPrint()">🖨️ Drucken</button>
+      <span>
+        <button class="btn btn-gray" onclick="closeModal()">Abbrechen</button>
+        <button class="btn btn-success" onclick="saveSetliste()">💾 Speichern</button>
+      </span>
     </div>
   </div>
 </div>
@@ -1264,10 +1388,11 @@ function runSearch(){
 }
 function showLoading(on){ const lo=document.getElementById('loading-overlay'); if(lo) lo.style.display=on?'flex':'none'; }
 applyFontSize();
-const ADMIN_PW='Asf06217';
+// Admin-Rechte kommen ausschließlich aus dem Nutzerprofil (isAdmin/permissions) — kein geteiltes Passwort mehr.
 const TYP_LABEL={"konzert": "🎵 Konzert", "fest": "🎪 Fest", "chorlager": "🏕️ Chorlager", "gottesdienst": "⛪ Gottesdienst", "probe": "🎹 Probe", "sonstiges": "📌 Sonstiges"};
 const TYP_COLOR={"konzert": "#2563b5", "fest": "#e67e22", "chorlager": "#27ae60", "gottesdienst": "#8e44ad", "probe": "#c0392b", "sonstiges": "#7f8c8d"};
 const INIT_MITGLIEDER=[]; // Mitgliederdaten liegen in der Datenbank (login-geschuetzt), nicht im oeffentlichen Code
+// Kein hartkodierter Termin-Fallback mehr: bei leerer/fehlgeschlagener DB zeigen wir lieber „keine Termine" als veraltete Daten.
 const INIT_TERMINE=[];
 
 let D=null, termine=[], kommentare=[], probenplan=[], mitglieder=[], liedwuensche=[], plakate=[], probenstatus={}, benachrichtigungen=[], anwesenheit={}, anwWork=null, userprofilesCache={}, abwesenheiten={};
@@ -1287,16 +1412,29 @@ function setEditMode(on){
   if(typeof renderPlakate==='function') renderPlakate();
   updateEditModeUI();
 }
+// Wer darf überhaupt bearbeiten? Voll-Admin ODER Nutzer mit Einzelrechten (aus dem Profil).
+function canUseEditMode(){
+  return !!(currentUserProfile && (currentUserProfile.isAdmin || (Array.isArray(currentUserProfile.permissions) && currentUserProfile.permissions.length>0)));
+}
 function updateEditModeUI(){
+  const canEdit=canUseEditMode();
   document.querySelectorAll('.editmode-btn').forEach(b=>{
+    b.style.display = canEdit ? '' : 'none';
     b.textContent = editMode ? '🔓 Bearbeiten-Modus ist AN – ausschalten' : '✏️ Bearbeiten-Modus einschalten';
     b.style.background = editMode ? '#27ae60' : '#ecf0f1';
     b.style.color = editMode ? 'white' : '#555';
   });
+  const ib=document.getElementById('editmode-icon-btn');
+  if(ib){
+    ib.style.display = canEdit ? '' : 'none';
+    ib.textContent = editMode ? '🔓' : '✏️';
+    ib.style.background = editMode ? '#27ae60' : 'rgba(255,255,255,.15)';
+    ib.title = editMode ? 'Bearbeiten-Modus ist AN – ausschalten' : 'Bearbeiten-Modus einschalten';
+  }
 }
 let aktiveSaison='__all__', aktiveTerminTab='anstehend';
+let liederView='aktiv'; // 'aktiv' | 'archiv'
 let kalMonat=new Date().getMonth(), kalJahr=new Date().getFullYear(), kalSel=null;
-let adminPw = localStorage.getItem('chor_admin_pw') || ADMIN_PW;
 
 // UTILS
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
@@ -1309,24 +1447,20 @@ function getStat(id){if(!D)return{last:null,count:0};const ps=(D.proben||[]).fil
 function uid(){return Math.random().toString(36).substr(2,9)}
 
 // ADMIN
-function toggleAdmin(){
-  if(adminMode){
-    adminMode=false;
-    sessionStorage.removeItem('chor_admin');
-    applyAdminMode();
-    return;
-  }
-  const pw=prompt('Admin-Passwort:');
-  if(pw===adminPw){
-    adminMode=true;
-    sessionStorage.setItem('chor_admin','1');
-    applyAdminMode();
-    alert('✅ Admin-Modus aktiviert');
-  } else if(pw!==null){
-    alert('❌ Falsches Passwort');
-  }
+// (wird weiter unten durch die profilbasierte Version ersetzt)
+// Admin-Formulare standardmäßig einklappen (Label = Schalter), damit der Inhalt oben bleibt
+function initAdminCollapse(){
+  document.querySelectorAll('.admin-section').forEach(sec=>{
+    if(sec.dataset.collInit) return;
+    const label=sec.querySelector('.admin-label'); if(!label) return;
+    sec.dataset.collInit='1';
+    sec.classList.add('collapsed');
+    label.classList.add('coll-toggle');
+    label.addEventListener('click',()=>sec.classList.toggle('collapsed'));
+  });
 }
 function applyAdminMode(){
+  initAdminCollapse();
   document.querySelectorAll('.admin-only').forEach(el=>{
     const perm = el.getAttribute('data-perm');
     const inTabs = el.closest('.main-tabs');
@@ -1344,7 +1478,7 @@ function applyAdminMode(){
     el.style.display = show ? (inTabs ? '' : 'block') : 'none';
   });
   // Falls die gerade aktive Seite ausgeblendet wurde (z. B. Admin-Modus verlassen): zurück zu Liedern
-  if(!document.querySelector('.page.active')) showPage('lieder');
+  if(!document.querySelector('.page.active')) showPage('start');
   const _b=document.getElementById('admin-badge');if(_b)_b.style.display=(adminMode&&editMode)?'':'none';
   const _n=document.getElementById('notice-bar');if(_n)_n.style.display=adminMode?'none':'block';
   if(uiEdit('proben')){renderSongPicker();}
@@ -1360,6 +1494,8 @@ function showPage(id,tab){
   document.querySelectorAll('.mtab').forEach(t=>t.classList.remove('active'));
   document.getElementById('p-'+id).classList.add('active');
   if(tab) tab.classList.add('active');
+  if(id==='start') renderStart();
+  if(id==='statistik'){ renderStatistik(); if(document.getElementById('av-anwesenheit')?.style.display!=='none') renderAnwesenheitPage(); }
   if(id==='proben'){renderProben();renderSongPicker();}
   if(id==='termine') renderTermine();
   if(id==='umfragen') renderUmfragen();
@@ -1368,13 +1504,12 @@ function showPage(id,tab){
   if(id==='einstellungen') renderEinstellungen();
   if(id==='lieder') renderLiedwuensche();
   if(id==='plakate') renderPlakate();
-  if(id==='anwesenheit') renderAnwesenheitPage();
   syncBottomNav(id);
   try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){}
 }
 
 // ===== UNTERE TAB-LEISTE (mobil) =====
-const BNAV_PRIMARY=['lieder','proben','termine','umfragen'];
+const BNAV_PRIMARY=['start','lieder','proben','termine'];
 function syncBottomNav(id){
   document.querySelectorAll('.bnav-item').forEach(b=>{
     const p=b.getAttribute('data-page');
@@ -1385,40 +1520,307 @@ function bnav(id){ showPage(id, null); }
 function bnavMore(id){ closeMoreSheet(); showPage(id, null); }
 function openMoreSheet(){
   const loggedIn = (typeof currentUser!=='undefined' && !!currentUser);
-  document.querySelectorAll('#more-sheet .sheet-adm').forEach(b=>b.style.display=adminMode?'flex':'none');
-  const me=document.getElementById('more-einst'); if(me) me.style.display=loggedIn?'flex':'none';
+  document.querySelectorAll('#more-sheet .sheet-adm').forEach(b=>b.style.display=adminMode?(b.classList.contains('sheet-label')?'block':'flex'):'none');
+  document.querySelectorAll('#more-sheet .sheet-user').forEach(b=>b.style.display=loggedIn?(b.classList.contains('sheet-label')?'block':'flex'):'none');
   document.getElementById('more-sheet').classList.add('open');
 }
 function closeMoreSheet(){ document.getElementById('more-sheet').classList.remove('open'); }
 
+// START-ÜBERSICHT
+function renderStart(){
+  const el=document.getElementById('start-content'); if(!el) return;
+  const today=localToday();
+  const TYP_IC={konzert:'🎵',fest:'🎪',chorlager:'🏕️',gottesdienst:'⛪',probe:'🎹',sonstiges:'📌'};
+  let html='';
+
+  // Nächste Probe (mit Abmelde-Möglichkeit direkt hier)
+  const nextProbe=(probenplan||[]).filter(p=>p.datum>=today).sort((a,b)=>a.datum.localeCompare(b.datum))[0];
+  html+='<div class="card">';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="showPageByName(\'proben\')"><span class="card-title" style="margin-bottom:0">🎹 Nächste Probe</span><span style="font-size:.76rem;color:#2563b5">Alle ›</span></div>';
+  if(nextProbe){
+    const songs=(nextProbe.songIds||[]).map(id=>findSongById(id)).filter(Boolean).map(s=>s.name);
+    html+=`<div style="font-size:1.05rem;font-weight:700;margin-top:8px">${fmt(nextProbe.datum)}</div>`;
+    if(songs.length) html+=`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">${songs.map(n=>`<span style="background:#eef3fa;color:#1b3a6b;border-radius:14px;padding:3px 10px;font-size:.78rem">${esc(n)}</span>`).join('')}</div>`;
+    if(nextProbe.notiz) html+=`<div style="font-size:.82rem;color:#777;margin-top:7px">📝 ${esc(nextProbe.notiz)}</div>`;
+    html+=buildProbeAttendance(nextProbe);
+  } else html+='<div class="empty" style="padding:12px 0 4px">Keine Probe geplant.</div>';
+  html+='</div>';
+
+  // Nächste Termine (max 3) mit Abstimm-Status + Schnell-Abstimmung
+  const myName=getUserVoteName();
+  const nextTermine=(termine||[]).filter(t=>((t.datum_ende||t.datum)>=today)).sort((a,b)=>a.datum.localeCompare(b.datum)).slice(0,3);
+  html+='<div class="card" style="margin-top:12px">';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="showPageByName(\'termine\')"><span class="card-title" style="margin-bottom:0">📆 Nächste Termine</span><span style="font-size:.76rem;color:#2563b5">Alle ›</span></div>';
+  if(nextTermine.length){
+    nextTermine.forEach(t=>{
+      const mv=myName?((t.abstimmungen||{})[myName]||null):null;
+      const chip=mv==='ja'?'<span style="background:#d5f5e3;color:#1a7a40;border-radius:12px;padding:2px 9px;font-size:.72rem;font-weight:700">✅ Zugesagt</span>'
+        :mv==='nein'?'<span style="background:#fdecea;color:#922b21;border-radius:12px;padding:2px 9px;font-size:.72rem;font-weight:700">❌ Abgesagt</span>'
+        :mv==='vielleicht'?'<span style="background:#fef9e7;color:#9a6b00;border-radius:12px;padding:2px 9px;font-size:.72rem;font-weight:700">❓ Vielleicht</span>'
+        :(myName?'<span style="background:#eaeef3;color:#666;border-radius:12px;padding:2px 9px;font-size:.72rem;font-weight:700">⚪ Noch offen</span>':'');
+      html+=`<div style="border-top:1px solid var(--line);margin-top:10px;padding-top:10px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">
+          <div><strong>${TYP_IC[t.typ]||'📌'} ${esc(t.titel)}</strong><div style="font-size:.8rem;color:#777;margin-top:2px">${fmt(t.datum)}${t.datum_ende?' – '+fmt(t.datum_ende):''}${t.uhrzeit?' · '+esc(t.uhrzeit):''}</div></div>
+          ${chip}
+        </div>
+        ${(myName&&!mv)?`<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+          <button class="btn btn-sm" style="background:#27ae60;color:white" onclick="abstimmen('${t.id}','ja').then(()=>renderStart())">✅ Komme</button>
+          <button class="btn btn-sm" style="background:#e74c3c;color:white" onclick="abstimmen('${t.id}','nein').then(()=>renderStart())">❌ Komme nicht</button>
+          <button class="btn btn-sm" style="background:#f39c12;color:white" onclick="abstimmen('${t.id}','vielleicht').then(()=>renderStart())">❓ Vielleicht</button>
+        </div>`:''}
+      </div>`;
+    });
+  } else html+='<div class="empty" style="padding:12px 0 4px">Keine anstehenden Termine.</div>';
+  html+='</div>';
+
+  // Offene Umfragen
+  const offene=Object.entries(umfragen||{}).filter(([id,u])=>u&&!u.geschlossen);
+  if(offene.length){
+    html+='<div class="card" style="margin-top:12px;cursor:pointer" onclick="showPageByName(\'umfragen\')">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center"><span class="card-title" style="margin-bottom:0">📊 Offene Umfragen</span><span style="font-size:.76rem;color:#2563b5">Abstimmen ›</span></div>';
+    offene.slice(0,3).forEach(([id,u])=>{
+      const voted=myName&&u.votes&&u.votes[ufSafeKey(myName)];
+      html+=`<div style="border-top:1px solid var(--line);margin-top:10px;padding-top:10px;display:flex;justify-content:space-between;gap:8px;align-items:center">
+        <span style="font-size:.9rem;font-weight:600">${esc(u.frage)}</span>
+        ${voted?'<span style="font-size:.72rem;color:#1a7a40;white-space:nowrap">✓ abgestimmt</span>':'<span style="font-size:.72rem;color:#9a6b00;white-space:nowrap">noch offen</span>'}
+      </div>`;
+    });
+    html+='</div>';
+  }
+
+  // 🎂 Geburtstage der nächsten 7 Tage
+  const gToday=new Date(); gToday.setHours(0,0,0,0);
+  const gebs=(mitglieder||[]).filter(m=>m.geburtstag).map(m=>{
+    const parts=String(m.geburtstag).split('.'); if(parts.length<2) return null;
+    const d=parseInt(parts[0]), mo=parseInt(parts[1])-1;
+    if(isNaN(d)||isNaN(mo)) return null;
+    let bd=new Date(gToday.getFullYear(),mo,d);
+    if(bd<gToday) bd=new Date(gToday.getFullYear()+1,mo,d);
+    const days=Math.round((bd-gToday)/86400000);
+    return days<=7?{name:memberName(m),days,bd}:null;
+  }).filter(Boolean).sort((a,b)=>a.days-b.days);
+  if(gebs.length){
+    const WD=['So','Mo','Di','Mi','Do','Fr','Sa'];
+    html+='<div class="card" style="margin-top:12px"><div class="card-title" style="margin-bottom:6px">🎂 Geburtstage diese Woche</div>';
+    html+=gebs.map(g=>`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:.9rem"><span>${g.days===0?'🎉 ':''}<strong>${esc(g.name)}</strong></span><span style="color:${g.days===0?'#e67e22':'#888'};font-size:.82rem;font-weight:${g.days===0?'700':'400'}">${g.days===0?'HEUTE!':(g.days===1?'morgen':WD[g.bd.getDay()]+', '+g.bd.getDate()+'.'+(g.bd.getMonth()+1)+'.')}</span></div>`).join('');
+    html+='</div>';
+  }
+
+  el.innerHTML=html;
+}
+
 // LIEDER
 function renderStats(){
   if(!D)return;
-  const all=D.seasons.flatMap(s=>s.songs||[]);
+  const all=D.seasons.flatMap(s=>(s.songs||[]).filter(x=>!x.archived));
   const never=all.filter(s=>!getStat(s.id).last).length;
   const fresh=all.filter(s=>{const d=dSince(getStat(s.id).last);return d!==null&&d<=14}).length;
   document.getElementById('stats').innerHTML=`<div class="stat"><div class="stat-n">${all.length}</div><div class="stat-l">Lieder</div></div><div class="stat"><div class="stat-n" style="color:#27ae60">${fresh}</div><div class="stat-l">Frisch</div></div><div class="stat"><div class="stat-n" style="color:#e74c3c">${never}</div><div class="stat-l">Nie geprobt</div></div><div class="stat"><div class="stat-n">${(D.proben||[]).length}</div><div class="stat-l">Proben</div></div>`;
 }
 function renderSaisonTabs(){
   if(!D)return;
-  const tabs=[{id:'__all__',label:'Alle',type:'all'},...D.seasons.map(s=>({id:s.id,label:s.name,type:s.type}))];
-  document.getElementById('saison-tabs').innerHTML=tabs.map(t=>{const tc={sommer:'sommer',weihnachten:'weihnachten',repertoire:'repertoire'}[t.type]||'';const ic={sommer:'☀️ ',weihnachten:'🎄 ',repertoire:'📚 ',all:'🎵 '}[t.type]||'🎵 ';return`<button class="stab ${tc} ${aktiveSaison===t.id?'active':''}" onclick="setSaison('${t.id}')">${ic}${esc(t.label)}</button>`;}).join('');
+  const admin=uiEdit('lieder');
+  const archivCount=D.seasons.flatMap(s=>s.songs||[]).filter(x=>x.archived).length;
+  const dnd=admin?' ondragover="event.preventDefault()"':'';
+  const sw=`<div style="display:flex;gap:6px;width:100%;margin-bottom:9px">
+    <button class="stab ${liederView==='aktiv'?'active':''}" style="flex:1;justify-content:center" onclick="setLiederView('aktiv')"${dnd}${admin?' ondrop="dropOnActive(event)"':''}>🎵 Aktiv</button>
+    <button class="stab ${liederView==='archiv'?'active':''}" style="flex:1;justify-content:center" onclick="setLiederView('archiv')"${dnd}${admin?' ondrop="dropOnArchive(event)"':''}>🗄️ Archiv${archivCount?` (${archivCount})`:''}</button>
+  </div>`;
+  let seasons=D.seasons.map(s=>s);
+  if(liederView==='aktiv'){ if(!admin) seasons=seasons.filter(s=>!s.hidden); }
+  else { seasons=seasons.filter(s=>(s.songs||[]).some(x=>x.archived)); }
+  const tabs=[{id:'__all__',label:'Alle',type:'all'},...seasons.map(s=>({id:s.id,label:s.name,type:s.type,hidden:!!s.hidden}))];
+  const tabHtml=tabs.map(t=>{
+    const tc={sommer:'sommer',weihnachten:'weihnachten',repertoire:'repertoire'}[t.type]||'';
+    const ic={sommer:'☀️ ',weihnachten:'🎄 ',repertoire:'📚 ',all:'🎵 '}[t.type]||'🎵 ';
+    const dim=(liederView==='aktiv'&&t.hidden)?'opacity:.5;':'';
+    let eye='';
+    if(admin && liederView==='aktiv' && t.id!=='__all__'){
+      eye=`<span onclick="event.stopPropagation();toggleSeasonHidden('${t.id}')" title="${t.hidden?'Vorne einblenden':'Vorne ausblenden'}" style="margin-left:6px;cursor:pointer">${t.hidden?'🙈':'👁️'}</span>`;
+    }
+    const drop=(admin && t.id!=='__all__')?` ondragover="event.preventDefault()" ondrop="dropOnSeason(event,'${t.id}')"`:'';
+    return `<button class="stab ${tc} ${aktiveSaison===t.id?'active':''}" style="${dim}" onclick="setSaison('${t.id}')"${drop}>${ic}${esc(t.label)}${eye}</button>`;
+  }).join('');
+  document.getElementById('saison-tabs').innerHTML=sw+tabHtml;
 }
 function setSaison(id){aktiveSaison=id;renderLieder();}
+// Unter-Tabs der Lieder-Seite: Lieder | Wünsche
+function setLiederPageTab(t){
+  document.getElementById('lv-lieder').style.display = t==='lieder'?'':'none';
+  document.getElementById('lv-wuensche').style.display = t==='wuensche'?'':'none';
+  document.getElementById('ltab-lieder').classList.toggle('active', t==='lieder');
+  document.getElementById('ltab-wuensche').classList.toggle('active', t==='wuensche');
+  if(t==='wuensche') renderLiedwuensche();
+}
+function setLiederView(v){ liederView=v; aktiveSaison='__all__'; renderLieder(); }
+async function toggleSeasonHidden(id){
+  if(!hasPermission('lieder')){alert('Keine Berechtigung.');return;}
+  const si=(D.seasons||[]).findIndex(s=>s.id===id); if(si<0)return;
+  const nv=!D.seasons[si].hidden; D.seasons[si].hidden=nv;
+  try{ await dbFetch(DB+'/chorproben/seasons/'+si+'/hidden.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(nv)}); }
+  catch(e){ D.seasons[si].hidden=!nv; alert('Speichern fehlgeschlagen: '+e); return; }
+  renderLieder();
+}
+async function toggleSongArchived(id,val){
+  if(!hasPermission('lieder')){alert('Keine Berechtigung.');return;}
+  const p=songPos(id); if(!p)return;
+  const song=D.seasons[p[0]].songs[p[1]]; const old=!!song.archived; song.archived=!!val;
+  try{ await dbFetch(DB+'/chorproben/seasons/'+p[0]+'/songs/'+p[1]+'/archived.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(!!val)}); }
+  catch(e){ song.archived=old; alert('Speichern fehlgeschlagen: '+e); return; }
+  renderLieder(); if(typeof renderSongPicker==='function')renderSongPicker();
+}
+// Ganze Saison ins Archiv / zurück (alle Lieder der Saison)
+async function archiveWholeSeason(id, val){
+  if(!hasPermission('lieder')){alert('Keine Berechtigung.');return;}
+  const si=(D.seasons||[]).findIndex(s=>s.id===id); if(si<0)return;
+  const songs=D.seasons[si].songs||[]; if(!songs.length){alert('Diese Saison hat keine Lieder.');return;}
+  const name=D.seasons[si].name||'Saison';
+  if(!confirm((val?'Alle Lieder von „':'Alle Lieder von „')+name+(val?'" ins Archiv verschieben?':'" aus dem Archiv zurückholen?')))return;
+  const before=songs.map(s=>!!s.archived);
+  songs.forEach(s=>s.archived=!!val);
+  try{ await dbFetch(DB+'/chorproben/seasons/'+si+'/songs.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(songs)}); }
+  catch(e){ songs.forEach((s,i)=>s.archived=before[i]); alert('Speichern fehlgeschlagen: '+e); return; }
+  renderLieder(); if(typeof renderSongPicker==='function')renderSongPicker();
+}
+// Lied zwischen Saisons verschieben
+function moveSong(id){
+  if(!hasPermission('lieder')){alert('Keine Berechtigung.');return;}
+  const song=findSongById(id); const p=songPos(id); if(!song||!p)return;
+  const curSi=p[0];
+  document.getElementById('ms-songid').value=id;
+  document.getElementById('ms-songname').textContent=song.name;
+  const sel=document.getElementById('ms-saison');
+  sel.innerHTML=(D.seasons||[]).map((s,i)=>{const ic={sommer:'☀️',weihnachten:'🎄',repertoire:'📚'}[s.type]||'🎵';return`<option value="${i}"${i===curSi?' disabled':''}>${ic} ${esc(s.name)}${i===curSi?' (aktuell)':''}</option>`;}).join('');
+  const firstEnabled=[...sel.options].find(o=>!o.disabled); if(firstEnabled) sel.value=firstEnabled.value;
+  document.getElementById('modal-movesong').classList.add('open');
+}
+async function confirmMoveSong(){
+  const id=document.getElementById('ms-songid').value;
+  const ti=parseInt(document.getElementById('ms-saison').value,10);
+  if(isNaN(ti)){alert('Bitte eine Saison wählen.');return;}
+  await doMoveSong(id, ti); closeModal();
+}
+async function doMoveSong(id, targetSi){
+  if(!hasPermission('lieder')){alert('Keine Berechtigung.');return;}
+  const p=songPos(id); if(!p)return; const si=p[0], sj=p[1];
+  if(si===targetSi || targetSi<0 || targetSi>=D.seasons.length) return;
+  const [song]=D.seasons[si].songs.splice(sj,1);
+  if(!Array.isArray(D.seasons[targetSi].songs)) D.seasons[targetSi].songs=[];
+  D.seasons[targetSi].songs.push(song);
+  try{ await dbFetch(DB+'/chorproben.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({seasons:D.seasons,proben:D.proben})}); }
+  catch(e){ D.seasons[targetSi].songs.pop(); D.seasons[si].songs.splice(sj,0,song); alert('Verschieben fehlgeschlagen: '+e); return; }
+  renderLieder(); if(typeof renderSongPicker==='function')renderSongPicker(); populateLiedSelect();
+}
+// Lied in eine weitere Saison KOPIEREN (bleibt auch in der Ursprungs-Saison; in „Alle" nur einmal sichtbar)
+async function confirmCopySong(){
+  const id=document.getElementById('ms-songid').value;
+  const ti=parseInt(document.getElementById('ms-saison').value,10);
+  if(isNaN(ti)){alert('Bitte eine Ziel-Saison wählen.');return;}
+  await doCopySong(id, ti); closeModal();
+}
+async function doCopySong(id, targetSi){
+  if(!hasPermission('lieder')){alert('Keine Berechtigung.');return;}
+  const p=songPos(id); if(!p)return; const si=p[0];
+  if(targetSi<0||targetSi>=D.seasons.length) return;
+  if(targetSi===si){alert('Das Lied ist schon in dieser Saison.');return;}
+  const src=D.seasons[si].songs[p[1]];
+  if(!Array.isArray(D.seasons[targetSi].songs)) D.seasons[targetSi].songs=[];
+  if(D.seasons[targetSi].songs.some(x=>songKey(x)===songKey(src))){alert('Dieses Lied gibt es in der Ziel-Saison schon.');return;}
+  const copy=Object.assign({},src,{id:uid()});
+  D.seasons[targetSi].songs.push(copy);
+  try{ await dbFetch(DB+'/chorproben.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({seasons:D.seasons,proben:D.proben})}); }
+  catch(e){ D.seasons[targetSi].songs.pop(); alert('Kopieren fehlgeschlagen: '+e); return; }
+  renderLieder(); if(typeof renderSongPicker==='function')renderSongPicker(); populateLiedSelect();
+}
+// Lied ganz aus seiner Saison löschen (Noten-Datei im Storage bleibt bestehen)
+async function deleteSong(){
+  if(!hasPermission('lieder')){alert('Keine Berechtigung.');return;}
+  const id=document.getElementById('ms-songid').value;
+  const p=songPos(id); if(!p)return;
+  const song=D.seasons[p[0]].songs[p[1]];
+  if(!confirm('Lied „'+song.name+'" wirklich ganz löschen?')) return;
+  const [removed]=D.seasons[p[0]].songs.splice(p[1],1);
+  try{ await dbFetch(DB+'/chorproben.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({seasons:D.seasons,proben:D.proben})}); }
+  catch(e){ D.seasons[p[0]].songs.splice(p[1],0,removed); alert('Löschen fehlgeschlagen: '+e); return; }
+  closeModal(); renderLieder(); if(typeof renderSongPicker==='function')renderSongPicker(); populateLiedSelect();
+}
+// Identität eines Lieds für die Entdopplung in der „Alle"-Übersicht (gleicher Name = ein Lied)
+function songKey(s){ return (s&&s.name||'').toLowerCase().replace(/\s+/g,' ').trim(); }
+// Drag & Drop (Desktop): Lied auf Saison-Tab ziehen = dorthin verschieben; auf Archiv-Umschalter = archivieren
+let _dragSongId=null;
+function dragSong(e,id){ _dragSongId=id; try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id);}catch(_){} }
+function dropOnSeason(e,seasonId){ e.preventDefault(); const id=_dragSongId; _dragSongId=null; if(!id)return; const ti=(D.seasons||[]).findIndex(s=>s.id===seasonId); if(ti>=0) doMoveSong(id,ti); }
+function dropOnArchive(e){ e.preventDefault(); const id=_dragSongId; _dragSongId=null; if(id) toggleSongArchived(id,true); }
+function dropOnActive(e){ e.preventDefault(); const id=_dragSongId; _dragSongId=null; if(id) toggleSongArchived(id,false); }
+function renderLiedForm(){
+  const sel=document.getElementById('nl-saison'); if(!sel||!D)return;
+  const prev=sel.value;
+  sel.innerHTML=(D.seasons||[]).map(s=>{const ic={sommer:'☀️',weihnachten:'🎄',repertoire:'📚'}[s.type]||'🎵';return`<option value="${s.id}">${ic} ${esc(s.name)}</option>`;}).join('');
+  if(prev && [...sel.options].some(o=>o.value===prev)) sel.value=prev;
+  else if(aktiveSaison && aktiveSaison!=='__all__') sel.value=aktiveSaison;
+}
+async function addSaisonInApp(){
+  if(!hasPermission('lieder')){alert('Keine Berechtigung.');return;}
+  const inp=document.getElementById('nl-newseason'); const typeSel=document.getElementById('nl-newseason-type');
+  const name=(inp?inp.value:'').trim(); if(!name){ alert('Bitte einen Saison-Namen eingeben.'); inp&&inp.focus(); return; }
+  const type=(typeSel&&typeSel.value)||'repertoire';
+  if(!D) D={seasons:[],proben:[]};
+  if(!Array.isArray(D.seasons)) D.seasons=[];
+  let base=name.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'')||'saison';
+  let id=base, n=2; while(D.seasons.find(x=>x.id===id)){ id=base+'_'+(n++); }
+  D.seasons.push({id,name,type,songs:[]});
+  try{
+    await dbFetch(DB+'/chorproben.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({seasons:D.seasons,proben:D.proben||[]})});
+  }catch(e){ D.seasons=D.seasons.filter(x=>x.id!==id); alert('Speichern fehlgeschlagen (als Admin angemeldet?): '+e); return; }
+  if(inp) inp.value='';
+  aktiveSaison=id;
+  renderLieder(); if(typeof populateLiedSelect==='function') populateLiedSelect();
+  alert('✅ Saison „'+name+'" angelegt. Jetzt oben ein Lied hinzufügen.');
+}
+async function addLied(){
+  if(!hasPermission('lieder')){alert('Keine Berechtigung.');return;}
+  if(!D){alert('Daten noch nicht geladen.');return;}
+  const name=document.getElementById('nl-name').value.trim();
+  const sid=document.getElementById('nl-saison').value;
+  if(!name){alert('Bitte einen Liedtitel eingeben.');return;}
+  const si=(D.seasons||[]).findIndex(s=>s.id===sid);
+  if(si<0){alert('Bitte eine Saison wählen.');return;}
+  if(!Array.isArray(D.seasons[si].songs)) D.seasons[si].songs=[];
+  if(D.seasons[si].songs.some(x=>(x.name||'').toLowerCase()===name.toLowerCase())){alert('Dieses Lied gibt es in der Saison schon.');return;}
+  D.seasons[si].songs.push({id:uid(),name});
+  try{
+    await dbFetch(DB+'/chorproben/seasons/'+si+'/songs.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(D.seasons[si].songs)});
+  }catch(e){ D.seasons[si].songs.pop(); alert('Speichern fehlgeschlagen: '+e); return; }
+  document.getElementById('nl-name').value='';
+  renderLieder(); populateLiedSelect(); if(typeof renderSongPicker==='function')renderSongPicker();
+  alert('✅ Lied hinzugefügt!');
+}
 function renderLieder(){
-  if(!D)return; renderStats(); renderSaisonTabs();
-  let songs=D.seasons.flatMap(s=>(s.songs||[]).map(song=>Object.assign({},song,{seasonId:s.id,seasonName:s.name,seasonType:s.type})));
+  if(!D)return; renderStats(); renderSaisonTabs(); renderLiedForm();
+  const admin=uiEdit('lieder');
+  let songs=D.seasons.flatMap(s=>(s.songs||[]).map(song=>Object.assign({},song,{seasonId:s.id,seasonName:s.name,seasonType:s.type,seasonHidden:!!s.hidden})));
+  if(liederView==='archiv') songs=songs.filter(s=>s.archived);
+  else { songs=songs.filter(s=>!s.archived); if(!admin) songs=songs.filter(s=>!s.seasonHidden); }
   if(aktiveSaison!=='__all__') songs=songs.filter(s=>s.seasonId===aktiveSaison);
+  const q=(document.getElementById('lied-search')?.value||'').trim().toLowerCase();
+  if(q) songs=songs.filter(s=>(s.name||'').toLowerCase().includes(q));
   const sort=document.getElementById('sort-sel')?.value||'last';
   songs=songs.map(s=>Object.assign({},s,getStat(s.id)));
   if(sort==='last') songs.sort((a,b)=>{if(!a.last&&!b.last)return a.name.localeCompare(b.name);if(!a.last)return-1;if(!b.last)return 1;return a.last.localeCompare(b.last)});
   else if(sort==='name') songs.sort((a,b)=>a.name.localeCompare(b.name));
   else songs.sort((a,b)=>a.count-b.count);
   const el=document.getElementById('lieder-list');if(!el)return;
-  if(!songs.length){el.innerHTML='<div class="empty">Keine Lieder vorhanden.</div>';return;}
+  if(!songs.length){el.innerHTML='<div class="empty">'+(liederView==='archiv'?'Archiv ist leer.':'Keine Lieder vorhanden.')+'</div>';return;}
   let html='';
-  if(aktiveSaison==='__all__'){D.seasons.forEach(s=>{const ss=songs.filter(x=>x.seasonId===s.id);if(!ss.length)return;const ic={sommer:'☀️',weihnachten:'🎄',repertoire:'📚'}[s.type]||'🎵';html+=`<div class="section-label">${ic} ${esc(s.name)}</div>`+buildTbl(ss);});}
-  else html=buildTbl(songs);
+  // Admin: ganze Saison ins Archiv / zurück (nur wenn eine konkrete Saison gewählt ist)
+  if(admin && aktiveSaison!=='__all__'){
+    const cs=D.seasons.find(s=>s.id===aktiveSaison); const nm=cs?esc(cs.name):'Saison';
+    html+= liederView==='archiv'
+      ? `<div style="margin-bottom:10px"><button class="btn btn-sm btn-gray" onclick="archiveWholeSeason('${aktiveSaison}',false)">↩️ Ganze Saison „${nm}" zurückholen</button></div>`
+      : `<div style="margin-bottom:10px"><button class="btn btn-sm btn-gray" onclick="archiveWholeSeason('${aktiveSaison}',true)">📦 Ganze Saison „${nm}" ins Archiv</button></div>`;
+  }
+  if(aktiveSaison==='__all__'){const seen=new Set();D.seasons.forEach(s=>{let ss=songs.filter(x=>x.seasonId===s.id);ss=ss.filter(x=>{const k=songKey(x);if(seen.has(k))return false;seen.add(k);return true;});if(!ss.length)return;const ic={sommer:'☀️',weihnachten:'🎄',repertoire:'📚'}[s.type]||'🎵';html+=`<div class="section-label">${ic} ${esc(s.name)}</div>`+buildTbl(ss);});}
+  else html+=buildTbl(songs);
   el.innerHTML=html;
 }
 function buildTbl(songs){
@@ -1429,8 +1831,13 @@ function buildTbl(songs){
     const hasHoer = s.hoer && (s.hoer.S||s.hoer.A||s.hoer.T||s.hoer.B);
     const hoerBtn = (hasHoer||canEdit)?`<button onclick="openHoer('${s.id}')" style="background:none;border:none;cursor:pointer;font-size:1.05rem;padding:0 1px" title="Hörbeispiele (S/A/T/B)">🎧</button>`:'';
     const editBtn = canEdit?`<button onclick="editSongPdf('${s.id}')" style="background:none;border:none;cursor:pointer;font-size:.85rem;opacity:.45;padding:0 2px" title="Noten/Üben bearbeiten">✏️</button>`:'';
-    const cell = (openLink||uebenLink||hoerBtn||editBtn) ? [openLink,uebenLink,hoerBtn,editBtn].filter(Boolean).join(' ') : '—';
-    return `<tr><td><strong>${esc(s.name)}</strong></td><td>${fmt(s.last)}</td><td style="text-align:center;color:#666">${s.count}×</td><td><span class="dot" style="background:${dotC(s.last)}"></span><span class="badge" style="${bdgS(s.last)}">${bdgT(s.last)}</span></td><td style="text-align:center;white-space:nowrap">${cell}</td></tr>`;
+    const archBtn = canEdit?(liederView==='archiv'
+      ? `<button onclick="toggleSongArchived('${s.id}',false)" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:0 2px" title="Aus Archiv wiederherstellen">↩️</button>`
+      : `<button onclick="toggleSongArchived('${s.id}',true)" style="background:none;border:none;cursor:pointer;font-size:1rem;opacity:.5;padding:0 2px" title="Ins Archiv verschieben">🗄️</button>`):'';
+    const moveBtn = (canEdit && (D.seasons||[]).length>1)?`<button onclick="moveSong('${s.id}')" style="background:none;border:none;cursor:pointer;font-size:1rem;opacity:.5;padding:0 2px" title="In andere Saison verschieben">↔️</button>`:'';
+    const cell = (openLink||uebenLink||hoerBtn||editBtn||archBtn||moveBtn) ? [openLink,uebenLink,hoerBtn,editBtn,moveBtn,archBtn].filter(Boolean).join(' ') : '—';
+    const dragAttr = canEdit?` draggable="true" ondragstart="dragSong(event,'${s.id}')" style="cursor:grab"`:'';
+    return `<tr${dragAttr}><td><strong>${esc(s.name)}</strong></td><td>${fmt(s.last)}</td><td style="text-align:center;color:#666">${s.count}×</td><td><span class="dot" style="background:${dotC(s.last)}"></span><span class="badge" style="${bdgS(s.last)}">${bdgT(s.last)}</span></td><td style="text-align:center;white-space:nowrap">${cell}</td></tr>`;
   }).join('')+'</tbody></table>';
 }
 function findSongById(id){
@@ -1613,10 +2020,11 @@ function renderSongPicker(){
   const el=document.getElementById('probe-song-picker');if(!el)return;
   el.innerHTML='';
   D.seasons.forEach(s=>{
-    if(!(s.songs||[]).length)return;
+    const aktiv=(s.songs||[]).filter(x=>!x.archived);
+    if(!aktiv.length)return;
     const ic={sommer:'☀️',weihnachten:'🎄',repertoire:'📚'}[s.type]||'🎵';
     el.innerHTML+=`<div style="width:100%;font-size:.7rem;font-weight:700;text-transform:uppercase;color:#999;margin:5px 0 3px">${ic} ${esc(s.name)}</div>`;
-    s.songs.forEach(song=>{
+    aktiv.forEach(song=>{
       const cid='psp-'+song.id;
       el.innerHTML+=`<label id="${cid}" style="display:inline-flex;align-items:center;gap:5px;background:#f0f4f8;border-radius:20px;padding:4px 11px;cursor:pointer;border:1.5px solid transparent;font-size:.82rem;user-select:none;margin-bottom:3px">
         <input type="checkbox" value="${song.id}" onchange="this.parentElement.style.background=this.checked?'#d6eaf8':'#f0f4f8';this.parentElement.style.borderColor=this.checked?'#2563b5':'transparent'">
@@ -1735,7 +2143,24 @@ async function saveProbeEdit(){
 
 // ===== PROBEN-ANWESENHEIT (Ab-/Zusage für geplante Proben) =====
 async function loadProbenstatus(){
-  try{ const r=await dbFetch(DB+'/probenstatus.json'); probenstatus=(r.ok?await r.json():null)||{}; renderProben(); }catch(e){}
+  try{ const r=await dbFetch(DB+'/probenstatus.json'); probenstatus=(r.ok?await r.json():null)||{}; renderProben(); try{renderStart();}catch(e){} }catch(e){}
+}
+// Vergangene GEPLANTE Proben automatisch in den Probenverlauf übernehmen.
+// Läuft bei jedem App-Start eines angemeldeten Nutzers; dedupliziert über die Proben-ID.
+async function migrateVergangeneProben(){
+  if(!currentUser || !D) return;
+  const today=localToday();
+  const past=(probenplan||[]).filter(p=>p.datum<today);
+  if(!past.length) return;
+  if(!Array.isArray(D.proben)) D.proben=[];
+  const have=new Set(D.proben.map(p=>p.id));
+  past.forEach(p=>{ if(!have.has(p.id)) D.proben.push({id:p.id,datum:p.datum,songIds:p.songIds||[],notiz:p.notiz||''}); });
+  const neuerPlan=(probenplan||[]).filter(p=>p.datum>=today);
+  try{
+    await dbFetch(DB+'/chorproben.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({seasons:D.seasons,proben:D.proben})});
+    await dbFetch(DB+'/probenplan.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(neuerPlan)});
+    probenplan=neuerPlan;
+  }catch(e){ console.warn('Proben-Übernahme fehlgeschlagen',e); }
 }
 // ===== ABWESENHEIT (Zeiträume, z. B. Urlaub) =====
 async function loadAbwesenheit(){
@@ -1867,7 +2292,7 @@ function setMitgliederTab(which){
 function setBeitragJahr(delta){ beitragJahr+=delta; renderBeitraege(); }
 function beitragPaidCount(rec){ return BEITRAG_QS.filter(k=>rec&&rec[k]).length; }
 function renderBeitraege(){
-  const canEdit = uiEdit('mitglieder');   // ändern nur Admin im Bearbeiten-Modus
+  const canEdit = isBeitragOwner() || uiEdit('mitglieder');   // Kassenwart darf immer, sonst Admin im Bearbeiten-Modus
   const jahrEl=document.getElementById('beitrag-jahr'); if(jahrEl) jahrEl.textContent=beitragJahr;
   const hintEl=document.getElementById('beitrag-hint');
   if(hintEl) hintEl.textContent = '30 € pro Quartal · 120 € pro Jahr.' + (canEdit ? ' Tippe ein Quartal an, um „bezahlt" zu markieren.' : ' Die Liste folgt automatisch der Mitgliederliste.');
@@ -1906,7 +2331,7 @@ function renderBeitraege(){
   }).join('');
 }
 async function toggleBeitrag(key, q){
-  if(!uiEdit('mitglieder')) return;
+  if(!(isBeitragOwner() || uiEdit('mitglieder'))) return;
   if(!beitraege[beitragJahr]) beitraege[beitragJahr]={};
   if(!beitraege[beitragJahr][key]) beitraege[beitragJahr][key]={};
   const val=!beitraege[beitragJahr][key][q];
@@ -1915,7 +2340,7 @@ async function toggleBeitrag(key, q){
   renderBeitraege();
 }
 async function markBeitragJahr(key){
-  if(!uiEdit('mitglieder')) return;
+  if(!(isBeitragOwner() || uiEdit('mitglieder'))) return;
   if(!beitraege[beitragJahr]) beitraege[beitragJahr]={};
   const rec=beitraege[beitragJahr][key]||{};
   const val=!BEITRAG_QS.every(k=>rec[k]);   // alle gesetzt? -> aus, sonst alle an
@@ -2162,6 +2587,80 @@ function renderAnwStats(){
     `</tbody></table>`;
 }
 
+// ===== STATISTIK (Chorleitung) =====
+function _statBars(items, color){
+  // items: [{label, value, sub?}] -> horizontale Balken
+  const max=Math.max(1,...items.map(i=>i.value));
+  return items.map(i=>`<div style="margin-bottom:9px">
+    <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:3px"><span style="font-weight:600;color:#333">${esc(i.label)}</span><span style="color:#888">${i.sub||i.value}</span></div>
+    <div style="background:#eef1f5;border-radius:6px;height:14px;overflow:hidden"><div style="height:100%;width:${Math.round(i.value/max*100)}%;background:${color};border-radius:6px;min-width:2px"></div></div>
+  </div>`).join('');
+}
+// Unter-Tabs der Auswertung-Seite: Statistik | Anwesenheit erfassen
+function setAuswertungTab(t){
+  document.getElementById('av-statistik').style.display = t==='statistik'?'':'none';
+  document.getElementById('av-anwesenheit').style.display = t==='anwesenheit'?'':'none';
+  document.getElementById('atab-statistik').classList.toggle('active', t==='statistik');
+  document.getElementById('atab-anwesenheit').classList.toggle('active', t==='anwesenheit');
+  if(t==='anwesenheit') renderAnwesenheitPage(); else renderStatistik();
+}
+function renderStatistik(){
+  const el=document.getElementById('statistik-content'); if(!el) return;
+  if(!D){ el.innerHTML='<div class="empty" style="padding:20px">Daten werden geladen…</div>'; return; }
+  const proben=(D.proben||[]);
+  const allS=D.seasons.flatMap(s=>(s.songs||[]));
+  const captured=Object.entries(anwesenheit||{}).filter(([,v])=>v&&v.erfasst);
+  // Ø Anwesenheitsquote
+  let quote='–';
+  if(captured.length && mitglieder.length){
+    let sum=0; captured.forEach(([,v])=>{ const fehlt=v.fehlt?Object.keys(v.fehlt).filter(k=>v.fehlt[k]).length:0; sum+=(mitglieder.length-fehlt)/mitglieder.length; });
+    quote=Math.round(sum/captured.length*100)+'%';
+  }
+  // Kacheln
+  let html=`<div class="stats" style="margin-bottom:14px">
+    <div class="stat"><div class="stat-n">${proben.length}</div><div class="stat-l">Proben erfasst</div></div>
+    <div class="stat"><div class="stat-n" style="color:#2563b5">${quote}</div><div class="stat-l">Ø Anwesenheit</div></div>
+    <div class="stat"><div class="stat-n" style="color:#27ae60">${allS.filter(s=>!s.archived).length}</div><div class="stat-l">Aktive Lieder</div></div>
+    <div class="stat"><div class="stat-n" style="color:#8e44ad">${(termine||[]).length}</div><div class="stat-l">Termine</div></div>
+  </div>`;
+
+  // Proben pro Monat (letzte 12)
+  const byMonth={};
+  proben.forEach(p=>{ if(p.datum){ const m=p.datum.slice(0,7); byMonth[m]=(byMonth[m]||0)+1; } });
+  const monthsSorted=Object.keys(byMonth).sort().slice(-12);
+  const MN=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+  const monthItems=monthsSorted.map(m=>{ const [y,mo]=m.split('-'); return {label:MN[parseInt(mo)-1]+' '+y.slice(2), value:byMonth[m]}; });
+  html+=`<div class="card"><div class="card-title">📅 Proben pro Monat</div>${monthItems.length?_statBars(monthItems,'#2563b5'):'<div class="empty">Noch keine Proben erfasst.</div>'}</div>`;
+
+  // Top geprobte Lieder (nach Häufigkeit)
+  const songStats=allS.map(s=>({name:s.name, count:getStat(s.id).count})).filter(s=>s.count>0).sort((a,b)=>b.count-a.count).slice(0,12);
+  const songItems=songStats.map(s=>({label:s.name, value:s.count, sub:s.count+'×'}));
+  html+=`<div class="card" style="margin-top:12px"><div class="card-title">🎵 Am häufigsten geprobt</div>${songItems.length?_statBars(songItems,'#27ae60'):'<div class="empty">Noch keine Probendaten.</div>'}</div>`;
+
+  // Lange nicht geprobt (aktive Lieder mit ältester/keiner letzter Probe)
+  const stale=allS.filter(s=>!s.archived).map(s=>{const st=getStat(s.id);return {name:s.name, last:st.last, count:st.count};})
+    .sort((a,b)=>{ if(!a.last&&!b.last)return 0; if(!a.last)return -1; if(!b.last)return 1; return a.last.localeCompare(b.last); }).slice(0,8);
+  html+=`<div class="card" style="margin-top:12px"><div class="card-title">🕰️ Lange nicht geprobt</div>`;
+  html+= stale.length?('<table class="overview-table" style="width:100%"><thead><tr><th>Lied</th><th style="text-align:right">Zuletzt</th></tr></thead><tbody>'+
+    stale.map(s=>`<tr><td>${esc(s.name)}</td><td style="text-align:right;color:${!s.last?'#e74c3c':'#888'}">${s.last?fmt(s.last):'nie'}</td></tr>`).join('')+'</tbody></table>')
+    :'<div class="empty">Keine aktiven Lieder.</div>';
+  html+='</div>';
+
+  // Anwesenheit pro Stimmgruppe (SATB)
+  if(captured.length && mitglieder.length){
+    const voices=['Sopran','Alt','Tenor','Bass'];
+    const vItems=voices.map(v=>{
+      const ms=mitglieder.filter(m=>m.stimme===v); if(!ms.length) return null;
+      let sum=0,n=0;
+      captured.forEach(([,rec])=>{ ms.forEach(m=>{ const k=memberKey(m); const fehlt=rec.fehlt&&rec.fehlt[k]; sum+=fehlt?0:1; n++; }); });
+      return {label:v, value:n?Math.round(sum/n*100):0, sub:(n?Math.round(sum/n*100):0)+'%'};
+    }).filter(Boolean);
+    if(vItems.length) html+=`<div class="card" style="margin-top:12px"><div class="card-title">🎤 Anwesenheit pro Stimmgruppe</div>${_statBars(vItems,'#e67e22')}</div>`;
+  }
+
+  el.innerHTML=html;
+}
+
 function localToday(){
   const d=new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -2172,8 +2671,9 @@ function renderProben(){
   const today=localToday();
 
   // Alle Proben aus BEIDEN Quellen zusammenführen, Quelle merken (für korrektes Löschen)
+  const _doneIds=new Set((D.proben||[]).map(p=>p.id));
   const alle=[
-    ...(probenplan||[]).map(p=>({...p,_src:'plan'})),
+    ...(probenplan||[]).filter(p=>!_doneIds.has(p.id)).map(p=>({...p,_src:'plan'})),
     ...((D.proben)||[]).map(p=>({...p,_src:'proben'}))
   ];
   // Einordnung NACH DATUM, nicht nach Quelle:
@@ -2304,8 +2804,10 @@ async function deleteVote(terminId, key){
   const t=(termine||[]).find(x=>x.id===terminId);
   if(!t || !t.abstimmungen || !(key in t.abstimmungen)) return;
   if(!confirm('Stimme von „'+(prettyName(key)||key)+'" wirklich löschen?')) return;
+  const idx=termine.indexOf(t);
   delete t.abstimmungen[key];
-  await dbFetch(DB+'/termine.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(termine)}).catch(e=>console.warn(e));
+  // Gezielt nur diese Stimme löschen (kein Ganz-Array-PUT)
+  await dbFetch(DB+'/termine/'+idx+'/abstimmungen/'+encodeURIComponent(key)+'.json',{method:'DELETE'}).catch(e=>console.warn(e));
   renderTermine();
 }
 function terminHtml(t,past=false){
@@ -2317,19 +2819,21 @@ function terminHtml(t,past=false){
   return`<div class="termin-card" style="border-left-color:${color};${past?'opacity:.6':''}">
     <span class="t-badge" style="background:${color}">${label}</span>
     <div class="t-title">${esc(t.titel)}</div>
-    <div class="t-meta">📅 ${dateStr}${t.uhrzeit?' &nbsp;🕐 '+esc(t.uhrzeit):''}</div>
-    ${t.beschreibung?`<div style="font-size:.78rem;color:#888;margin-bottom:5px">ℹ️ ${esc(t.beschreibung)}</div>`:''}
-    ${t.frist&&!past?`<div style="font-size:.78rem;color:${t.frist<localToday()?'#e74c3c':'#7d6608'};margin-bottom:5px">⏳ Bitte bis <strong>${fmt(t.frist)}</strong> zurückmelden${t.frist<localToday()?' (Frist abgelaufen)':''}</div>`:''}
+    <div class="t-meta">📅 ${dateStr}${t.uhrzeit?' &nbsp;🕐 '+esc(t.uhrzeit):''}${t.frist&&!past?` &nbsp;<span style="color:${t.frist<localToday()?'#e74c3c':'#7d6608'}">⏳ bis ${fmt(t.frist)}${t.frist<localToday()?' (abgelaufen)':''}</span>`:''}</div>
+    ${!past?`<div class="vote-row" id="vrow-${t.id}">${buildVoteRow(t)}</div>`:''}
     ${setlisteHtml(t)}
     ${showRueck?rueckmeldungenHtml(t, bd):''}
-    ${!past?`<div class="vote-row" id="vrow-${t.id}">${buildVoteRow(t)}</div>`:''}
-    <div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap;align-items:center">
-      <button class="btn btn-sm" style="background:transparent;border:1px solid #8e44ad;color:#8e44ad;font-size:.72rem" onclick="exportTerminICS('${t.id}')">📥 .ics</button>
-      ${uiEdit('termine')?`
-        ${(t.typ==='konzert'||t.typ==='fest')?`<button class="btn btn-sm" style="background:#3498db;color:white;font-size:.72rem" onclick="editSetliste('${t.id}')">🎵 Setliste</button>`:''}
-        <button class="btn btn-danger btn-sm del-btn" style="opacity:1;position:static" onclick="deleteTermin('${t.id}')">✕</button>
-      `:''}
-    </div>
+    <details class="t-coll"><summary>ℹ️ Details${t.beschreibung?' & Beschreibung':''}</summary><div>
+      ${t.beschreibung?`<div style="font-size:.84rem;color:#555;margin-bottom:8px">${esc(t.beschreibung)}</div>`:''}
+      ${t.frist&&!past?`<div style="font-size:.78rem;color:#7d6608;margin-bottom:8px">⏳ Rückmeldefrist: <strong>${fmt(t.frist)}</strong></div>`:''}
+      <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-sm" style="background:transparent;border:1px solid #8e44ad;color:#8e44ad;font-size:.72rem" onclick="exportTerminICS('${t.id}')">📥 Kalender (.ics)</button>
+        ${uiEdit('termine')?`
+          ${(t.typ==='konzert'||t.typ==='fest')?`<button class="btn btn-sm" style="background:#3498db;color:white;font-size:.72rem" onclick="editSetliste('${t.id}')">🎵 Setliste</button>`:''}
+          <button class="btn btn-danger btn-sm del-btn" style="opacity:1;position:static" onclick="deleteTermin('${t.id}')">✕ Termin löschen</button>
+        `:''}
+      </div>
+    </div></details>
   </div>`;
 }
 // Stabiler Schlüssel zum SPEICHERN von Stimmen: Benutzername (ändert sich nie).
@@ -2370,21 +2874,27 @@ function buildVoteRow(t){
 
 async function abstimmen(id,antwort){
   const t=termine.find(x=>x.id===id);if(!t)return;
+  const idx=termine.indexOf(t);
   if(!t.abstimmungen) t.abstimmungen={};
-  
+
   let name = getUserVoteName();
+  const ops=[];
+  const base=DB+'/termine/'+idx+'/abstimmungen/';
   if(!name){
     const nameEl=document.getElementById('vn-'+id);
     name=nameEl?nameEl.value.trim():'';
     if(!name){alert('Bitte deinen Namen eingeben.');nameEl&&nameEl.focus();return;}
+    name=name.replace(/[.#$\[\]\/]/g,'_'); // Firebase-sicherer Schlüssel für frei getippte Gast-Namen
   } else {
     // Alte Stimmen unter früheren Namens-Varianten (z. B. altem Anzeigenamen) entfernen -> keine Doppel-Stimmen
     const aliases=getUserAliases();
-    Object.keys(t.abstimmungen).forEach(k=>{ if(_norm(k)!==_norm(name) && aliases.has(_norm(k))) delete t.abstimmungen[k]; });
+    Object.keys(t.abstimmungen).forEach(k=>{ if(_norm(k)!==_norm(name) && aliases.has(_norm(k))){ delete t.abstimmungen[k]; ops.push(dbFetch(base+encodeURIComponent(k)+'.json',{method:'DELETE'})); } });
   }
 
   t.abstimmungen[name]=antwort;
-  await dbFetch(DB+'/termine.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(termine)}).catch(e=>console.warn(e));
+  // Nur die EIGENE Stimme schreiben — kein Ganz-Array-PUT mehr, sonst löschen sich gleichzeitige Stimmen gegenseitig
+  ops.push(dbFetch(base+encodeURIComponent(name)+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(antwort)}));
+  await Promise.all(ops).catch(e=>console.warn(e));
   if(antwort==='nein'){ notifyAdminAbsage('❌ Absage Termin', name+' kommt nicht zu „'+(t.titel||'Termin')+'" am '+fmt(t.datum)+'.'); }
   // Update just this vote row for instant feedback
   const vrow=document.getElementById('vrow-'+id);
@@ -2462,10 +2972,11 @@ async function voteUmfrage(id, optIdx){
   // Alte Stimmen unter früheren Namens-Varianten entfernen -> keine Doppel-Stimmen
   const aliases=getUserAliases();
   let cur=u.votes[key]?(u.votes[key].o||[]).slice():[];
+  const _removedAliasKeys=[];
   Object.keys(u.votes).forEach(k=>{
     if(k===key) return;
     const vn=u.votes[k]&&u.votes[k].n;
-    if(aliases.has(_norm(k)) || (vn&&aliases.has(_norm(vn)))){ if(!cur.length) cur=(u.votes[k].o||[]).slice(); delete u.votes[k]; }
+    if(aliases.has(_norm(k)) || (vn&&aliases.has(_norm(vn)))){ if(!cur.length) cur=(u.votes[k].o||[]).slice(); delete u.votes[k]; _removedAliasKeys.push(k); }
   });
   if(u.mehrfach){
     const pos=cur.indexOf(optIdx);
@@ -2474,7 +2985,12 @@ async function voteUmfrage(id, optIdx){
     cur=[optIdx];
   }
   if(cur.length) u.votes[key]={n:name,o:cur}; else delete u.votes[key];
-  await dbFetch(DB+'/umfragen/'+id+'/votes.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(u.votes||{})}).catch(e=>console.warn(e));
+  // Nur die EIGENE Stimme (+ entfernte Alias-Stimmen) schreiben — kein Ganz-Objekt-PUT
+  const vbase=DB+'/umfragen/'+id+'/votes/';
+  const vops=_removedAliasKeys.map(k=>dbFetch(vbase+encodeURIComponent(k)+'.json',{method:'DELETE'}));
+  if(cur.length) vops.push(dbFetch(vbase+encodeURIComponent(key)+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({n:name,o:cur})}));
+  else vops.push(dbFetch(vbase+encodeURIComponent(key)+'.json',{method:'DELETE'}));
+  await Promise.all(vops).catch(e=>console.warn(e));
   renderUmfragen();
 }
 async function closeUmfrage(id, off){
@@ -2710,13 +3226,41 @@ async function deleteKommentar(key){
   await dbFetch(DB+'/kommentare/'+key+'.json',{method:'DELETE'}).catch(e=>console.warn(e));
   await loadKommentare();
 }
+// Reaktionen (👍/❤️) auf Kommentare — pro Person einmal, toggelbar
+const K_REAKTIONEN=[['daumen','👍'],['herz','❤️']];
+function reaktionHtml(k){
+  if(!k._key) return '';
+  const my=getUserVoteName(); const myKey=my?ufSafeKey(my):null;
+  return '<div style="display:flex;gap:6px;margin-top:7px">'+K_REAKTIONEN.map(([emo,icon])=>{
+    const r=(k.reaktionen&&k.reaktionen[emo])||{};
+    const n=Object.keys(r).length;
+    const mine=!!(myKey&&r[myKey]);
+    const names=Object.values(r).map(v=>prettyName(v)).join(', ');
+    return `<button title="${esc(names)}" onclick="toggleReaktion('${k._key}','${emo}')" style="background:${mine?'#d6eaf8':'#f0f2f5'};border:1.5px solid ${mine?'#2563b5':'transparent'};border-radius:14px;padding:3px 10px;font-size:.8rem;cursor:pointer;font-family:inherit">${icon}${n?' '+n:''}</button>`;
+  }).join('')+'</div>';
+}
+async function toggleReaktion(key,emo){
+  const my=getUserVoteName(); if(!my){alert('Bitte zuerst anmelden.');return;}
+  const myKey=ufSafeKey(my);
+  const k=kommentare.find(x=>x._key===key); if(!k) return;
+  if(!k.reaktionen) k.reaktionen={}; if(!k.reaktionen[emo]) k.reaktionen[emo]={};
+  const path=DB+'/kommentare/'+key+'/reaktionen/'+emo+'/'+encodeURIComponent(myKey)+'.json';
+  if(k.reaktionen[emo][myKey]){
+    delete k.reaktionen[emo][myKey];
+    await dbFetch(path,{method:'DELETE'}).catch(e=>console.warn(e));
+  } else {
+    k.reaktionen[emo][myKey]=my;
+    await dbFetch(path,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(my)}).catch(e=>console.warn(e));
+  }
+  renderKommentare();
+}
 function renderKommentare(){
   const el=document.getElementById('kommentare-list');if(!el)return;
   if(!kommentare.length){el.innerHTML='<div class="empty">Noch keine Kommentare.</div>';return;}
   el.innerHTML=kommentare.map(k=>{
     const d=new Date(k.datum);
     const ds=d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
-    return`<div class="kommentar"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span class="k-name">👤 ${esc(prettyName(k.name))}</span><span class="k-meta">${ds}</span></div>${k.lied?`<div class="k-lied">🎵 ${esc(k.lied)}</div>`:''}<div class="k-text">${esc(k.text)}</div>${uiEdit('kommentare')&&k._key?`<button class="btn btn-danger btn-sm del-btn" onclick="deleteKommentar('${k._key}')">✕</button>`:''}</div>`;
+    return`<div class="kommentar"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span class="k-name">👤 ${esc(prettyName(k.name))}</span><span class="k-meta">${ds}</span></div>${k.lied?`<div class="k-lied">🎵 ${esc(k.lied)}</div>`:''}<div class="k-text">${esc(k.text)}</div>${reaktionHtml(k)}${uiEdit('kommentare')&&k._key?`<button class="btn btn-danger btn-sm del-btn" onclick="deleteKommentar('${k._key}')">✕</button>`:''}</div>`;
   }).join('');
 }
 async function submitKommentar(){
@@ -2852,13 +3396,10 @@ function exportData(){
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='chor-eisleben-backup-'+new Date().toISOString().split('T')[0]+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
+// Geteiltes Admin-Passwort wurde abgeschafft — Admin-Rechte laufen jetzt über die Benutzerverwaltung (isAdmin).
 function changePw(){
-  const nw=document.getElementById('new-pw').value;
-  if(!nw||nw.length<4){alert('Passwort zu kurz (min. 4 Zeichen).');return;}
-  localStorage.setItem('chor_admin_pw',nw);
-  adminPw=nw;
-  document.getElementById('pw-result').textContent='✅ Passwort geändert!';
-  document.getElementById('new-pw').value='';
+  const r=document.getElementById('pw-result');
+  if(r) r.textContent='ℹ️ Das geteilte Admin-Passwort gibt es nicht mehr. Admin-Rechte vergibst du unten unter „Nutzer & Rechte".';
 }
 
 
@@ -2886,6 +3427,25 @@ async function loadUserProfile(uid, email) {
     const res = await dbFetch(DB+'/userprofiles/'+uid+'.json');
     const profile = res.ok ? await res.json() : null;
     currentUserProfile = profile;
+    // E-Mail-Bestätigung erzwingen — NUR für neue Konten mit pendingVerify (bestehende Konten unberührt)
+    if(profile && profile.pendingVerify){
+      if(currentUser && currentUser.emailVerified){
+        // bestätigt -> Flag entfernen, normal weiter
+        try{ await dbFetch(DB+'/userprofiles/'+uid+'/pendingVerify.json',{method:'DELETE'}); }catch(_){}
+        delete profile.pendingVerify;
+      } else {
+        // noch nicht bestätigt -> neue Mail schicken, abmelden, Hinweis zeigen
+        try{ if(currentUser) await window._fbSendVerification(currentUser); }catch(_){}
+        try{ await window._fbSignOut(window._fbAuth); }catch(_){}
+        currentUser = null; currentUserProfile = null;
+        document.getElementById('login-overlay').style.display = 'flex';
+        document.getElementById('user-chip').style.display = 'none';
+        document.querySelectorAll('.user-only').forEach(el=>el.style.display='none');
+        const le = document.getElementById('login-err');
+        if(le){ le.style.color = '#e67e22'; le.textContent = '📧 Bitte bestätige zuerst deine E-Mail. Wir haben dir gerade (erneut) einen Bestätigungslink an ' + email + ' geschickt – prüfe auch den Spam-Ordner.'; }
+        return;
+      }
+    }
     const displayName = profile?.anzeigename || profile?.username || email.split('@')[0];
     document.getElementById('user-display').textContent = '👤 ' + displayName;
     document.getElementById('user-chip').style.display = 'flex';
@@ -2926,44 +3486,29 @@ async function doLogin() {
   const errEl = document.getElementById('login-err');
   errEl.textContent = '';
   if(!input || !pw) { errEl.textContent = 'Bitte alle Felder ausfüllen.'; return; }
-  
-  // Special admin bypass: username "admin" with admin password
-  if(input.toLowerCase() === 'admin' && pw === adminPw) {
-    adminMode = true;
-    sessionStorage.setItem('chor_admin','1');
-    currentUser = {email:'admin@local',uid:'admin'};
-    document.getElementById('login-overlay').style.display = 'none';
-    document.getElementById('user-display').textContent = '🔑 Admin';
-    document.getElementById('user-chip').style.display = 'flex';
-    const _bell3=document.getElementById('bell-btn'); if(_bell3) _bell3.style.display='block';
-    const _lb=document.getElementById('logout-btn');if(_lb)_lb.style.display='block';
-    applyAdminMode();
-    loadAll();
-    return;
-  }
-  
-  let email = input;
-  if(!input.includes('@')) {
-    try {
-      const res = await dbFetch(DB+'/usernames/'+input.toLowerCase()+'.json');
-      if(res.ok) {
-        const data = await res.json();
-        if(data && data.email) email = data.email;
-        else { errEl.textContent = 'Benutzername nicht gefunden.'; return; }
-      } else { errEl.textContent = 'Benutzername nicht gefunden.'; return; }
-    } catch(e) { errEl.textContent = 'Verbindungsfehler.'; return; }
-  }
-  
+
   const btn = document.getElementById('btn-login-submit');
   if(btn){btn.textContent = '⏳'; btn.disabled = true;}
+  const done=()=>{ if(btn){btn.textContent = 'Anmelden'; btn.disabled = false;} };
   try {
-    await window._fbSignIn(window._fbAuth, email, pw);
+    if(input.includes('@')) {
+      // E-Mail-Login direkt bei Firebase
+      await window._fbSignIn(window._fbAuth, input.toLowerCase(), pw);
+    } else {
+      // Benutzername-Login über den Server — die E-Mail wird NICHT an den Browser gegeben
+      const r = await fetch(window.USERNAME_AUTH_URL, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',username:input,password:pw})});
+      if(!r.ok){ errEl.textContent = r.status===429 ? 'Zu viele Fehlversuche. Bitte in etwa 15 Minuten erneut versuchen.' : (r.status===401||r.status===404) ? 'Benutzername oder Passwort falsch.' : 'Anmeldung gerade nicht möglich. Bitte später erneut versuchen.'; done(); return; }
+      const j = await r.json().catch(()=>({}));
+      if(!j.token){ errEl.textContent = 'Benutzername oder Passwort falsch.'; done(); return; }
+      await window._fbSignInCustom(window._fbAuth, j.token);
+    }
   } catch(e) {
     let msg = 'E-Mail oder Passwort falsch.';
     if(e.code==='auth/too-many-requests') msg = 'Zu viele Versuche. Bitte warte kurz.';
+    else if(String(e&&e.message||e).includes('fetch')) msg = 'Keine Verbindung zum Server. Bitte Internet prüfen.';
     errEl.textContent = msg;
   }
-  if(btn){btn.textContent = 'Anmelden'; btn.disabled = false;}
+  done();
 }
 
 async function doRegister() {
@@ -3008,8 +3553,8 @@ async function doRegister() {
       username = base.substring(0,8) || ('USER'+Date.now().toString().slice(-4));
     }
 
-    // Store profile
-    const profile = { uid, username, email, vorname, nachname, geburtstag, isAdmin:false, erstellt:new Date().toISOString() };
+    // Store profile (pendingVerify: E-Mail muss vor der ersten Anmeldung bestätigt werden)
+    const profile = { uid, username, email, vorname, nachname, geburtstag, isAdmin:false, pendingVerify:true, erstellt:new Date().toISOString() };
     await dbFetch(DB+'/userprofiles/'+uid+'.json', {method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(profile)});
     // Store username lookup
     await dbFetch(DB+'/usernames/'+username.toLowerCase()+'.json', {method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,uid})});
@@ -3031,9 +3576,17 @@ async function doRegister() {
       }
     }catch(e){ console.warn('Mitglied-Anlage', e); }
 
-    // Mitglied bestätigt -> jetzt regulär in die App
+    // Bestätigungs-Mail senden und abmelden: Anmeldung erst nach E-Mail-Bestätigung
+    try{ await window._fbSendVerification(window._fbAuth.currentUser); }catch(_){}
     window._registering = false;
-    onAuthChange(window._fbAuth.currentUser);
+    try{ await window._fbSignOut(window._fbAuth); }catch(_){}
+    currentUser = null;
+    switchAuthTab('login');
+    errEl.style.color = '#27ae60';
+    errEl.textContent = '✅ Fast fertig! Wir haben dir eine Bestätigungs-Mail an ' + email + ' geschickt. Bitte klick den Link darin – danach kannst du dich anmelden.';
+    setTimeout(()=>{ if(errEl){ errEl.style.color='#e74c3c'; } }, 12000);
+    if(btn){btn.textContent = 'Konto erstellen'; btn.disabled = false;}
+    return;
   } catch(e) {
     window._registering = false;
     let msg = 'Fehler bei der Registrierung.';
@@ -3064,26 +3617,19 @@ async function showResetPw() {
   errEl.textContent = '';
   if(!input) { errEl.textContent = 'Bitte E-Mail-Adresse oder Benutzernamen eingeben.'; return; }
 
-  let email = input;
-
-  // If no @ → treat as username, look up email in DB
-  if(!input.includes('@')) {
-    try {
-      const r = await dbFetch(DB + '/usernames/' + input.toLowerCase() + '.json');
-      const d = r.ok ? await r.json() : null;
-      if(!d?.email) { errEl.textContent = 'Benutzername nicht gefunden.'; return; }
-      email = d.email;
-    } catch(e) { errEl.textContent = 'Fehler beim Suchen des Benutzers.'; return; }
-  }
-
+  const okMsg = 'Falls das Konto existiert, wurde eine E-Mail zum Zurücksetzen verschickt. Bitte Posteingang (und Spam) prüfen.';
+  const showOk = () => { errEl.style.color = '#27ae60'; errEl.textContent = '✅ ' + okMsg; setTimeout(() => { errEl.textContent = ''; errEl.style.color = '#e74c3c'; }, 6000); };
   try {
-    await window._fbResetPassword(window._fbAuth, email);
-    errEl.style.color = '#27ae60';
-    errEl.textContent = '✅ Reset-Mail gesendet an: ' + email;
-    setTimeout(() => { errEl.textContent = ''; errEl.style.color = '#e74c3c'; }, 5000);
+    if(input.includes('@')) {
+      await window._fbResetPassword(window._fbAuth, input.toLowerCase());
+    } else {
+      // Benutzername: Reset serverseitig auslösen — die E-Mail wird NICHT an den Browser gegeben
+      await fetch(window.USERNAME_AUTH_URL, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'reset',username:input})});
+    }
+    showOk();
   } catch(e) {
-    if(e.code === 'auth/user-not-found') errEl.textContent = 'Keine E-Mail-Adresse hinterlegt.';
-    else errEl.textContent = 'Fehler: ' + e.message;
+    // Neutrale Meldung, um die Existenz eines Kontos nicht zu verraten
+    showOk();
   }
 }
 
@@ -3094,12 +3640,13 @@ function showUserMenu() {
   const displayName = profile ? (profile.vorname+' '+profile.nachname) : username;
   document.getElementById('menu-username').textContent = profile?.username ? profile.username + ' – ' + displayName : username;
   document.getElementById('menu-email').textContent = email;
-  // Show admin toggle
+  // Admin-Umschalter nur für echte Admins (isAdmin) — normale Mitglieder sehen ihn nicht mehr
   const adminSection = document.getElementById('admin-toggle-section');
   if(adminSection) {
-    adminSection.style.display = 'block';
+    const isAdm = !!(profile && profile.isAdmin);
+    adminSection.style.display = isAdm ? 'block' : 'none';
     const btn = document.getElementById('admin-toggle-btn');
-    if(btn) btn.textContent = adminMode ? '🔓 Admin-Modus deaktivieren' : '🔑 Admin-Modus aktivieren';
+    if(btn) btn.textContent = adminMode ? '🔓 Admin-Ansicht aus (als Mitglied ansehen)' : '🔑 Admin-Ansicht an';
   }
   document.getElementById('modal-user-menu').classList.add('open');
 }
@@ -3116,25 +3663,14 @@ async function changeUserPw() {
   }
 }
 
-// Override toggleAdmin to use user menu
+// Admin-Modus wird durch das eigene Konto bestimmt (isAdmin). Der Schalter erlaubt echten Admins nur,
+// die Ansicht vorübergehend als „normales Mitglied" zu betrachten — kein Passwort mehr.
 function toggleAdmin() {
-  if(adminMode) {
-    adminMode = false;
-    sessionStorage.removeItem('chor_admin');
-    applyAdminMode();
-    closeModal();
-    return;
-  }
-  const pw = prompt('Admin-Passwort:');
-  if(pw === adminPw) {
-    adminMode = true;
-    sessionStorage.setItem('chor_admin','1');
-    applyAdminMode();
-    closeModal();
-    alert('✅ Admin-Modus aktiviert');
-  } else if(pw !== null) {
-    alert('❌ Falsches Passwort');
-  }
+  if(!(currentUserProfile && currentUserProfile.isAdmin)) { closeModal(); return; }
+  adminMode = !adminMode;
+  if(adminMode) sessionStorage.setItem('chor_admin','1'); else { sessionStorage.removeItem('chor_admin'); setEditMode(false); }
+  applyAdminMode();
+  closeModal();
 }
 
 
@@ -3230,7 +3766,7 @@ async function renderUserVerwaltung() {
   </div>`;
   const memberOptions = mitglieder.map((m,i)=>({m,i})).sort((a,b)=>memberName(a.m).localeCompare(memberName(b.m)))
     .map(({m,i})=>`<option value="${i}">${esc(memberName(m)||('Nr. '+m.nr))}</option>`).join('');
-  const permLabels = {proben:'📅 Proben',termine:'📆 Termine',mitglieder:'👥 Mitglieder',kommentare:'💬 Kommentare',lieder:'🎵 Lieder'};
+  const permLabels = {proben:'📅 Proben',termine:'📆 Termine',mitglieder:'👥 Mitglieder',kommentare:'💬 Kommentare',lieder:'🎵 Lieder',plakate:'📋 Plakate'};
   el.innerHTML = banner + users.map(u => {
     const perms = u.permissions||[];
     const uid = u.uid;
@@ -3282,7 +3818,7 @@ async function renderUserVerwaltung() {
 
 async function saveUserPerms(uid) {
   const isAdmin = document.getElementById('perm-'+uid+'-admin')?.checked||false;
-  const perms = ['proben','termine','mitglieder','kommentare','lieder'].filter(p=>document.getElementById('perm-'+uid+'-'+p)?.checked);
+  const perms = ['proben','termine','mitglieder','kommentare','lieder','plakate'].filter(p=>document.getElementById('perm-'+uid+'-'+p)?.checked);
   await dbFetch(DB+'/userprofiles/'+uid+'/isAdmin.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(isAdmin)});
   await dbFetch(DB+'/userprofiles/'+uid+'/permissions.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(perms)});
   const res = document.getElementById('perm-result-'+uid);
@@ -3513,6 +4049,8 @@ async function deleteLiedwunsch(key){
 }
 
 function renderLiedwuensche(){
+  const cnt=document.getElementById('lw-count');
+  if(cnt){const open=(liedwuensche||[]).filter(w=>!w.erledigt).length;cnt.textContent=open?('('+open+')'):'';}
   const el=document.getElementById('liedwunsch-list');
   if(!el)return;
   if(!liedwuensche.length){el.innerHTML='<div class="empty" style="padding:20px">Noch keine Liedwünsche eingetragen.</div>';return;}
@@ -3616,10 +4154,14 @@ function timeAgo(ts){
 }
 function renderNotifList(){
   const el=document.getElementById('notif-list'); if(!el) return;
+  const canDel=!!adminMode;
+  const clearBtn=document.getElementById('notif-clear-all');
+  if(clearBtn) clearBtn.style.display=(canDel && benachrichtigungen.length)?'':'none';
   if(!benachrichtigungen.length){ el.innerHTML='<div class="empty" style="padding:24px">Noch keine Benachrichtigungen.</div>'; return; }
   const lastSeen=parseInt(localStorage.getItem('notif_last_seen')||'0');
   el.innerHTML=benachrichtigungen.slice(0,50).map(n=>{
     const neu=(n.ts||0)>lastSeen;
+    const del=canDel?`<button onclick="deleteNotification('${esc(n._key)}')" title="Löschen" style="background:none;border:none;cursor:pointer;color:#c0392b;font-size:1rem;flex-shrink:0;padding:0 2px;align-self:flex-start">✕</button>`:'';
     return `<div style="display:flex;gap:10px;padding:10px 12px;border-bottom:1px solid #f0f0f0;background:${neu?'#eaf3fb':'transparent'}">
       <div style="font-size:1.2rem;flex-shrink:0">🔔</div>
       <div style="flex:1;min-width:0">
@@ -3627,8 +4169,25 @@ function renderNotifList(){
         ${n.body?`<div style="font-size:.83rem;color:#555;margin-top:1px;word-break:break-word">${esc(n.body)}</div>`:''}
         <div style="font-size:.72rem;color:#aaa;margin-top:2px">${n.ts?timeAgo(n.ts):''}</div>
       </div>
+      ${del}
     </div>`;
   }).join('');
+}
+async function deleteNotification(key){
+  if(!adminMode){ alert('Nur Admins können Nachrichten löschen.'); return; }
+  if(!key) return;
+  benachrichtigungen=benachrichtigungen.filter(n=>n._key!==key);
+  renderNotifList(); updateBellBadge();
+  try{ await dbFetch(DB+'/benachrichtigungen/'+key+'.json',{method:'DELETE'}); }
+  catch(e){ console.warn('Nachricht löschen',e); }
+}
+async function clearAllNotifications(){
+  if(!adminMode){ alert('Nur Admins können Nachrichten löschen.'); return; }
+  if(!confirm('Wirklich ALLE Benachrichtigungen löschen?')) return;
+  benachrichtigungen=[];
+  renderNotifList(); updateBellBadge();
+  try{ await dbFetch(DB+'/benachrichtigungen.json',{method:'DELETE'}); }
+  catch(e){ console.warn('Alle Nachrichten löschen',e); }
 }
 async function openNotifications(){
   await loadBenachrichtigungen();
@@ -3656,12 +4215,58 @@ async function addPlakat(){
   const anzahl=document.getElementById('pl-anzahl').value.trim();
   const adresse=document.getElementById('pl-adresse').value.trim();
   const notiz=document.getElementById('pl-notiz').value.trim();
-  await dbFetch(DB+'/plakate.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ort,anzahl,adresse,notiz,von:'',erstellt:new Date().toISOString()})});
+  const ortschaft=_plOrtschaftValue('pl-ortschaft');
+  await dbFetch(DB+'/plakate.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ort,ortschaft,anzahl,adresse,notiz,von:'',erstellt:new Date().toISOString()})});
   ['pl-ort','pl-anzahl','pl-adresse','pl-notiz'].forEach(id=>document.getElementById(id).value='');
   await loadPlakate();
 }
+// Ortschaften rund um Dölau für die Auswahl (freie Eingabe über „Andere…" möglich)
+const PLAKAT_ORTSCHAFTEN=['Dölau','Heide-Nord','Heide-Süd','Lettin','Kröllwitz','Nietleben','Halle-Neustadt','Halle (Zentrum)','Giebichenstein','Trotha','Lieskau','Salzmünde','Zappendorf','Bennstedt','Beesenstedt','Höhnstedt','Schochwitz','Köllme','Langenbogen','Angersdorf','Zscherben','Holleben','Teutschenthal','Sonstiges'];
+// Typische Orte, an denen Chor-Plakate gut aufgehoben sind (Antippen füllt das Formular)
+const PLAKAT_VORSCHLAEGE=['Bäckerei','Apotheke','Supermarkt (Schwarzes Brett)','Kirche / Gemeindehaus','Kita','Grundschule','Arztpraxis','Physiotherapie','Friseur','Bibliothek','Sparkasse / Bank','Schaukasten / Bushaltestelle','Sportverein / Vereinsheim','Café','Gaststätte / Restaurant','Blumenladen','Getränkemarkt','Buchhandlung','Musikschule','Rathaus / Bürgerbüro','Ärztehaus','Seniorenheim'];
+function plVorschlag(name){
+  const det=document.querySelector('#p-plakate details'); if(det) det.open=true;
+  const inp=document.getElementById('pl-ort'); if(inp){ inp.value=name; inp.focus(); }
+}
+function _plFillOrtschaftSelect(selId, current){
+  const sel=document.getElementById(selId); if(!sel) return;
+  const opts=[...PLAKAT_ORTSCHAFTEN];
+  if(current && !opts.includes(current)) opts.unshift(current);
+  sel.innerHTML=opts.map(o=>`<option value="${esc(o)}"${o===current?' selected':''}>${esc(o)}</option>`).join('')+'<option value="__frei__">➕ Andere…</option>';
+  const frei=document.getElementById(selId+'-frei'); if(frei){ frei.style.display='none'; frei.value=''; }
+}
+function _plOrtschaftValue(selId){
+  const sel=document.getElementById(selId); if(!sel) return 'Sonstiges';
+  if(sel.value==='__frei__'){ const frei=document.getElementById(selId+'-frei'); const v=(frei&&frei.value.trim())||''; return v||'Sonstiges'; }
+  return sel.value||'Sonstiges';
+}
+function editPlakat(key){
+  if(!uiEdit('plakate')) return;
+  const p=plakate.find(x=>x._key===key); if(!p) return;
+  document.getElementById('ple-key').value=key;
+  document.getElementById('ple-ort').value=p.ort||'';
+  document.getElementById('ple-anzahl').value=p.anzahl||'';
+  document.getElementById('ple-adresse').value=p.adresse||'';
+  document.getElementById('ple-notiz').value=p.notiz||'';
+  _plFillOrtschaftSelect('ple-ortschaft', p.ortschaft||'Sonstiges');
+  document.getElementById('modal-plakat-edit').classList.add('open');
+}
+async function savePlakatEdit(){
+  if(!uiEdit('plakate')){alert('Keine Berechtigung.');return;}
+  const key=document.getElementById('ple-key').value;
+  const ort=document.getElementById('ple-ort').value.trim();
+  if(!ort){alert('Bitte Standort eingeben.');return;}
+  const upd={ort,
+    ortschaft:_plOrtschaftValue('ple-ortschaft'),
+    anzahl:document.getElementById('ple-anzahl').value.trim(),
+    adresse:document.getElementById('ple-adresse').value.trim(),
+    notiz:document.getElementById('ple-notiz').value.trim()};
+  await dbFetch(DB+'/plakate/'+key+'.json',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(upd)});
+  closeModal();
+  await loadPlakate();
+}
 async function deletePlakat(key){
-  if(!uiEdit('termine')) return;
+  if(!uiEdit('plakate')) return;
   if(!confirm('Standort löschen?'))return;
   await dbFetch(DB+'/plakate/'+key+'.json',{method:'DELETE'});
   await loadPlakate();
@@ -3681,36 +4286,79 @@ async function releasePlakat(key){
 function renderPlakate(){
   const el=document.getElementById('plakate-list');
   if(!el)return;
-  const canManage=uiEdit('termine');
+  const canManage=uiEdit('plakate');
+  // Formular-Select + Vorschlags-Chips einmalig befüllen (Nutzerwahl nicht überschreiben)
+  const formSel=document.getElementById('pl-ortschaft');
+  if(formSel && !formSel.options.length) _plFillOrtschaftSelect('pl-ortschaft','Dölau');
+  const vs=document.getElementById('pl-vorschlaege');
+  if(vs && !vs.childElementCount) vs.innerHTML=PLAKAT_VORSCHLAEGE.map(v=>`<button type="button" onclick="plVorschlag('${esc(v)}')" style="background:#eef3fa;color:#1b3a6b;border:1.5px solid transparent;border-radius:16px;padding:4px 11px;font-size:.78rem;cursor:pointer;font-family:inherit">${esc(v)}</button>`).join('');
   const stats=document.getElementById('plakate-stats');
   const total=plakate.length, taken=plakate.filter(p=>p.von).length;
   if(stats) stats.textContent = total ? (taken+' von '+total+' übernommen') : '';
-  if(!plakate.length){ el.innerHTML='<div class="empty" style="padding:24px">Noch keine Plakat-Standorte angelegt.</div>'; return; }
+  // Fortschrittsbalken
+  const prog=document.getElementById('plakate-progress'), fill=document.getElementById('plakate-progress-fill');
+  if(prog&&fill){ prog.style.display=total?'':'none'; fill.style.width=total?Math.round(taken/total*100)+'%':'0%'; }
+  if(!plakate.length){
+    el.innerHTML='<div class="empty" style="padding:24px">Noch keine Plakat-Standorte angelegt.</div>';
+    const rc=document.getElementById('plakate-ranking-card'); if(rc) rc.style.display='none';
+    return;
+  }
   const myName=getUserVoteName();
-  el.innerHTML=plakate.map(p=>{
+  const karte=p=>{
     const done=!!p.von;
-    const maps=p.adresse?`<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.adresse)}" target="_blank" rel="noopener" style="font-size:.78rem;color:#2563b5;text-decoration:none">🗺️ Karte</a>`:'';
-    return `<div style="border-left:4px solid ${done?'#27ae60':'#f39c12'};padding:11px 14px;margin-bottom:8px;background:${done?'#f0fff4':'#fffdf5'};border-radius:0 8px 8px 0">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:600;font-size:.92rem;color:#1b3a6b">📋 ${esc(p.ort)}${p.anzahl?` <span style="font-size:.78rem;color:#888;font-weight:400">· ${esc(p.anzahl)} Plakat(e)</span>`:''}</div>
-          ${p.adresse?`<div style="font-size:.8rem;color:#666;margin-top:1px">📍 ${esc(p.adresse)} &nbsp; ${maps}</div>`:''}
-          ${p.notiz?`<div style="font-size:.8rem;color:#888;font-style:italic;margin-top:1px">💬 ${esc(p.notiz)}</div>`:''}
-          <div style="margin-top:6px">
-            ${done
-              ? `<span style="font-size:.84rem;color:#1a7a40;font-weight:600">✅ Übernommen von ${esc(p.von)}</span>
-                 <button class="btn btn-sm btn-gray" style="font-size:.72rem;margin-left:8px" onclick="releasePlakat('${p._key}')">↩ freigeben</button>`
-              : `<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-                   <input class="fl-input" id="pl-name-${p._key}" placeholder="Dein Name" value="${esc(myName||'')}" style="flex:1;min-width:120px;padding:6px 9px;font-size:.82rem">
-                   <button class="btn btn-sm btn-success" style="font-size:.78rem" onclick="claimPlakat('${p._key}')">✋ Ich übernehme</button>
-                 </div>`
-            }
-          </div>
+    const maps=p.adresse?`<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.adresse)}" target="_blank" rel="noopener" style="font-size:.78rem;color:#2563b5;text-decoration:none;white-space:nowrap">🗺️ Karte</a>`:'';
+    const del=canManage?`<button class="btn btn-sm" style="flex-shrink:0;padding:2px 8px;background:#eef1f5;color:#1d4e96" title="Bearbeiten" onclick="editPlakat('${p._key}')">✏️</button><button class="btn btn-danger btn-sm" style="flex-shrink:0;padding:2px 8px" onclick="deletePlakat('${p._key}')">✕</button>`:'';
+    // Aktion rechts: eingeloggt = nur Button; Gast = Namensfeld + Button
+    const action=done
+      ? `<button class="btn btn-sm btn-gray" style="font-size:.72rem;flex-shrink:0" onclick="releasePlakat('${p._key}')">↩ freigeben</button>`
+      : (myName
+        ? `<button class="btn btn-sm btn-success" style="font-size:.78rem;flex-shrink:0" onclick="claimPlakat('${p._key}')">✋ Übernehmen</button>`
+        : `<span style="display:flex;gap:5px;align-items:center;flex-shrink:0"><input class="fl-input" id="pl-name-${p._key}" placeholder="Dein Name" style="width:110px;padding:5px 8px;font-size:.8rem;margin:0"><button class="btn btn-sm btn-success" style="font-size:.78rem" onclick="claimPlakat('${p._key}')">✋</button></span>`);
+    return `<div style="border-left:4px solid ${done?'#27ae60':'#f39c12'};padding:9px 12px;margin-bottom:7px;background:${done?'#f4faf5':'#fffdf5'};border-radius:0 8px 8px 0">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <div style="flex:1;min-width:150px">
+          <span style="font-weight:600;font-size:.9rem;color:#1b3a6b">${esc(p.ort)}</span>
+          ${p.anzahl?`<span style="font-size:.76rem;color:#888"> · ${esc(p.anzahl)}×</span>`:''}
+          ${done?`<div style="font-size:.78rem;color:#1a7a40;margin-top:1px">✅ ${esc(p.von)}</div>`:''}
+          ${p.adresse?`<div style="font-size:.76rem;color:#777;margin-top:1px">📍 ${esc(p.adresse)} ${maps}</div>`:''}
+          ${p.notiz?`<div style="font-size:.76rem;color:#999;font-style:italic;margin-top:1px">💬 ${esc(p.notiz)}</div>`:''}
         </div>
-        ${canManage?`<button class="btn btn-danger btn-sm" style="flex-shrink:0" onclick="deletePlakat('${p._key}')">✕</button>`:''}
+        <div style="display:flex;gap:6px;align-items:center">${action}${del}</div>
       </div>
     </div>`;
-  }).join('');
+  };
+  // Oben: Offen / Übernommen — darunter jeweils nach Ortschaft unterteilt
+  const nachOrtschaft=list=>{
+    const g={}; list.forEach(p=>{ const k=p.ortschaft||'Sonstiges'; (g[k]=g[k]||[]).push(p); });
+    const order=[...PLAKAT_ORTSCHAFTEN.filter(o=>g[o]), ...Object.keys(g).filter(x=>!PLAKAT_ORTSCHAFTEN.includes(x)).sort()];
+    return order.map(o=>`<div style="font-size:.74rem;font-weight:700;color:#8a97a8;margin:9px 0 4px">📍 ${esc(o)} (${g[o].length})</div>`+g[o].map(karte).join('')).join('');
+  };
+  const offen=plakate.filter(p=>!p.von), fertig=plakate.filter(p=>p.von);
+  let html='';
+  if(offen.length){
+    html+=`<div class="section-label" style="color:#b9770e">🟠 Noch zu verteilen (${offen.length})</div>`+nachOrtschaft(offen);
+  } else if(total){
+    html+=`<div style="background:#d5f5e3;color:#1a7a40;border-radius:8px;padding:10px 14px;font-size:.88rem;font-weight:600;margin-bottom:10px">🎉 Alle Standorte sind übernommen!</div>`;
+  }
+  if(fertig.length){
+    html+=`<details class="t-coll" style="margin-top:10px"><summary>✅ Übernommen (${fertig.length})</summary><div style="padding-top:4px">${nachOrtschaft(fertig)}</div></details>`;
+  }
+  el.innerHTML=html;
+  // 🏆 Verteiler-Statistik: Standorte (und Plakat-Anzahl, falls erfasst) pro Person
+  const rankCard=document.getElementById('plakate-ranking-card'), rankEl=document.getElementById('plakate-ranking');
+  if(rankCard && rankEl){
+    const rank={};
+    fertig.forEach(p=>{
+      const n=prettyName(p.von)||p.von;
+      if(!rank[n]) rank[n]={standorte:0, stueck:0};
+      rank[n].standorte++;
+      rank[n].stueck+=parseInt(p.anzahl)||1;
+    });
+    const items=Object.entries(rank).sort((a,b)=>b[1].standorte-a[1].standorte||b[1].stueck-a[1].stueck)
+      .map(([n,r])=>({label:n, value:r.standorte, sub:r.standorte+' Standort'+(r.standorte===1?'':'e')+(r.stueck>r.standorte?' · ~'+r.stueck+' Plakate':'')}));
+    rankCard.style.display=items.length?'':'none';
+    rankEl.innerHTML=items.length?_statBars(items,'#8e44ad'):'';
+  }
 }
 
 // ===== GEBURTSTAGE IN TERMINE =====
@@ -3818,7 +4466,8 @@ function setlisteHtml(t){
   const songCount = items.filter(it=>it.typ!=='moderation').length;
   const modCount = items.length - songCount;
   const sub = `${songCount} Lied${songCount===1?'':'er'}${modCount?` · ${modCount} Mod.`:''}`;
-  return `<details class="t-coll"><summary>🎵 Ablauf / Setliste · ${sub}</summary><div>${rows}</div></details>`;
+  const printBtn = `<div style="margin-top:8px"><button class="btn btn-sm" type="button" style="background:#eef1f5;color:#1d4e96;font-size:.76rem" onclick="printSetliste('${esc(t.id)}')">🖨️ Setliste drucken</button></div>`;
+  return `<details class="t-coll"><summary>🎵 Ablauf / Setliste · ${sub}</summary><div>${rows}${printBtn}</div></details>`;
 }
 let _slId = null;
 let _slItems = [];
@@ -3828,11 +4477,19 @@ function editSetliste(terminId){
   _slId = terminId;
   _slItems = normSetliste(t.setliste);
   document.getElementById('sl-titel').textContent = t.titel||'';
-  // Lied-Auswahl aus allen Saisons
-  const allSongs = (D&&D.seasons) ? D.seasons.flatMap(s=>(s.songs||[]).map(song=>song.name)) : [];
-  const uniq = [...new Set(allSongs.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'de'));
+  // Lied-Auswahl nach Saison gruppiert (aktive zuerst, dann Archiv)
   const sel = document.getElementById('sl-song-select');
-  if(sel) sel.innerHTML = '<option value="">— Lied wählen —</option>' + uniq.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  if(sel){
+    const ic={sommer:'☀️',weihnachten:'🎄',repertoire:'📚'};
+    let html = '<option value="">— Lied wählen —</option>';
+    (D&&D.seasons||[]).forEach(s=>{
+      const songs=[...new Set((s.songs||[]).map(x=>x.name).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'de'));
+      if(!songs.length) return;
+      const label = (ic[s.type]||'🎵')+' '+(s.name||'Saison');
+      html += `<optgroup label="${esc(label)}">` + songs.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('') + '</optgroup>';
+    });
+    sel.innerHTML = html;
+  }
   ['sl-mod-input','sl-custom-input'].forEach(id=>{const e=document.getElementById(id); if(e) e.value='';});
   slRender();
   document.getElementById('modal-setliste').classList.add('open');
@@ -3882,6 +4539,42 @@ async function saveSetliste(){
   closeModal();
   renderTermine();
 }
+// Druckansicht der Setliste (aus dem Termin oder – im Editor – aus dem aktuellen Stand)
+function printSetliste(terminId, itemsOverride){
+  const t = termine.find(x=>x.id===terminId);
+  if(!t) return;
+  const items = itemsOverride || normSetliste(t.setliste);
+  if(!items.length){ alert('Für diesen Termin ist noch keine Setliste angelegt.'); return; }
+  let nr=0;
+  const rows = items.map(it => it.typ==='moderation'
+    ? `<li class="mod">🎤 <em>${esc(it.text)}</em></li>`
+    : `<li><span class="n">${++nr}.</span> ${esc(it.text)}</li>`).join('');
+  const dateStr = t.datum_ende?fmt(t.datum)+' – '+fmt(t.datum_ende):fmt(t.datum);
+  const w = window.open('', '_blank');
+  if(!w){ alert('Bitte Pop-ups für diese Seite erlauben, dann klappt der Druck.'); return; }
+  w.document.write(`<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Setliste – ${esc(t.titel||'')}</title>
+    <style>
+      *{box-sizing:border-box} body{font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;max-width:640px;margin:32px auto;padding:0 24px;color:#1a1a1a}
+      h1{font-size:1.6rem;margin:0 0 3px} .date{color:#555;margin-bottom:22px;font-size:1rem}
+      ul{list-style:none;padding:0;margin:0}
+      li{padding:9px 2px;border-bottom:1px solid #eee;font-size:1.12rem}
+      li .n{display:inline-block;min-width:2em;color:#2563b5;font-weight:700}
+      li.mod{color:#8e44ad;border-bottom:1px dashed #e7d8f2}
+      .foot{margin-top:28px;font-size:.72rem;color:#aaa;border-top:1px solid #eee;padding-top:8px}
+      @media print{ body{margin:0 auto} .noprint{display:none} }
+      .noprint{margin-bottom:18px}
+      .noprint button{font-size:1rem;padding:8px 18px;border:0;border-radius:8px;background:#2563b5;color:#fff;cursor:pointer}
+    </style></head><body>
+    <div class="noprint"><button onclick="window.print()">🖨️ Drucken</button></div>
+    <h1>${esc(t.titel||'Setliste')}</h1>
+    <div class="date">📅 ${dateStr}${t.uhrzeit?' · '+esc(t.uhrzeit)+' Uhr':''}</div>
+    <ul>${rows}</ul>
+    <div class="foot">Regionalchor Eisleben · Setliste gedruckt am ${new Date().toLocaleDateString('de-DE')}</div>
+    </body></html>`);
+  w.document.close(); w.focus();
+  setTimeout(()=>{ try{ w.print(); }catch(_){} }, 350);
+}
+function slPrint(){ if(_slId) printSetliste(_slId, _slItems.map(it=>({typ:it.typ, text:it.text}))); }
 
 // ===== HAUSAUFGABEN EDIT =====
 let _editHAId = null;
@@ -4015,7 +4708,7 @@ function renderEinstellungen(){
   if(el_an) el_an.value = p?.anzeigename || '';
   if(el_p){
     const perms = p?.permissions||[];
-    const labels = {proben:'Proben',termine:'Termine',mitglieder:'Mitglieder',kommentare:'Kommentare löschen',lieder:'Lieder'};
+    const labels = {proben:'Proben',termine:'Termine',mitglieder:'Mitglieder',kommentare:'Kommentare löschen',lieder:'Lieder',plakate:'Plakate'};
     if(p?.isAdmin) el_p.textContent = '🔑 Admin';
     else if(perms.length) el_p.textContent = '🛡️ Berechtigungen: '+perms.map(x=>labels[x]||x).join(', ');
     else el_p.textContent = '';
@@ -4248,8 +4941,10 @@ async function loadAll(){
   }catch(e){termine=INIT_TERMINE;mitglieder=[];console.warn(e);}
   const d=new Date();
   document.getElementById('stand').textContent='Stand: '+d.toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'})+' · '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})+' Uhr';
+  try{ await migrateVergangeneProben(); }catch(e){ console.warn(e); }
   if(D){renderLieder();renderProben();populateLiedSelect();}
-  else document.getElementById('lieder-list').innerHTML='<div class="empty">Noch keine Daten. Tracker öffnen und synchronisieren.</div>';
+  else document.getElementById('lieder-list').innerHTML='<div class="empty">Noch keine Lieder. Als Admin im Bearbeiten-Modus oben eine Saison anlegen und dann Lieder hinzufügen.</div>';
+  try{ renderStart(); }catch(e){ console.warn('renderStart',e); }
   renderTermine();
   renderMitglieder();
   await Promise.all([
@@ -4261,12 +4956,11 @@ async function loadAll(){
     loadAbwesenheit(),
     loadBenachrichtigungen(),
     loadUmfragen(),
-    loadBeitraege(),
-    loadKasse(),
     loadUserProfiles().then(p=>{ userprofilesCache=p||{}; }).catch(()=>{})
   ]);
   // Profile sind jetzt geladen -> Namens-Anzeigen mit aktuellen Anzeigenamen neu aufbauen
   refreshNameDisplays();
+  try{ renderStart(); }catch(e){ console.warn('renderStart',e); }
   if(document.getElementById('uf-optionen') && !document.querySelector('#uf-optionen .uf-opt')) resetUmfrageForm();
   loadNotice();
   if(!window._notifPoll){ window._notifPoll=setInterval(loadBenachrichtigungen, 90000); }
@@ -4285,6 +4979,11 @@ async function loadAll(){
 // loadAll is called by onAuthChange when user logs in
 setInterval(()=>{if(currentUser){loadAll();if(aktiveTerminTab==='kalender')renderKalender();}},120000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&currentUser)loadAll();});
+// Offline-Hinweis: Banner ein-/ausblenden; beim Wieder-online-Gehen frisch laden
+function updateOfflineBar(){ const b=document.getElementById('offline-bar'); if(b) b.style.display=navigator.onLine?'none':'block'; }
+window.addEventListener('online',()=>{ updateOfflineBar(); if(currentUser)loadAll(); });
+window.addEventListener('offline',updateOfflineBar);
+updateOfflineBar();
 </script>
 <script>
 if('serviceWorker' in navigator){
