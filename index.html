@@ -158,6 +158,10 @@ input[type=checkbox]{accent-color:#2563b5}
 /* Schriftgröße (Barrierefreiheit) */
 html.fs-gross{font-size:18px}
 html.fs-sehrgross{font-size:20.5px}
+/* Dunkles Design: Invert-Technik auf <html> (zieht auch Inline-Farben mit, bricht kein fixed-Layout);
+   Bilder & explizit markierte Elemente werden zurück-invertiert, damit Logo/Fotos normal bleiben. */
+html.dark{ filter: invert(1) hue-rotate(180deg); background:#12171d; }
+html.dark img, html.dark video, html.dark .no-invert{ filter: invert(1) hue-rotate(180deg); }
 /* Ladeanzeige */
 #loading-overlay{position:fixed;inset:0;background:#f0f2f5;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
 .spinner{width:42px;height:42px;border:4px solid #d6e0ea;border-top-color:#2563b5;border-radius:50%;animation:spin 1s linear infinite}
@@ -311,6 +315,68 @@ html.fs-sehrgross{font-size:20.5px}
   /* sehr schmale Handys: Datumsspalte in der Liederliste ausblenden (Status zeigt Frische) */
   #lieder-list th:nth-child(2),#lieder-list td:nth-child(2){display:none}
 }
+
+/* ============================================================
+   FEINSCHLIFF-EBENE (2026-07): Dashboard, Bedienung, Zugänglichkeit
+   ============================================================ */
+/* Sanfter Seiten-Hintergrund */
+body{background:
+  radial-gradient(1100px 460px at 100% -8%, #e6eefb 0%, rgba(230,238,251,0) 60%),
+  radial-gradient(900px 420px at -10% 4%, #eef2f8 0%, rgba(238,242,248,0) 55%),
+  var(--bg);}
+
+/* Zugänglichkeit: klarer Fokus-Ring für Tastatur-Navigation */
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,
+.stab:focus-visible,.mtab:focus-visible,.bnav-item:focus-visible,.sheet-link:focus-visible,.qa:focus-visible{
+  outline:3px solid rgba(37,99,181,.45); outline-offset:2px; border-radius:8px;
+}
+/* Karten heben sich beim Überfahren leicht */
+.card,.termin-card{transition:box-shadow .18s ease,transform .18s ease}
+@media(hover:hover){
+  .card:hover,.termin-card:hover{box-shadow:0 4px 14px rgba(20,40,80,.09),0 14px 36px rgba(20,40,80,.08)}
+}
+
+/* ---- Dashboard-Kopf (Startseite) ---- */
+.hero{margin:2px 0 12px}
+.hero-greet{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;color:var(--navy);line-height:1.15}
+.hero-date{font-size:.86rem;color:var(--muted);margin-top:3px;text-transform:capitalize}
+.qa-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:9px;margin-bottom:16px}
+.qa{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:13px 6px;
+  background:var(--card);border:1px solid rgba(20,40,80,.06);border-radius:var(--radius-sm);
+  box-shadow:var(--shadow);cursor:pointer;font-size:.75rem;font-weight:600;color:var(--ink);
+  font-family:inherit;transition:transform .14s ease,box-shadow .14s ease,border-color .14s}
+.qa:hover{border-color:var(--primary);color:var(--primary);transform:translateY(-2px);box-shadow:0 6px 18px rgba(37,99,181,.16)}
+.qa:active{transform:translateY(0)}
+.qa-ic{font-size:1.5rem;line-height:1}
+.qa.qa-adm{background:linear-gradient(135deg,#fff6ec,#fdecdb);border-color:#f6d9bd;color:#a2600f}
+.qa.qa-adm:hover{border-color:#e67e22;color:#a2600f}
+
+/* ---- Leerzustände mit mehr Ruhe ---- */
+.empty{text-align:center;padding:26px 16px;color:var(--muted);font-size:.9rem;line-height:1.5}
+
+/* ---- Toaster (dezente Erfolg-/Fehlermeldungen) ---- */
+#toast-wrap{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 74px);z-index:1200;
+  display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 12px}
+@media(min-width:641px){#toast-wrap{bottom:24px}}
+.toast{pointer-events:auto;max-width:440px;width:fit-content;background:#243244;color:#fff;
+  padding:11px 16px;border-radius:12px;font-size:.86rem;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.25);
+  display:flex;align-items:center;gap:9px;opacity:0;transform:translateY(12px);transition:opacity .22s,transform .22s}
+.toast.show{opacity:1;transform:none}
+.toast.ok{background:#1f8a4c}
+.toast.err{background:#c0392b}
+.toast.info{background:#243244}
+.toast-ic{font-size:1.05rem;line-height:1}
+
+/* ---- Größere Tap-Ziele auf dem Handy (Zugänglichkeit) ---- */
+@media(max-width:640px){
+  .btn{min-height:44px}
+  .bnav-item{min-height:56px}
+  .vbtn{min-height:40px}
+  .qa{min-height:64px}
+}
+
+/* Neue Elemente im Dunkelmodus: Filter-Invert zieht sie mit (nur Fokus-Ring dezenter) */
+html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,170,240,.5)}
 </style>
 </head>
 
@@ -347,6 +413,7 @@ html.fs-sehrgross{font-size:20.5px}
 </script>
 <body>
 
+<div id="toast-wrap"></div>
 
 <!-- LADEANZEIGE -->
 <div id="loading-overlay" style="display:none">
@@ -426,6 +493,7 @@ html.fs-sehrgross{font-size:20.5px}
 <div class="content">
 
 <div class="page active" id="p-start">
+  <div id="pinnwand-card"></div>
   <div id="start-content"></div>
 </div>
 
@@ -569,6 +637,10 @@ html.fs-sehrgross{font-size:20.5px}
     <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:8px">
       <div style="flex:1;min-width:150px"><label style="display:block;font-size:.78rem;font-weight:500;margin-bottom:3px;color:#444">Rückmeldefrist (optional)</label><input class="fl-input" type="date" id="t-frist"></div>
     </div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px">
+      <label style="display:flex;align-items:center;gap:7px;font-size:.85rem;cursor:pointer;user-select:none"><input type="checkbox" id="t-keine-abstimmung" style="accent-color:#8e44ad;width:16px;height:16px"> 📢 Nur Info (ohne Abstimmung)</label>
+      <label style="display:flex;align-items:center;gap:7px;font-size:.85rem;cursor:pointer;user-select:none"><input type="checkbox" id="t-startseite" checked style="accent-color:#2563b5;width:16px;height:16px"> 🏠 Auf Startseite anzeigen</label>
+    </div>
     <button class="btn btn-primary" onclick="addTermin()">＋ Termin hinzufügen</button>
   </div>
   <div class="card">
@@ -592,20 +664,39 @@ html.fs-sehrgross{font-size:20.5px}
 </div>
 
 <div class="page" id="p-umfragen">
-  <div class="admin-section admin-only" data-perm="termine">
-    <div class="admin-label">🔑 Admin: Neue Umfrage erstellen</div>
-    <input class="fl-input" type="text" id="uf-frage" placeholder="Frage * (z. B. Welcher Termin passt fürs Sommerfest?)" maxlength="160">
-    <label style="display:block;font-size:.8rem;font-weight:600;margin-bottom:5px;color:#444">Antwortmöglichkeiten</label>
-    <div id="uf-optionen"></div>
-    <button class="btn btn-gray btn-sm" type="button" onclick="addUmfrageOption()" style="margin-bottom:10px">＋ Option hinzufügen</button>
-    <label style="display:flex;align-items:center;gap:8px;font-size:.86rem;cursor:pointer;margin-bottom:12px">
-      <input type="checkbox" id="uf-mehrfach" style="accent-color:#2563b5;width:16px;height:16px">
-      <span>Mehrfachauswahl erlauben (mehrere Antworten pro Person)</span>
-    </label>
-    <button class="btn btn-primary" onclick="createUmfrage()">📊 Umfrage starten</button>
-    <div id="uf-create-result" style="font-size:.82rem;min-height:16px;margin-top:6px"></div>
+  <div class="sub-tabs">
+    <button id="utab-umfragen" class="stab active" onclick="setUmfragenTab('umfragen')">📊 Umfragen</button>
+    <button id="utab-terminfindung" class="stab" onclick="setUmfragenTab('terminfindung')">🗓️ Terminfindung</button>
   </div>
-  <div id="umfragen-list"></div>
+  <div id="uv-umfragen">
+    <div class="admin-section admin-only" data-perm="termine">
+      <div class="admin-label">🔑 Admin: Neue Umfrage erstellen</div>
+      <input class="fl-input" type="text" id="uf-frage" placeholder="Frage * (z. B. Welcher Termin passt fürs Sommerfest?)" maxlength="160">
+      <label style="display:block;font-size:.8rem;font-weight:600;margin-bottom:5px;color:#444">Antwortmöglichkeiten</label>
+      <div id="uf-optionen"></div>
+      <button class="btn btn-gray btn-sm" type="button" onclick="addUmfrageOption()" style="margin-bottom:10px">＋ Option hinzufügen</button>
+      <label style="display:flex;align-items:center;gap:8px;font-size:.86rem;cursor:pointer;margin-bottom:12px">
+        <input type="checkbox" id="uf-mehrfach" style="accent-color:#2563b5;width:16px;height:16px">
+        <span>Mehrfachauswahl erlauben (mehrere Antworten pro Person)</span>
+      </label>
+      <button class="btn btn-primary" onclick="createUmfrage()">📊 Umfrage starten</button>
+      <div id="uf-create-result" style="font-size:.82rem;min-height:16px;margin-top:6px"></div>
+    </div>
+    <div id="umfragen-list"></div>
+  </div>
+  <div id="uv-terminfindung" style="display:none">
+    <div class="admin-section admin-only" data-perm="termine">
+      <div class="admin-label">🔑 Admin: Neue Terminfindung</div>
+      <input class="fl-input" type="text" id="tf-titel" placeholder="Titel * (z. B. Wann proben wir extra?)" maxlength="160">
+      <label style="display:block;font-size:.8rem;font-weight:600;margin:8px 0 5px;color:#444">Datums-Vorschläge</label>
+      <div id="tf-optionen"></div>
+      <button class="btn btn-gray btn-sm" type="button" onclick="addTfOption()" style="margin-bottom:10px">＋ Vorschlag hinzufügen</button>
+      <button class="btn btn-primary" onclick="createTerminfindung()">🗓️ Terminfindung starten</button>
+      <div id="tf-create-result" style="font-size:.82rem;min-height:16px;margin-top:6px"></div>
+    </div>
+    <div style="font-size:.82rem;color:#888;margin-bottom:10px">✅ passt · ❓ vielleicht · ❌ passt nicht — die beste Option wird markiert.</div>
+    <div id="tf-list"></div>
+  </div>
 </div>
 
 <div class="page" id="p-mitglieder">
@@ -990,6 +1081,24 @@ html.fs-sehrgross{font-size:20.5px}
     </div>
   </div>
 
+  <div class="card" style="max-width:480px" id="meine-kontaktdaten-card">
+    <div class="card-title">📇 Meine Kontaktdaten</div>
+    <div style="font-size:.83rem;color:#666;margin-bottom:12px">Halte deine eigenen Daten aktuell – nur du kannst deinen Eintrag ändern.</div>
+    <div id="kd-hinweis" style="font-size:.82rem;color:#888;margin-bottom:10px"></div>
+    <div id="kd-felder" style="display:none">
+      <div class="form-row">
+        <div style="flex:1;min-width:130px"><label style="display:block;font-size:.78rem;font-weight:500;margin-bottom:3px;color:#444">Handy</label><input class="fl-input" type="tel" id="kd-handy" autocomplete="tel"></div>
+        <div style="flex:1;min-width:130px"><label style="display:block;font-size:.78rem;font-weight:500;margin-bottom:3px;color:#444">Telefon (Festnetz)</label><input class="fl-input" type="tel" id="kd-telefon"></div>
+      </div>
+      <div class="form-row">
+        <div style="flex:2;min-width:150px"><label style="display:block;font-size:.78rem;font-weight:500;margin-bottom:3px;color:#444">Adresse</label><input class="fl-input" type="text" id="kd-adresse" placeholder="Straße & Hausnummer, Ort" autocomplete="street-address"></div>
+        <div style="flex:0 0 100px"><label style="display:block;font-size:.78rem;font-weight:500;margin-bottom:3px;color:#444">PLZ</label><input class="fl-input" type="text" id="kd-plz" maxlength="5" autocomplete="postal-code"></div>
+      </div>
+      <button class="btn btn-primary" onclick="saveMeineKontaktdaten()">💾 Speichern</button>
+      <div id="kd-result" style="font-size:.82rem;min-height:16px;margin-top:8px"></div>
+    </div>
+  </div>
+
   <div class="card" style="max-width:480px">
     <div class="card-title">🔤 Schriftgröße</div>
     <div style="font-size:.83rem;color:#666;margin-bottom:10px">Macht die ganze App größer und besser lesbar.</div>
@@ -997,6 +1106,15 @@ html.fs-sehrgross{font-size:20.5px}
       <button class="fs-btn btn btn-sm" data-fs="normal" onclick="setFontSize('normal')">Normal</button>
       <button class="fs-btn btn btn-sm" data-fs="gross" onclick="setFontSize('gross')">Groß</button>
       <button class="fs-btn btn btn-sm" data-fs="sehrgross" onclick="setFontSize('sehrgross')">Sehr groß</button>
+    </div>
+  </div>
+
+  <div class="card" style="max-width:480px">
+    <div class="card-title">🎨 Darstellung</div>
+    <div style="font-size:.83rem;color:#666;margin-bottom:10px">Helles oder dunkles Design (schont Augen und Akku).</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="theme-btn btn btn-sm" data-theme="hell" onclick="setTheme('hell')">☀️ Hell</button>
+      <button class="theme-btn btn btn-sm" data-theme="dark" onclick="setTheme('dark')">🌙 Dunkel</button>
     </div>
   </div>
 
@@ -1063,6 +1181,25 @@ html.fs-sehrgross{font-size:20.5px}
     <div id="abw-result" style="font-size:.82rem;min-height:16px;margin-bottom:6px"></div>
     <div id="abw-list"></div>
     <div class="modal-actions"><button class="btn btn-gray" onclick="closeModal()">Schließen</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-abmelden">
+  <div class="modal">
+    <h3>🙋 Abmelden</h3>
+    <div id="abmelden-body"></div>
+    <div class="modal-actions"><button class="btn btn-gray" onclick="closeModal()">Schließen</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-zusagen">
+  <div class="modal">
+    <h3>📆 Zu- & Absagen</h3>
+    <div id="zusagen-body" style="max-height:64vh;overflow-y:auto"></div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal()">Schließen</button>
+      <button class="btn btn-primary" onclick="closeModal();showPageByName('termine')">Alle Termine ›</button>
+    </div>
   </div>
 </div>
 
@@ -1265,6 +1402,42 @@ html.fs-sehrgross{font-size:20.5px}
   </div>
 </div>
 
+<!-- TERMIN BEARBEITEN MODAL -->
+<div class="modal-overlay" id="modal-termin-edit">
+  <div class="modal" style="max-width:560px">
+    <h3>✏️ Termin bearbeiten</h3>
+    <input type="hidden" id="te-id">
+    <div class="form-row">
+      <input class="fl-input" type="text" id="te-titel" placeholder="Bezeichnung *" style="flex:2;min-width:160px">
+      <select id="te-typ" class="fl-input" style="flex:1;min-width:120px">
+        <option value="konzert">🎵 Konzert</option>
+        <option value="fest">🎪 Fest</option>
+        <option value="chorlager">🏕️ Chorlager</option>
+        <option value="gottesdienst">⛪ Gottesdienst</option>
+        <option value="probe">🎹 Probe</option>
+        <option value="sonstiges">📌 Sonstiges</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div style="flex:1;min-width:130px"><label style="display:block;font-size:.78rem;font-weight:500;margin-bottom:3px;color:#444">Von</label><input class="fl-input" type="date" id="te-datum"></div>
+      <div style="flex:1;min-width:130px"><label style="display:block;font-size:.78rem;font-weight:500;margin-bottom:3px;color:#444">Bis (optional)</label><input class="fl-input" type="date" id="te-datum-ende"></div>
+      <div style="flex:1;min-width:100px"><label style="display:block;font-size:.78rem;font-weight:500;margin-bottom:3px;color:#444">Uhrzeit</label><input class="fl-input" type="text" id="te-uhrzeit" placeholder="15:00"></div>
+    </div>
+    <input class="fl-input" type="text" id="te-beschreibung" placeholder="Beschreibung (optional)" style="margin-bottom:8px">
+    <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:8px">
+      <div style="flex:1;min-width:150px"><label style="display:block;font-size:.78rem;font-weight:500;margin-bottom:3px;color:#444">Rückmeldefrist (optional)</label><input class="fl-input" type="date" id="te-frist"></div>
+    </div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:6px">
+      <label style="display:flex;align-items:center;gap:7px;font-size:.85rem;cursor:pointer;user-select:none"><input type="checkbox" id="te-keine-abstimmung" style="accent-color:#8e44ad;width:16px;height:16px"> 📢 Nur Info (ohne Abstimmung)</label>
+      <label style="display:flex;align-items:center;gap:7px;font-size:.85rem;cursor:pointer;user-select:none"><input type="checkbox" id="te-startseite" style="accent-color:#2563b5;width:16px;height:16px"> 🏠 Auf Startseite anzeigen</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal()">Abbrechen</button>
+      <button class="btn btn-success" onclick="saveTerminEdit()">💾 Speichern</button>
+    </div>
+  </div>
+</div>
+
 <!-- HAUSAUFGABEN MODAL -->
 <div class="modal-overlay" id="modal-hausaufgaben">
   <div class="modal" style="max-width:500px">
@@ -1358,6 +1531,15 @@ function applyFontSize(){
   document.querySelectorAll('.fs-btn').forEach(b=>{ const on=b.getAttribute('data-fs')===fs; b.style.background=on?'#2563b5':'#ecf0f1'; b.style.color=on?'#fff':'#555'; });
 }
 function setFontSize(fs){ localStorage.setItem('chor_fontsize',fs); applyFontSize(); }
+function applyTheme(){
+  const dark = localStorage.getItem('chor_theme')==='dark';
+  document.documentElement.classList.toggle('dark', dark);
+  document.querySelectorAll('.theme-btn').forEach(b=>{
+    const on=(b.getAttribute('data-theme')===(dark?'dark':'hell'));
+    b.style.background=on?'#2563b5':'#ecf0f1'; b.style.color=on?'#fff':'#555';
+  });
+}
+function setTheme(mode){ localStorage.setItem('chor_theme', mode==='dark'?'dark':'hell'); applyTheme(); }
 
 function showPageByName(id){
   const tab=[...document.querySelectorAll('.mtab')].find(t=>{const o=t.getAttribute('onclick');return o&&o.indexOf("showPage('"+id+"'")>=0;});
@@ -1367,6 +1549,67 @@ function openAbwesenheit(){
   const res=document.getElementById('abw-result'); if(res) res.textContent='';
   renderAbwesenheit();
   document.getElementById('modal-abwesenheit').classList.add('open');
+}
+// Abmelde-Chooser: nächste Probe ODER Urlaub/längere Abwesenheit
+function openAbmelden(){
+  if(!currentUser){ alert('Bitte zuerst anmelden.'); return; }
+  const today=localToday();
+  const nextProbe=(probenplan||[]).filter(p=>p.datum>=today).sort((a,b)=>a.datum.localeCompare(b.datum))[0];
+  const box=document.getElementById('abmelden-body'); if(!box) return;
+  let h='';
+  if(nextProbe){
+    const st=(probenstatus&&probenstatus[nextProbe.id])||{};
+    const myUid=currentUser&&currentUser.uid;
+    const selfNein=(myUid&&st[myUid]&&st[myUid].status==='nein');
+    const selfUrlaub=myAbsent(nextProbe.datum);
+    h+=`<div style="border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px">
+      <div style="font-weight:700;color:var(--navy)">🎹 Nächste Probe</div>
+      <div style="font-size:.85rem;color:#666;margin:2px 0 10px">${fmt(nextProbe.datum)}${nextProbe.notiz?' · '+esc(nextProbe.notiz):''}</div>`;
+    if(selfUrlaub) h+=`<div style="font-size:.82rem;color:#8a6d3b">🏖️ Du bist in diesem Zeitraum bereits als abwesend eingetragen.</div>`;
+    else if(selfNein) h+=`<div style="font-size:.84rem;color:#922b21;font-weight:600;margin-bottom:8px">❌ Du bist für diese Probe abgemeldet.</div><button class="btn btn-sm" style="background:#d5f5e3;color:#1a7a40" onclick="abmeldenProbeToggle('${nextProbe.id}')">↩ Doch dabei</button>`;
+    else h+=`<button class="btn" style="background:#fdecea;color:#922b21" onclick="abmeldenProbeToggle('${nextProbe.id}')">❌ Für diese Probe abmelden</button>`;
+    h+=`</div>`;
+  } else {
+    h+=`<div style="border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;font-size:.85rem;color:#888">🎹 Aktuell ist keine Probe geplant.</div>`;
+  }
+  h+=`<div style="border:1px solid var(--line);border-radius:12px;padding:14px">
+      <div style="font-weight:700;color:var(--navy)">🏖️ Urlaub / längere Abwesenheit</div>
+      <div style="font-size:.82rem;color:#666;margin:2px 0 10px">Zeitraum eintragen – du zählst dann bei allen Proben &amp; Terminen in der Zeit automatisch als „nicht da".</div>
+      <button class="btn btn-primary" onclick="closeModal();openAbwesenheit()">🏖️ Urlaub eintragen</button>
+    </div>`;
+  box.innerHTML=h;
+  document.getElementById('modal-abmelden').classList.add('open');
+}
+async function abmeldenProbeToggle(id){
+  await setProbeStatus(id,'nein');
+  const isNein = !!(probenstatus[id] && currentUser && probenstatus[id][currentUser.uid] && probenstatus[id][currentUser.uid].status==='nein');
+  showToast(isNein?'Für die Probe abgemeldet':'Wieder dabei','ok');
+  openAbmelden();
+  try{ renderStart(); }catch(e){}
+}
+// Kurze Zu-/Absagen-Übersicht der anstehenden Termine als Popup
+function openZusagen(){
+  const box=document.getElementById('zusagen-body'); if(!box) return;
+  const today=new Date().toISOString().split('T')[0];
+  const myName=getUserVoteName();
+  const IC={konzert:'🎵',fest:'🎪',chorlager:'🏕️',gottesdienst:'⛪',probe:'🎹',sonstiges:'📌'};
+  const up=(termine||[]).filter(t=>((t.datum_ende||t.datum)>=today) && !t.keineAbstimmung).sort((a,b)=>a.datum.localeCompare(b.datum));
+  if(!up.length){ box.innerHTML='<div class="empty">Keine anstehenden Termine mit Abstimmung.</div>'; }
+  else box.innerHTML=up.map(t=>{
+    const bd=terminVoteBreakdown(t);
+    const mv=myName?((t.abstimmungen||{})[myName]||null):null;
+    const meChip = mv==='ja'?'<span style="color:#1a7a40;font-weight:700">· du: ✅</span>':mv==='nein'?'<span style="color:#922b21;font-weight:700">· du: ❌</span>':mv==='vielleicht'?'<span style="color:#9a6b00;font-weight:700">· du: ❓</span>':'<span style="color:#999">· du: offen</span>';
+    const line=(ic,arr,col)=>arr.length?`<div style="font-size:.79rem;color:${col};margin-top:3px"><strong>${ic} ${arr.length}:</strong> ${esc(arr.join(', '))}</div>`:'';
+    return `<div style="border:1px solid var(--line);border-radius:12px;padding:12px 13px;margin-bottom:9px">
+      <div style="font-weight:700;color:var(--navy)">${IC[t.typ]||'📌'} ${esc(t.titel)}</div>
+      <div style="font-size:.78rem;color:#777;margin:1px 0 6px">${fmt(t.datum)}${t.datum_ende?' – '+fmt(t.datum_ende):''}${t.uhrzeit?' · '+esc(t.uhrzeit):''} ${meChip}</div>
+      <div style="font-size:.82rem;color:#444;font-weight:600">✅ ${bd.ja.length} · ❌ ${bd.nein.length} · ❓ ${bd.vl.length} · ⏳ ${bd.notVoted.length} offen</div>
+      ${line('✅',bd.ja,'#1a7a40')}
+      ${line('❌',bd.nein,'#922b21')}
+      ${line('❓',bd.vl,'#9a6b00')}
+    </div>`;
+  }).join('');
+  document.getElementById('modal-zusagen').classList.add('open');
 }
 function openSearch(){
   const inp=document.getElementById('search-input'); if(inp) inp.value='';
@@ -1387,7 +1630,19 @@ function runSearch(){
   res.slice(0,40).forEach(r=>{ const d=document.createElement('div'); d.className='search-result'; d.innerHTML=`<span style="font-size:1.15rem">${r.icon}</span><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:.88rem">${esc(r.label)}</div>${r.sub?`<div style="font-size:.76rem;color:#888">${esc(r.sub)}</div>`:''}</div>`; d.onclick=r.go; el.appendChild(d); });
 }
 function showLoading(on){ const lo=document.getElementById('loading-overlay'); if(lo) lo.style.display=on?'flex':'none'; }
+// Dezente Erfolg-/Fehlermeldung unten einblenden
+function showToast(msg, type){
+  const wrap=document.getElementById('toast-wrap'); if(!wrap) { return; }
+  const ic = type==='ok'?'✅':type==='err'?'⚠️':'ℹ️';
+  const el=document.createElement('div');
+  el.className='toast '+(type||'info');
+  el.innerHTML='<span class="toast-ic">'+ic+'</span><span>'+esc(msg)+'</span>';
+  wrap.appendChild(el);
+  requestAnimationFrame(()=>el.classList.add('show'));
+  setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=>el.remove(),260); }, type==='err'?4200:2600);
+}
 applyFontSize();
+applyTheme();
 // Admin-Rechte kommen ausschließlich aus dem Nutzerprofil (isAdmin/permissions) — kein geteiltes Passwort mehr.
 const TYP_LABEL={"konzert": "🎵 Konzert", "fest": "🎪 Fest", "chorlager": "🏕️ Chorlager", "gottesdienst": "⛪ Gottesdienst", "probe": "🎹 Probe", "sonstiges": "📌 Sonstiges"};
 const TYP_COLOR={"konzert": "#2563b5", "fest": "#e67e22", "chorlager": "#27ae60", "gottesdienst": "#8e44ad", "probe": "#c0392b", "sonstiges": "#7f8c8d"};
@@ -1396,6 +1651,7 @@ const INIT_MITGLIEDER=[]; // Mitgliederdaten liegen in der Datenbank (login-gesc
 const INIT_TERMINE=[];
 
 let D=null, termine=[], kommentare=[], probenplan=[], mitglieder=[], liedwuensche=[], plakate=[], probenstatus={}, benachrichtigungen=[], anwesenheit={}, anwWork=null, userprofilesCache={}, abwesenheiten={};
+let pinnwand={}, fahrten={}, terminfindungen={};
 let adminMode = sessionStorage.getItem('chor_admin')==='1';
 let editMode = sessionStorage.getItem('chor_editmode')==='1';
 // Sichtbarkeit von Admin-Bearbeitungs-Elementen: nur wenn Bearbeiten-Modus AN und Berechtigung vorhanden
@@ -1416,6 +1672,8 @@ function setEditMode(on){
 function canUseEditMode(){
   return !!(currentUserProfile && (currentUserProfile.isAdmin || (Array.isArray(currentUserProfile.permissions) && currentUserProfile.permissions.length>0)));
 }
+// Ankündigungen anpinnen dürfen nur echte Admins (nicht Nutzer mit Einzelrechten)
+function canPin(){ return !!(currentUserProfile && currentUserProfile.isAdmin); }
 function updateEditModeUI(){
   const canEdit=canUseEditMode();
   document.querySelectorAll('.editmode-btn').forEach(b=>{
@@ -1498,7 +1756,7 @@ function showPage(id,tab){
   if(id==='statistik'){ renderStatistik(); if(document.getElementById('av-anwesenheit')?.style.display!=='none') renderAnwesenheitPage(); }
   if(id==='proben'){renderProben();renderSongPicker();}
   if(id==='termine') renderTermine();
-  if(id==='umfragen') renderUmfragen();
+  if(id==='umfragen'){ renderUmfragen(); if(!document.querySelector('#tf-optionen .tf-opt')) resetTfForm(); renderTerminfindung(); }
   if(id==='mitglieder') renderMitglieder();
   if(id==='konsole') renderKonsole();
   if(id==='einstellungen') renderEinstellungen();
@@ -1528,10 +1786,25 @@ function closeMoreSheet(){ document.getElementById('more-sheet').classList.remov
 
 // START-ÜBERSICHT
 function renderStart(){
+  try{ renderPinnwand(); }catch(e){}
   const el=document.getElementById('start-content'); if(!el) return;
   const today=localToday();
   const TYP_IC={konzert:'🎵',fest:'🎪',chorlager:'🏕️',gottesdienst:'⛪',probe:'🎹',sonstiges:'📌'};
   let html='';
+
+  // ---- Dashboard-Kopf: persönliche Begrüßung + Schnellaktionen ----
+  const _h=new Date().getHours();
+  const _gruss=_h<11?'Guten Morgen':_h<17?'Hallo':'Guten Abend';
+  const _me=(typeof currentUser!=='undefined'&&currentUser)?(prettyName(getUserVoteName())||'').split(' ')[0]:'';
+  const _heute=new Date().toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'});
+  html+=`<div class="hero"><div class="hero-greet">${_gruss}${_me?', '+esc(_me):''} 👋</div><div class="hero-date">${esc(_heute)}</div></div>`;
+  const _qa=[
+    `<button class="qa" onclick="openZusagen()"><span class="qa-ic">📆</span>Zu-/Absagen</button>`,
+    `<button class="qa" onclick="openAbmelden()"><span class="qa-ic">🙋</span>Abmelden</button>`,
+    `<button class="qa" onclick="showPageByName('lieder')"><span class="qa-ic">🎵</span>Lieder</button>`
+  ];
+  if(canPin()) _qa.push(`<button class="qa qa-adm" onclick="document.getElementById('pw-text')&&document.getElementById('pw-text').focus();window.scrollTo({top:0,behavior:'smooth'})"><span class="qa-ic">📌</span>Ankündigen</button>`);
+  html+=`<div class="qa-row">${_qa.join('')}</div>`;
 
   // Nächste Probe (mit Abmelde-Möglichkeit direkt hier)
   const nextProbe=(probenplan||[]).filter(p=>p.datum>=today).sort((a,b)=>a.datum.localeCompare(b.datum))[0];
@@ -1548,22 +1821,24 @@ function renderStart(){
 
   // Nächste Termine (max 3) mit Abstimm-Status + Schnell-Abstimmung
   const myName=getUserVoteName();
-  const nextTermine=(termine||[]).filter(t=>((t.datum_ende||t.datum)>=today)).sort((a,b)=>a.datum.localeCompare(b.datum)).slice(0,3);
+  const nextTermine=(termine||[]).filter(t=>((t.datum_ende||t.datum)>=today) && t.startseite!==false).sort((a,b)=>a.datum.localeCompare(b.datum)).slice(0,3);
   html+='<div class="card" style="margin-top:12px">';
   html+='<div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="showPageByName(\'termine\')"><span class="card-title" style="margin-bottom:0">📆 Nächste Termine</span><span style="font-size:.76rem;color:#2563b5">Alle ›</span></div>';
   if(nextTermine.length){
     nextTermine.forEach(t=>{
-      const mv=myName?((t.abstimmungen||{})[myName]||null):null;
-      const chip=mv==='ja'?'<span style="background:#d5f5e3;color:#1a7a40;border-radius:12px;padding:2px 9px;font-size:.72rem;font-weight:700">✅ Zugesagt</span>'
+      const infoOnly=!!t.keineAbstimmung;
+      const mv=(myName&&!infoOnly)?((t.abstimmungen||{})[myName]||null):null;
+      const chip=infoOnly?'<span style="background:#f3ecfa;color:#8e44ad;border-radius:12px;padding:2px 9px;font-size:.72rem;font-weight:700">📢 Info</span>'
+        :mv==='ja'?'<span style="background:#d5f5e3;color:#1a7a40;border-radius:12px;padding:2px 9px;font-size:.72rem;font-weight:700">✅ Zugesagt</span>'
         :mv==='nein'?'<span style="background:#fdecea;color:#922b21;border-radius:12px;padding:2px 9px;font-size:.72rem;font-weight:700">❌ Abgesagt</span>'
         :mv==='vielleicht'?'<span style="background:#fef9e7;color:#9a6b00;border-radius:12px;padding:2px 9px;font-size:.72rem;font-weight:700">❓ Vielleicht</span>'
         :(myName?'<span style="background:#eaeef3;color:#666;border-radius:12px;padding:2px 9px;font-size:.72rem;font-weight:700">⚪ Noch offen</span>':'');
       html+=`<div style="border-top:1px solid var(--line);margin-top:10px;padding-top:10px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">
-          <div><strong>${TYP_IC[t.typ]||'📌'} ${esc(t.titel)}</strong><div style="font-size:.8rem;color:#777;margin-top:2px">${fmt(t.datum)}${t.datum_ende?' – '+fmt(t.datum_ende):''}${t.uhrzeit?' · '+esc(t.uhrzeit):''}</div></div>
+          <div><strong>${TYP_IC[t.typ]||'📌'} ${esc(t.titel)}</strong><div style="font-size:.8rem;color:#777;margin-top:2px">${fmt(t.datum)}${t.datum_ende?' – '+fmt(t.datum_ende):''}${t.uhrzeit?' · '+esc(t.uhrzeit):''}</div>${infoOnly&&t.beschreibung?`<div style="font-size:.78rem;color:#888;margin-top:3px">${esc(t.beschreibung)}</div>`:''}</div>
           ${chip}
         </div>
-        ${(myName&&!mv)?`<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        ${(myName&&!mv&&!infoOnly)?`<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
           <button class="btn btn-sm" style="background:#27ae60;color:white" onclick="abstimmen('${t.id}','ja').then(()=>renderStart())">✅ Komme</button>
           <button class="btn btn-sm" style="background:#e74c3c;color:white" onclick="abstimmen('${t.id}','nein').then(()=>renderStart())">❌ Komme nicht</button>
           <button class="btn btn-sm" style="background:#f39c12;color:white" onclick="abstimmen('${t.id}','vielleicht').then(()=>renderStart())">❓ Vielleicht</button>
@@ -1653,6 +1928,16 @@ function setLiederPageTab(t){
   if(t==='wuensche') renderLiedwuensche();
 }
 function setLiederView(v){ liederView=v; aktiveSaison='__all__'; renderLieder(); }
+function setUmfragenTab(which){
+  const views={umfragen:'uv-umfragen', terminfindung:'uv-terminfindung'};
+  const tabs={umfragen:'utab-umfragen', terminfindung:'utab-terminfindung'};
+  Object.keys(views).forEach(k=>{
+    const v=document.getElementById(views[k]); if(v) v.style.display=(k===which)?'':'none';
+    const t=document.getElementById(tabs[k]); if(t) t.classList.toggle('active', k===which);
+  });
+  if(which==='terminfindung'){ if(!document.querySelector('#tf-optionen .tf-opt')) resetTfForm(); renderTerminfindung(); }
+  else renderUmfragen();
+}
 async function toggleSeasonHidden(id){
   if(!hasPermission('lieder')){alert('Keine Berechtigung.');return;}
   const si=(D.seasons||[]).findIndex(s=>s.id===id); if(si<0)return;
@@ -2178,7 +2463,8 @@ function buildProbeAttendance(p){
   const st=(probenstatus && probenstatus[p.id])||{};
   const nein=Object.values(st).filter(e=>e&&e.status==='nein').map(e=>e.name);
   const urlaub=absentNamesForDate(p.datum);
-  const alle=[...new Set([...nein, ...urlaub])];
+  // Anzeige als „Vorname N." — und danach entdoppeln (jemand kann unter Kürzel UND vollem Namen auftauchen)
+  const alle=[...new Set([...nein, ...urlaub].map(x=>prettyName(x)).filter(Boolean))];
   const myUid=currentUser&&currentUser.uid;
   const selfNein=(myUid && st[myUid] && st[myUid].status==='nein');
   const selfUrlaub=myAbsent(p.datum);
@@ -2415,6 +2701,18 @@ function allProbenSorted(){
 }
 function memberKey(m){ return String(m.id||m.nr); }
 function memberName(m){ return ((m.vorname||'')+' '+(m.nachname||'')).trim(); }
+// Anzeige-Kurzform: „Martin Wolff" -> „Martin W."; nur ein Namensteil -> unverändert
+function shortName(vorname, nachname){
+  const v=String(vorname||'').trim(); const nn=String(nachname||'').trim();
+  if(v && nn) return v+' '+nn.charAt(0).toUpperCase()+'.';
+  return v || nn || '';
+}
+// Kürzt einen frei getippten „Vorname Nachname"-String zu „Vorname N." (einzelne Wörter bleiben)
+function shortenFree(s){
+  const parts=String(s||'').trim().split(/\s+/);
+  if(parts.length>=2){ const last=parts[parts.length-1]; return parts.slice(0,-1).join(' ')+' '+last.charAt(0).toUpperCase()+'.'; }
+  return s;
+}
 // Vorab-Selbstabmeldungen ('nein') einem Mitglied zuordnen (über Benutzerprofil + Namens-Fallbacks)
 function _norm(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9äöüß]/g,''); }
 
@@ -2434,23 +2732,23 @@ function _anzeigeForUsername(username){
 function prettyName(stored){
   if(stored==null || stored==='') return stored;
   const n=_norm(stored);
-  // 1) Profil, dessen Anzeigename ODER Benutzername passt
+  // 1) Profil per Benutzername/Anzeigename -> „Vorname N."
   for(const uid in userprofilesCache){
     const p=userprofilesCache[uid]; if(!p) continue;
     if(_norm(p.anzeigename)===n || _norm(p.username)===n){
-      if(p.anzeigename) return p.anzeigename;
-      const fn=((p.vorname||'')+' '+(p.nachname||'')).trim(); if(fn) return fn;
+      const sn=shortName(p.vorname, p.nachname); if(sn) return sn;
+      if(p.anzeigename) return shortenFree(p.anzeigename);
       break;
     }
   }
-  // 2) Mitglied per Benutzername -> Live-Anzeigename, sonst voller Name
+  // 2) Mitglied per Benutzername -> „Vorname N."
   let m=mitglieder.find(x=>x.username && _norm(x.username)===n);
-  if(m){ const an=_anzeigeForUsername(m.username); if(an) return an; const fn=memberName(m); if(fn) return fn; }
-  // 3) Bereits voller Mitgliedsname -> ggf. aktuellen Anzeigenamen bevorzugen
+  if(m){ const sn=shortName(m.vorname, m.nachname); if(sn) return sn; }
+  // 3) Bereits voller Mitgliedsname -> „Vorname N."
   m=mitglieder.find(x=>memberName(x) && _norm(memberName(x))===n);
-  if(m){ const an=_anzeigeForUsername(m.username); if(an) return an; return memberName(m)||stored; }
-  // 4) Gast / frei eingetippter Name -> unverändert
-  return stored;
+  if(m){ const sn=shortName(m.vorname, m.nachname); if(sn) return sn; return stored; }
+  // 4) Gast / frei eingetippter Name -> „Vorname N." falls zwei Teile
+  return shortenFree(stored);
 }
 function prettyNames(arr){ return (arr||[]).map(prettyName); }
 // Alle Namens-Varianten, unter denen der aktuelle Benutzer evtl. früher gespeichert wurde
@@ -2465,7 +2763,14 @@ function getUserAliases(){
 }
 // Alle Ansichten, die Namen über prettyName() anzeigen, neu aufbauen
 function refreshNameDisplays(){
-  try{ renderTermine(); renderUmfragen(); renderKommentare(); renderLiedwuensche(); }catch(e){}
+  // Alle Ansichten mit Namen neu aufbauen, sobald Profile/Mitglieder geladen sind
+  try{ renderTermine(); }catch(e){}
+  try{ renderUmfragen(); }catch(e){}
+  try{ renderKommentare(); }catch(e){}
+  try{ renderLiedwuensche(); }catch(e){}
+  try{ renderProben(); }catch(e){}     // Probe-Abmeldungen („Abgemeldet: …")
+  try{ renderStart(); }catch(e){}      // Startseite (nächste Probe/Termine)
+  try{ renderPlakate(); }catch(e){}    // Plakat-Verteiler + Rangliste
 }
 function _matchMemberByProfile(uid, nm){
   let m=mitglieder.find(x=>x.uid && x.uid===uid); if(m) return m;  // explizite Verknüpfung zuerst
@@ -2764,7 +3069,7 @@ function terminVoteBreakdown(t){
     let v=null;
     for(const k of Object.keys(abs)){ if(cands.includes(_norm(k))){ v=abs[k]; usedKeys.add(_norm(k)); } }
     if(v===null && cands.some(c=>urlaubNorm.has(c))) v='nein';
-    const nm=memberName(m)||('Nr. '+(m.nr||'?'));
+    const nm=shortName(m.vorname,m.nachname)||memberName(m)||('Nr. '+(m.nr||'?'));
     const voice=SATB_VOICES.includes(m.stimme)?m.stimme:'—';
     stat[voice].total++;
     if(v==='ja'){ ja.push(nm); stat[voice].ja++; }
@@ -2787,7 +3092,7 @@ function rueckmeldungenHtml(t, bd){
   const cells=SATB_VOICES.map(v=>cell(v,bd.stat[v])).join('')+cell('o. Stimme',bd.stat['—']);
   const tally=(bd.ja.length||bd.nein.length||bd.vl.length)?`<div class="tally">${bd.ja.length?`<span style="color:#27ae60">✅ ${bd.ja.length}: ${esc(bd.ja.join(', '))}</span><br>`:''}${bd.nein.length?`<span style="color:#e74c3c">❌ ${bd.nein.length}: ${esc(bd.nein.join(', '))}</span><br>`:''}${bd.vl.length?`<span style="color:#f39c12">❓ ${bd.vl.length}: ${esc(bd.vl.join(', '))}</span>`:''}</div>`:'';
   const offen=bd.notVoted.length
-    ? `<div style="font-size:.78rem;color:#7d6608;margin-top:8px"><strong>⏳ Noch nicht abgestimmt (${bd.notVoted.length}):</strong> ${esc(bd.notVoted.map(m=>memberName(m)||('Nr. '+(m.nr||'?'))).join(', '))}</div>`
+    ? `<div style="font-size:.78rem;color:#7d6608;margin-top:8px"><strong>⏳ Noch nicht abgestimmt (${bd.notVoted.length}):</strong> ${esc(bd.notVoted.map(m=>shortName(m.vorname,m.nachname)||memberName(m)||('Nr. '+(m.nr||'?'))).join(', '))}</div>`
     : `<div style="font-size:.78rem;color:#22a559;margin-top:8px">✅ Alle haben abgestimmt.</div>`;
   // Admin: einzelne Stimm-Einträge (roh) verwalten/löschen
   const abs=t.abstimmungen||{};
@@ -2814,14 +3119,17 @@ function terminHtml(t,past=false){
   const color=TYP_COLOR[t.typ]||'#888';
   const label=TYP_LABEL[t.typ]||t.typ;
   const dateStr=t.datum_ende?fmt(t.datum)+' – '+fmt(t.datum_ende):fmt(t.datum);
+  const infoOnly = !!t.keineAbstimmung;
   const bd=terminVoteBreakdown(t);
-  const showRueck = !past || bd.ja.length || bd.nein.length || bd.vl.length;
+  const showRueck = !infoOnly && (!past || bd.ja.length || bd.nein.length || bd.vl.length);
   return`<div class="termin-card" style="border-left-color:${color};${past?'opacity:.6':''}">
     <span class="t-badge" style="background:${color}">${label}</span>
-    <div class="t-title">${esc(t.titel)}</div>
-    <div class="t-meta">📅 ${dateStr}${t.uhrzeit?' &nbsp;🕐 '+esc(t.uhrzeit):''}${t.frist&&!past?` &nbsp;<span style="color:${t.frist<localToday()?'#e74c3c':'#7d6608'}">⏳ bis ${fmt(t.frist)}${t.frist<localToday()?' (abgelaufen)':''}</span>`:''}</div>
-    ${!past?`<div class="vote-row" id="vrow-${t.id}">${buildVoteRow(t)}</div>`:''}
+    <div class="t-title">${esc(t.titel)}${infoOnly?' <span style="font-size:.66rem;font-weight:600;color:#8e44ad;background:#f3ecfa;border-radius:8px;padding:1px 7px;vertical-align:middle">📢 Info</span>':''}</div>
+    <div class="t-meta">📅 ${dateStr}${t.uhrzeit?' &nbsp;🕐 '+esc(t.uhrzeit):''}${t.frist&&!past&&!infoOnly?` &nbsp;<span style="color:${t.frist<localToday()?'#e74c3c':'#7d6608'}">⏳ bis ${fmt(t.frist)}${t.frist<localToday()?' (abgelaufen)':''}</span>`:''}</div>
+    ${(!past&&!infoOnly)?`<div class="vote-row" id="vrow-${t.id}">${buildVoteRow(t)}</div>`:''}
+    ${infoOnly&&t.beschreibung?`<div style="font-size:.85rem;color:#555;margin:2px 0 4px">${esc(t.beschreibung)}</div>`:''}
     ${setlisteHtml(t)}
+    ${!past?fahrtenBlock(t):''}
     ${showRueck?rueckmeldungenHtml(t, bd):''}
     <details class="t-coll"><summary>ℹ️ Details${t.beschreibung?' & Beschreibung':''}</summary><div>
       ${t.beschreibung?`<div style="font-size:.84rem;color:#555;margin-bottom:8px">${esc(t.beschreibung)}</div>`:''}
@@ -2829,6 +3137,7 @@ function terminHtml(t,past=false){
       <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-sm" style="background:transparent;border:1px solid #8e44ad;color:#8e44ad;font-size:.72rem" onclick="exportTerminICS('${t.id}')">📥 Kalender (.ics)</button>
         ${uiEdit('termine')?`
+          <button class="btn btn-sm" style="background:#eef1f5;color:#1d4e96;font-size:.72rem" onclick="editTermin('${t.id}')">✏️ Bearbeiten</button>
           ${(t.typ==='konzert'||t.typ==='fest')?`<button class="btn btn-sm" style="background:#3498db;color:white;font-size:.72rem" onclick="editSetliste('${t.id}')">🎵 Setliste</button>`:''}
           <button class="btn btn-danger btn-sm del-btn" style="opacity:1;position:static" onclick="deleteTermin('${t.id}')">✕ Termin löschen</button>
         `:''}
@@ -2899,6 +3208,7 @@ async function abstimmen(id,antwort){
   // Update just this vote row for instant feedback
   const vrow=document.getElementById('vrow-'+id);
   if(vrow) vrow.innerHTML=buildVoteRow(t);
+  showToast(antwort==='ja'?'Zusage gespeichert':antwort==='nein'?'Absage gespeichert':'Als „Vielleicht" gespeichert','ok');
   // Also refresh tally
   renderTermine();
 }
@@ -2908,9 +3218,13 @@ async function addTermin(){
   if(!titel||!datum){alert('Bezeichnung und Datum erforderlich.');return;}
   const tUhr=document.getElementById('t-uhrzeit').value.trim();
   const tFrist=document.getElementById('t-frist').value||'';
-  termine.push({id:uid(),titel,datum,datum_ende:document.getElementById('t-datum-ende').value||'',uhrzeit:tUhr,typ:document.getElementById('t-typ').value,beschreibung:document.getElementById('t-beschreibung').value.trim(),frist:tFrist,abstimmungen:{}});
+  const keineAbstimmung=!!document.getElementById('t-keine-abstimmung')?.checked;
+  const startseite=document.getElementById('t-startseite') ? !!document.getElementById('t-startseite').checked : true;
+  termine.push({id:uid(),titel,datum,datum_ende:document.getElementById('t-datum-ende').value||'',uhrzeit:tUhr,typ:document.getElementById('t-typ').value,beschreibung:document.getElementById('t-beschreibung').value.trim(),frist:tFrist,keineAbstimmung,startseite,abstimmungen:{}});
   await dbFetch(DB+'/termine.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(termine)}).catch(e=>console.warn(e));
   ['t-titel','t-datum','t-datum-ende','t-uhrzeit','t-beschreibung','t-frist'].forEach(id=>document.getElementById(id).value='');
+  if(document.getElementById('t-keine-abstimmung')) document.getElementById('t-keine-abstimmung').checked=false;
+  if(document.getElementById('t-startseite')) document.getElementById('t-startseite').checked=true;
   renderTermine(); renderKalender();
   notifyPush('termin','🗓️ Neuer Termin: '+titel, fmt(datum)+(tUhr?' um '+tUhr+' Uhr':''));
   alert('✅ Termin gespeichert!');
@@ -2920,6 +3234,41 @@ async function deleteTermin(id){
   termine=termine.filter(t=>t.id!==id);
   await dbFetch(DB+'/termine.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(termine)}).catch(e=>console.warn(e));
   renderTermine(); renderKalender();
+}
+function editTermin(id){
+  if(!uiEdit('termine')) return;
+  const t=termine.find(x=>x.id===id); if(!t) return;
+  document.getElementById('te-id').value=id;
+  document.getElementById('te-titel').value=t.titel||'';
+  document.getElementById('te-typ').value=t.typ||'sonstiges';
+  document.getElementById('te-datum').value=t.datum||'';
+  document.getElementById('te-datum-ende').value=t.datum_ende||'';
+  document.getElementById('te-uhrzeit').value=t.uhrzeit||'';
+  document.getElementById('te-beschreibung').value=t.beschreibung||'';
+  document.getElementById('te-frist').value=t.frist||'';
+  document.getElementById('te-keine-abstimmung').checked=!!t.keineAbstimmung;
+  document.getElementById('te-startseite').checked=(t.startseite!==false);
+  document.getElementById('modal-termin-edit').classList.add('open');
+}
+async function saveTerminEdit(){
+  if(!uiEdit('termine')){alert('Keine Berechtigung.');return;}
+  const id=document.getElementById('te-id').value;
+  const t=termine.find(x=>x.id===id); if(!t) return;
+  const titel=document.getElementById('te-titel').value.trim();
+  const datum=document.getElementById('te-datum').value;
+  if(!titel||!datum){alert('Bezeichnung und Datum erforderlich.');return;}
+  t.titel=titel;
+  t.typ=document.getElementById('te-typ').value;
+  t.datum=datum;
+  t.datum_ende=document.getElementById('te-datum-ende').value||'';
+  t.uhrzeit=document.getElementById('te-uhrzeit').value.trim();
+  t.beschreibung=document.getElementById('te-beschreibung').value.trim();
+  t.frist=document.getElementById('te-frist').value||'';
+  t.keineAbstimmung=!!document.getElementById('te-keine-abstimmung').checked;
+  t.startseite=!!document.getElementById('te-startseite').checked;
+  await dbFetch(DB+'/termine.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(termine)}).catch(e=>console.warn(e));
+  closeModal();
+  renderTermine(); renderKalender(); try{renderStart();}catch(e){}
 }
 
 // ===== UMFRAGEN (mit Auswertung) =====
@@ -3142,7 +3491,7 @@ function renderMitglieder(){
         ${m.adresse||m.plz?`<div class="mitglied-detail">📍 ${esc(m.adresse||'')} ${esc(m.plz||'')}</div>`:''}
         ${m.geburtstag?`<div class="mitglied-detail">🎂 ${esc(m.geburtstag)}</div>`:''}
       </div>
-      ${uiEdit('mitglieder')?`<div style="display:flex;flex-direction:column;gap:4px"><button class="btn btn-gray btn-sm" onclick="openEditMitglied('${m.nr||m.id}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteMitglied('${m.nr||m.id}')">✕</button></div>`:''}
+      ${(uiEdit('mitglieder')||(currentUserProfile&&currentUserProfile.isAdmin&&m.username))?`<div style="display:flex;flex-direction:column;gap:4px">${uiEdit('mitglieder')?`<button class="btn btn-gray btn-sm" onclick="openEditMitglied('${m.nr||m.id}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteMitglied('${m.nr||m.id}')">✕</button>`:''}${(currentUserProfile&&currentUserProfile.isAdmin&&m.username)?`<button class="btn btn-sm" style="background:#eef1f5;color:#1d4e96" title="Passwort auf Benutzername zurücksetzen" onclick="adminResetPassword('${esc(m.username)}')">🔑</button>`:''}</div>`:''}
     </div>`;
   }).join('');
   // Registrierte Nutzerkonten, die (noch) keinem Mitglied zugeordnet sind
@@ -3631,6 +3980,27 @@ async function showResetPw() {
     // Neutrale Meldung, um die Existenz eines Kontos nicht zu verraten
     showOk();
   }
+}
+
+// Admin: Passwort eines Mitglieds serverseitig auf dessen Benutzernamen zurücksetzen
+async function adminResetPassword(username){
+  if(!(currentUserProfile && currentUserProfile.isAdmin)){ showToast('Nur Admins dürfen das','err'); return; }
+  if(!username){ showToast('Kein Benutzername hinterlegt','err'); return; }
+  if(!confirm('Passwort von „'+username+'" auf den Benutzernamen zurücksetzen?\n\nDas Mitglied meldet sich danach mit\n  Benutzername: '+username+'\n  Passwort: '+username+'\nan und kann es in den Einstellungen ändern.')) return;
+  try{
+    const u=window._fbAuth&&window._fbAuth.currentUser;
+    if(!u){ showToast('Bitte neu anmelden','err'); return; }
+    const idToken=await u.getIdToken();
+    const r=await fetch(window.USERNAME_AUTH_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'adminreset', idToken, target:username})});
+    if(r.ok){
+      showToast('Passwort zurückgesetzt','ok');
+      alert('✅ Passwort von „'+username+'" wurde zurückgesetzt.\n\nNeues Passwort = Benutzername:\n  '+username+'\n\nBitte dem Mitglied mitteilen. Es kann das Passwort danach in den Einstellungen selbst ändern.');
+    } else if(r.status===403){ showToast('Keine Admin-Berechtigung','err'); }
+    else if(r.status===404){ showToast('Kein Konto für dieses Mitglied vorhanden','err'); }
+    else if(r.status===401){ showToast('Sitzung abgelaufen – bitte neu anmelden','err'); }
+    else if(r.status===400){ const j=await r.json().catch(()=>({})); showToast(j.error==='short'?'Benutzername zu kurz (min. 6 Zeichen)':'Ungültige Anfrage','err'); }
+    else { showToast('Zurücksetzen fehlgeschlagen','err'); }
+  }catch(e){ showToast('Netzwerkfehler beim Zurücksetzen','err'); }
 }
 
 function showUserMenu() {
@@ -4723,7 +5093,9 @@ function renderEinstellungen(){
   if(pw2) pw2.value='';
   const pr = document.getElementById('push-result'); if(pr) pr.textContent='';
   applyFontSize();
+  applyTheme();
   renderPushStatus();
+  renderMeineKontaktdaten();
   // Bearbeiten-Modus-Karte nur für Bearbeiter (Admin oder mit Berechtigung) zeigen
   const emCard = document.getElementById('editmode-card');
   if(emCard){
@@ -4731,6 +5103,51 @@ function renderEinstellungen(){
     emCard.style.display = isEditor ? 'block' : 'none';
   }
   updateEditModeUI();
+}
+// Index des zum aktuellen Konto gehörenden Mitglieds (über uid, sonst Benutzername)
+function myMemberIndex(){
+  if(!currentUser && !currentUserProfile) return -1;
+  const uid=currentUser&&currentUser.uid;
+  let i=(mitglieder||[]).findIndex(m=>m && m.uid && uid && m.uid===uid);
+  if(i<0){ const un=currentUserProfile&&currentUserProfile.username; if(un) i=(mitglieder||[]).findIndex(m=>m && m.username && _norm(m.username)===_norm(un)); }
+  return i;
+}
+function renderMeineKontaktdaten(){
+  const hint=document.getElementById('kd-hinweis'), felder=document.getElementById('kd-felder');
+  if(!hint||!felder) return;
+  const i=myMemberIndex();
+  if(i<0){
+    hint.textContent='ℹ️ Dein Konto ist noch keinem Mitglied-Eintrag zugeordnet. Bitte kurz an die Chorleitung wenden.';
+    felder.style.display='none'; return;
+  }
+  const m=mitglieder[i];
+  hint.textContent='Angemeldet als '+(memberName(m)||m.username||'');
+  document.getElementById('kd-handy').value=m.handy||'';
+  document.getElementById('kd-telefon').value=m.telefon||'';
+  document.getElementById('kd-adresse').value=m.adresse||'';
+  document.getElementById('kd-plz').value=m.plz||'';
+  felder.style.display='';
+  const r=document.getElementById('kd-result'); if(r) r.textContent='';
+}
+async function saveMeineKontaktdaten(){
+  const i=myMemberIndex();
+  const res=document.getElementById('kd-result');
+  if(i<0){ if(res){res.style.color='#e74c3c';res.textContent='❌ Kein zugeordnetes Mitglied gefunden.';} return; }
+  const upd={
+    handy:document.getElementById('kd-handy').value.trim(),
+    telefon:document.getElementById('kd-telefon').value.trim(),
+    adresse:document.getElementById('kd-adresse').value.trim(),
+    plz:document.getElementById('kd-plz').value.trim()
+  };
+  Object.assign(mitglieder[i], upd);
+  try{
+    // Nur die eigenen Kontaktfelder gezielt schreiben (kein Überschreiben fremder Einträge)
+    await dbFetch(DB+'/mitglieder/'+i+'.json',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(upd)});
+    if(res){res.style.color='#27ae60';res.textContent='✅ Gespeichert – danke fürs Aktuell-Halten!';}
+    showToast('Kontaktdaten gespeichert','ok');
+    setTimeout(()=>{if(res)res.textContent='';},3000);
+    if(typeof renderMitglieder==='function') renderMitglieder();
+  }catch(e){ if(res){res.style.color='#e74c3c';res.textContent='❌ Speichern fehlgeschlagen: '+e;} showToast('Speichern fehlgeschlagen','err'); }
 }
 
 async function saveAnzeigename(){
@@ -4925,6 +5342,241 @@ function hasPermission(perm){
 const _origRenderKonsole = typeof renderKonsole !== 'undefined' ? renderKonsole : null;
 
 // LOAD ALL
+// ===== Gemeinsame Kennung: stabiler Schlüssel + Anzeige für Pinnwand/Fahrten/Terminfindung =====
+function myKey(){
+  if(typeof currentUser!=='undefined' && currentUser && currentUser.uid) return currentUser.uid;
+  const n=getUserVoteName(); return n?('u_'+_norm(n)):null;
+}
+
+// ===== PINNWAND / ANKÜNDIGUNGEN (getrennt von Kommentaren, mit „gelesen von …") =====
+async function loadPinnwand(){
+  try{ const r=await dbFetch(DB+'/pinnwand.json'); if(r.ok){ pinnwand=(await r.json())||{}; } }catch(e){ console.warn('loadPinnwand',e); }
+}
+function renderPinnwand(){
+  const card=document.getElementById('pinnwand-card'); if(!card) return;
+  const editor=canPin();
+  const entries=Object.entries(pinnwand||{}).map(([k,v])=>Object.assign({_key:k},v||{})).filter(x=>x&&x.text).sort((a,b)=>(b.ts||0)-(a.ts||0));
+  if(!entries.length && !editor){ card.innerHTML=''; return; }
+  const compose = editor ? `
+    <div style="margin-bottom:${entries.length?'12px':'0'}">
+      <textarea id="pw-text" class="fl-input" rows="2" placeholder="Neue Ankündigung an alle…" style="resize:vertical"></textarea>
+      <div style="display:flex;justify-content:flex-end;margin-top:6px"><button class="btn btn-primary btn-sm" onclick="addPinnwand()">📌 Anpinnen</button></div>
+    </div>` : '';
+  const myk=myKey();
+  const list=entries.map(e=>{
+    const gel=e.gelesen||{};
+    const gelNames=Object.values(gel).filter(Boolean);
+    const cnt=gelNames.length;
+    const gelHtml = cnt
+      ? `<details class="t-coll" style="margin-top:6px"><summary style="font-size:.74rem;color:#888">👁️ Gelesen von ${cnt}</summary><div style="font-size:.78rem;color:#777;padding-top:4px">${esc(gelNames.map(n=>prettyName(n)||n).join(', '))}</div></details>`
+      : `<div style="font-size:.74rem;color:#bbb;margin-top:6px">Noch nicht gelesen</div>`;
+    const del = editor ? `<button class="btn btn-danger btn-sm" style="opacity:1;position:static;margin-left:auto;padding:2px 8px" onclick="deletePinnwand('${e._key}')">✕</button>` : '';
+    return `<div style="border-left:3px solid #e67e22;background:#fff8f1;border-radius:8px;padding:10px 12px;margin-bottom:8px">
+      <div style="white-space:pre-wrap;font-size:.9rem;color:#333">${esc(e.text)}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px;font-size:.72rem;color:#a06020">📌 ${esc(prettyName(e.autor)||e.autor||'Chorleitung')} · ${e.ts?fmt(new Date(e.ts).toISOString().split('T')[0]):''}${del}</div>
+      ${gelHtml}
+    </div>`;
+  }).join('');
+  card.innerHTML=`<div class="card" style="border-top:3px solid #e67e22">
+    <div class="card-title" style="color:#c0620f">📌 Ankündigungen</div>
+    ${compose}${list||(editor?'<div style="font-size:.82rem;color:#aaa">Noch keine Ankündigungen.</div>':'')}
+  </div>`;
+  // Still als „gelesen" markieren (nur eigene Kennung)
+  if(myk){ entries.forEach(e=>{ if(!(e.gelesen&&e.gelesen[myk])) markPinnwandRead(e._key); }); }
+}
+async function addPinnwand(){
+  if(!canPin()){ showToast('Nur Admins können anpinnen','err'); return; }
+  const ta=document.getElementById('pw-text'); if(!ta) return;
+  const text=ta.value.trim(); if(!text){ ta.focus(); return; }
+  const id=uid();
+  const entry={text, autor:getUserVoteName()||'Chorleitung', ts:Date.now()};
+  pinnwand[id]=entry; ta.value='';
+  await dbFetch(DB+'/pinnwand/'+id+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(entry)}).catch(e=>console.warn(e));
+  renderPinnwand();
+  showToast('Ankündigung angepinnt','ok');
+}
+async function deletePinnwand(id){
+  if(!canPin()) return;
+  if(!confirm('Diese Ankündigung löschen?')) return;
+  delete pinnwand[id];
+  await dbFetch(DB+'/pinnwand/'+id+'.json',{method:'DELETE'}).catch(e=>console.warn(e));
+  renderPinnwand();
+}
+async function markPinnwandRead(id){
+  const myk=myKey(); if(!myk) return;
+  const nm=getUserVoteName()||'?';
+  if(!pinnwand[id]) return;
+  if(!pinnwand[id].gelesen) pinnwand[id].gelesen={};
+  if(pinnwand[id].gelesen[myk]) return;
+  pinnwand[id].gelesen[myk]=nm;
+  await dbFetch(DB+'/pinnwand/'+id+'/gelesen/'+encodeURIComponent(myk)+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(nm)}).catch(e=>console.warn(e));
+}
+
+// ===== FAHRGEMEINSCHAFTEN (pro Termin) =====
+async function loadFahrten(){
+  try{ const r=await dbFetch(DB+'/fahrten.json'); if(r.ok){ fahrten=(await r.json())||{}; } }catch(e){ console.warn('loadFahrten',e); }
+}
+// Pro Termin: Fahrgemeinschaften an/aus (nur Bearbeiter schalten; standardmäßig aus)
+function fahrtenBlock(t){
+  const on = t.fahrten===true;
+  const canEdit = uiEdit('termine');
+  if(on){
+    const off = canEdit ? `<div style="text-align:right;margin-top:2px"><button class="btn btn-sm" style="background:transparent;color:#e74c3c;font-size:.7rem;padding:1px 6px" onclick="toggleFahrtenAktiv('${esc(t.id)}')">🚗 Fahrgemeinschaften deaktivieren</button></div>` : '';
+    return fahrtenHtml(t)+off;
+  }
+  return canEdit ? `<button class="btn btn-sm" style="background:#eef7f0;color:#1a7a40;font-size:.72rem;margin:3px 0" onclick="toggleFahrtenAktiv('${esc(t.id)}')">🚗 Fahrgemeinschaften aktivieren</button>` : '';
+}
+async function toggleFahrtenAktiv(id){
+  if(!uiEdit('termine')){ alert('Nur im Bearbeiten-Modus.'); return; }
+  const t=termine.find(x=>x.id===id); if(!t) return;
+  const idx=termine.indexOf(t);
+  t.fahrten=!t.fahrten;
+  await dbFetch(DB+'/termine/'+idx+'/fahrten.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(!!t.fahrten)}).catch(e=>console.warn(e));
+  renderTermine();
+}
+function fahrtenHtml(t){
+  const f=(fahrten&&fahrten[t.id])||{};
+  const entries=Object.entries(f).map(([k,v])=>Object.assign({_key:k},v||{})).filter(x=>x&&x.typ);
+  const biete=entries.filter(e=>e.typ==='biete');
+  const suche=entries.filter(e=>e.typ==='suche');
+  const myk=myKey();
+  const mine=myk?entries.find(e=>e._key===myk):null;
+  const freeSeats=biete.reduce((s,e)=>s+(parseInt(e.plaetze)||0),0);
+  const row=(e,ic)=>`<div style="display:flex;align-items:center;gap:6px;font-size:.82rem;padding:2px 0">
+      <span>${ic}</span><span style="flex:1">${esc(prettyName(e.name)||e.name||'?')}${e.ort?` <span style="color:#888">· ab ${esc(e.ort)}</span>`:''}${e.typ==='biete'?` <span style="color:#27ae60">(${parseInt(e.plaetze)||0} Pl.)</span>`:''}</span>
+      ${(e._key===myk)?`<button class="btn btn-danger btn-sm" style="opacity:1;position:static;padding:2px 7px" onclick="removeFahrt('${esc(t.id)}')">✕</button>`:''}
+    </div>`;
+  const lists=`
+    ${biete.length?`<div style="margin-top:4px"><strong style="font-size:.76rem;color:#1a7a40">🚗 Bietet Mitfahrt (${freeSeats} Plätze):</strong>${biete.map(e=>row(e,'🚗')).join('')}</div>`:''}
+    ${suche.length?`<div style="margin-top:4px"><strong style="font-size:.76rem;color:#a05a00">🙋 Sucht Mitfahrt (${suche.length}):</strong>${suche.map(e=>row(e,'🙋')).join('')}</div>`:''}
+    ${(!biete.length&&!suche.length)?'<div style="font-size:.8rem;color:#aaa;margin-top:4px">Noch keine Einträge.</div>':''}`;
+  const actions = (typeof currentUser!=='undefined'&&currentUser) ? (mine
+    ? `<div style="font-size:.76rem;color:#888;margin-top:8px">Dein Eintrag: ${mine.typ==='biete'?'🚗 du bietest Mitfahrt':'🙋 du suchst Mitfahrt'} · <a href="#" onclick="removeFahrt('${esc(t.id)}');return false" style="color:#e74c3c">entfernen</a></div>`
+    : `<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn btn-sm" style="background:#27ae60;color:#fff;font-size:.74rem" onclick="addFahrt('${esc(t.id)}','biete')">🚗 Ich biete Plätze</button>
+        <button class="btn btn-sm" style="background:#e67e22;color:#fff;font-size:.74rem" onclick="addFahrt('${esc(t.id)}','suche')">🙋 Ich suche Mitfahrt</button>
+      </div>`) : '';
+  const total=entries.length;
+  return `<details class="t-coll"><summary>🚗 Fahrgemeinschaft${total?` · ${total}`:''}</summary><div>${lists}${actions}</div></details>`;
+}
+async function addFahrt(terminId, typ){
+  const myk=myKey(); if(!myk){ alert('Bitte zuerst anmelden.'); return; }
+  let plaetze=1, ort='';
+  if(typ==='biete'){
+    const p=prompt('Wie viele Plätze bietest du an?','3'); if(p===null) return;
+    plaetze=Math.max(1,parseInt(p)||1);
+  }
+  const o=prompt(typ==='biete'?'Ab wo / Treffpunkt? (optional)':'Wo möchtest du zusteigen? (optional)',''); if(o===null) return; ort=o.trim();
+  const entry={typ, plaetze, ort, name:getUserVoteName()||'?', ts:Date.now()};
+  if(!fahrten[terminId]) fahrten[terminId]={};
+  fahrten[terminId][myk]=entry;
+  await dbFetch(DB+'/fahrten/'+encodeURIComponent(terminId)+'/'+encodeURIComponent(myk)+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(entry)}).catch(e=>console.warn(e));
+  renderTermine();
+  showToast(typ==='biete'?'Mitfahrt angeboten':'Als Mitfahrer eingetragen','ok');
+}
+async function removeFahrt(terminId){
+  const myk=myKey(); if(!myk) return;
+  if(fahrten[terminId]) delete fahrten[terminId][myk];
+  await dbFetch(DB+'/fahrten/'+encodeURIComponent(terminId)+'/'+encodeURIComponent(myk)+'.json',{method:'DELETE'}).catch(e=>console.warn(e));
+  renderTermine();
+}
+
+// ===== TERMINFINDUNG (Doodle-Stil) =====
+async function loadTerminfindungen(){
+  try{ const r=await dbFetch(DB+'/terminfindungen.json'); if(r.ok){ terminfindungen=(await r.json())||{}; } }catch(e){ console.warn('loadTerminfindungen',e); }
+}
+function addTfOption(d='',z=''){
+  const box=document.getElementById('tf-optionen'); if(!box) return;
+  const div=document.createElement('div');
+  div.className='tf-opt';
+  div.style.cssText='display:flex;gap:6px;margin-bottom:6px;align-items:center';
+  div.innerHTML=`<input type="date" class="fl-input tf-d" style="flex:1;min-width:130px" value="${d}"><input type="text" class="fl-input tf-z" placeholder="Uhrzeit / Notiz (optional)" style="flex:1;min-width:110px" value="${esc(z)}"><button class="btn btn-danger btn-sm" style="opacity:1;position:static" onclick="this.parentElement.remove()">✕</button>`;
+  box.appendChild(div);
+}
+function resetTfForm(){
+  const box=document.getElementById('tf-optionen'); if(box){ box.innerHTML=''; addTfOption(); addTfOption(); }
+  const t=document.getElementById('tf-titel'); if(t) t.value='';
+}
+async function createTerminfindung(){
+  const titel=(document.getElementById('tf-titel').value||'').trim();
+  if(!titel){ alert('Bitte einen Titel eingeben.'); return; }
+  const opts=[...document.querySelectorAll('#tf-optionen .tf-opt')].map(r=>({d:r.querySelector('.tf-d').value,z:r.querySelector('.tf-z').value.trim()})).filter(o=>o.d);
+  if(opts.length<2){ alert('Bitte mindestens zwei Datums-Optionen angeben.'); return; }
+  const id=uid();
+  const entry={titel, autor:getUserVoteName()||'—', ts:Date.now(), optionen:opts, stimmen:{}};
+  terminfindungen[id]=entry;
+  await dbFetch(DB+'/terminfindungen/'+id+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(entry)}).catch(e=>console.warn(e));
+  resetTfForm();
+  const r=document.getElementById('tf-create-result'); if(r){ r.style.color='#27ae60'; r.textContent='✅ Terminfindung erstellt.'; setTimeout(()=>{r.textContent='';},3000); }
+  renderTerminfindung();
+  showToast('Terminfindung gestartet','ok');
+}
+async function tfVote(id, optIdx, val){
+  const myk=myKey(); if(!myk){ alert('Bitte anmelden.'); return; }
+  const p=terminfindungen[id]; if(!p||p.geschlossen) return;
+  if(!p.stimmen) p.stimmen={};
+  if(!p.stimmen[myk]) p.stimmen[myk]={name:getUserVoteName()||'?', v:{}};
+  if(!p.stimmen[myk].v) p.stimmen[myk].v={};
+  if(p.stimmen[myk].v[optIdx]===val) delete p.stimmen[myk].v[optIdx];
+  else p.stimmen[myk].v[optIdx]=val;
+  await dbFetch(DB+'/terminfindungen/'+id+'/stimmen/'+encodeURIComponent(myk)+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(p.stimmen[myk])}).catch(e=>console.warn(e));
+  renderTerminfindung();
+}
+async function tfToggleClose(id){
+  if(!canUseEditMode()) return;
+  const p=terminfindungen[id]; if(!p) return;
+  p.geschlossen=!p.geschlossen;
+  await dbFetch(DB+'/terminfindungen/'+id+'/geschlossen.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(!!p.geschlossen)}).catch(e=>console.warn(e));
+  renderTerminfindung();
+}
+async function tfDelete(id){
+  if(!canUseEditMode()) return;
+  if(!confirm('Diese Terminfindung löschen?')) return;
+  delete terminfindungen[id];
+  await dbFetch(DB+'/terminfindungen/'+id+'.json',{method:'DELETE'}).catch(e=>console.warn(e));
+  renderTerminfindung();
+}
+function renderTerminfindung(){
+  const el=document.getElementById('tf-list'); if(!el) return;
+  const editor=canUseEditMode();
+  const polls=Object.entries(terminfindungen||{}).map(([k,v])=>Object.assign({_key:k},v||{})).filter(x=>x&&x.titel).sort((a,b)=>(b.ts||0)-(a.ts||0));
+  if(!polls.length){ el.innerHTML='<div class="empty">Noch keine Terminfindung.'+(editor?' Erstelle oben eine neue.':'')+'</div>'; return; }
+  const myk=myKey();
+  el.innerHTML=polls.map(p=>{
+    const opts=p.optionen||[];
+    const stimmen=p.stimmen||{};
+    const voters=Object.values(stimmen);
+    const tally=opts.map((o,i)=>{
+      let ja=0,ev=0,ne=0; const jaN=[];
+      voters.forEach(s=>{ const v=s&&s.v&&s.v[i]; if(v==='ja'){ja++;jaN.push(prettyName(s.name)||s.name);} else if(v==='evtl'){ev++;} else if(v==='nein'){ne++;} });
+      return {ja,ev,ne,jaN,score:ja*2+ev};
+    });
+    const maxScore=Math.max(0,...tally.map(t=>t.score));
+    const mine=myk?stimmen[myk]:null;
+    const loggedIn=(typeof currentUser!=='undefined'&&currentUser);
+    const rows=opts.map((o,i)=>{
+      const t=tally[i];
+      const best=t.score===maxScore && maxScore>0;
+      const myv=mine&&mine.v?mine.v[i]:null;
+      const dstr=o.d?fmt(o.d):''; const zstr=o.z?' · '+esc(o.z):'';
+      const btn=(val,ic,col)=>`<button class="btn btn-sm" style="padding:3px 9px;font-size:.82rem;${myv===val?`background:${col};color:#fff`:'background:#ececec;color:#666'}" onclick="tfVote('${p._key}',${i},'${val}')">${ic}</button>`;
+      return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 9px;border-radius:8px;margin-bottom:5px;background:${best?'#eafaf0':'#f7f7f8'}">
+        <div style="flex:1;min-width:140px;font-size:.86rem"><strong>${dstr}</strong>${zstr} ${best?'<span style="font-size:.68rem;color:#1a7a40;font-weight:700">★ beste</span>':''}
+          <div style="font-size:.72rem;color:#888">✅ ${t.ja}${t.ev?` · ❓${t.ev}`:''}${t.ne?` · ❌${t.ne}`:''}${t.jaN.length?' — '+esc(t.jaN.join(', ')):''}</div>
+        </div>
+        ${(loggedIn&&!p.geschlossen)?`<div style="display:flex;gap:4px">${btn('ja','✅','#27ae60')}${btn('evtl','❓','#f39c12')}${btn('nein','❌','#e74c3c')}</div>`:''}
+      </div>`;
+    }).join('');
+    const ctrls=editor?`<div style="display:flex;gap:6px;margin-top:8px">
+        <button class="btn btn-sm" style="background:#eef1f5;color:#1d4e96;font-size:.74rem" onclick="tfToggleClose('${p._key}')">${p.geschlossen?'🔓 Wieder öffnen':'🔒 Abschließen'}</button>
+        <button class="btn btn-danger btn-sm" style="opacity:1;position:static;font-size:.74rem" onclick="tfDelete('${p._key}')">✕ Löschen</button>
+      </div>`:'';
+    return `<div class="card"><div class="card-title">🗓️ ${esc(p.titel)}${p.geschlossen?' <span style="font-size:.66rem;color:#888">(abgeschlossen)</span>':''}</div>
+      <div style="font-size:.74rem;color:#999;margin-bottom:8px">von ${esc(prettyName(p.autor)||p.autor||'—')} · ${voters.length} Rückmeldung${voters.length===1?'':'en'}</div>
+      ${rows}${ctrls}</div>`;
+  }).join('');
+}
+
 async function loadAll(){
   showLoading(true);
   try{
@@ -4956,8 +5608,14 @@ async function loadAll(){
     loadAbwesenheit(),
     loadBenachrichtigungen(),
     loadUmfragen(),
+    loadPinnwand(),
+    loadFahrten(),
+    loadTerminfindungen(),
     loadUserProfiles().then(p=>{ userprofilesCache=p||{}; }).catch(()=>{})
   ]);
+  try{ renderPinnwand(); }catch(e){ console.warn('renderPinnwand',e); }
+  try{ renderTermine(); }catch(e){}
+  try{ if(document.getElementById('p-umfragen')?.classList.contains('active')) renderTerminfindung(); }catch(e){}
   // Profile sind jetzt geladen -> Namens-Anzeigen mit aktuellen Anzeigenamen neu aufbauen
   refreshNameDisplays();
   try{ renderStart(); }catch(e){ console.warn('renderStart',e); }
