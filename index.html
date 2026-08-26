@@ -272,6 +272,14 @@ html.dark img, html.dark video, html.dark .no-invert{ filter: invert(1) hue-rota
 .t-coll[open]>summary::after{transform:rotate(180deg)}
 .t-coll>summary:hover{color:var(--primary)}
 .t-coll>div{padding:2px 12px 11px}
+/* Mehrzeilige aufklappbare Karten (z.B. Nutzerverwaltung): eigener Pfeil-Indikator, ohne die einzeilige t-coll-Flex-Annahme */
+.uv-card>summary{list-style:none;position:relative;padding-right:26px}
+.uv-card>summary::-webkit-details-marker{display:none}
+.uv-card>summary::after{content:'▾';position:absolute;right:14px;top:10px;color:#9aa7b4;transition:transform .15s}
+.uv-card[open]>summary::after{transform:rotate(180deg)}
+/* Distanz-Badge über den nächstgelegenen offenen Plakat-Standorten auf der Karte */
+.plakate-dist-tip{background:#2563b5!important;color:#fff!important;border:none!important;font-weight:700;font-size:.7rem!important;padding:2px 6px!important;border-radius:8px!important;box-shadow:0 1px 3px rgba(0,0,0,.3)!important}
+.plakate-dist-tip::before{display:none!important}
 .satb-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
 .satb-cell{flex:1;min-width:82px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 9px}
 .satb-name{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
@@ -385,7 +393,7 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 <script>
-  firebase.initializeApp({
+  const FIREBASE_CFG = {
     apiKey: "AIzaSyCWcedNt0L08m4bQx6Yt-xtDMh9jWxKRP4",
     authDomain: "chor-eisleben.firebaseapp.com",
     databaseURL: "https://chor-eisleben-default-rtdb.europe-west1.firebasedatabase.app",
@@ -393,7 +401,8 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
     storageBucket: "chor-eisleben.firebasestorage.app",
     messagingSenderId: "853028319821",
     appId: "1:853028319821:web:f000c379254784bc45e204"
-  });
+  };
+  firebase.initializeApp(FIREBASE_CFG);
   const _auth = firebase.auth();
   window._fbStorage = firebase.storage();
   // Map to window globals used by the app
@@ -405,13 +414,45 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
   window._fbUpdatePassword = (user, pw) => user.updatePassword(pw);
   window._fbResetPassword = (auth, email) => auth.sendPasswordResetEmail(email);
   window._fbSendVerification = (user) => user.sendEmailVerification();
+  // Zweite, komplett unabhängige Firebase-App NUR zum Anlegen fremder Konten durch den Admin.
+  // createUserWithEmailAndPassword meldet in der Auth-Instanz, in der es läuft, IMMER automatisch
+  // als neuer Nutzer an — auf der Haupt-App würde das den Admin aus seiner eigenen Sitzung werfen.
+  // Auf dieser separaten App-Instanz betrifft das niemanden; die Admin-Sitzung bleibt unberührt.
+  window._fbCreateUserIsolated = async (email, pw) => {
+    const secondaryApp = firebase.initializeApp(FIREBASE_CFG, 'admin-create-'+Date.now());
+    try {
+      const cred = await secondaryApp.auth().createUserWithEmailAndPassword(email, pw);
+      return cred.user.uid;
+    } finally {
+      try{ await secondaryApp.auth().signOut(); }catch(_){}
+      try{ await secondaryApp.delete(); }catch(_){}
+    }
+  };
   // Server-Endpoint für Benutzername-Login/Reset (E-Mail bleibt serverseitig)
   window.USERNAME_AUTH_URL = 'https://europe-west1-chor-eisleben.cloudfunctions.net/usernameAuth';
+  window.PUSH_NOW_URL = 'https://europe-west1-chor-eisleben.cloudfunctions.net/pushNow';
   _auth.onAuthStateChanged((user) => {
     if(window.onAuthChange) window.onAuthChange(user);
   });
 </script>
 <body>
+
+<!-- Alt-Browser-Weiche: prüft moderne JS-Syntax (ES2020). Muss ES5 bleiben, damit sie überall läuft. -->
+<script>
+(function(){
+  var ok=true;
+  try{ new Function('var o={};return o?.x ?? 1'); }catch(e){ ok=false; }
+  if(!ok){
+    var show=function(){
+      var m=document.createElement('div');
+      m.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;z-index:99999;background:#1b3a6b;color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;padding:28px;font-family:Arial,sans-serif';
+      m.innerHTML='<div style="max-width:340px"><div style="font-size:2.4rem;margin-bottom:12px">🔄</div><div style="font-size:1.15rem;font-weight:700;margin-bottom:10px">Bitte Browser aktualisieren</div><div style="font-size:.92rem;line-height:1.5;opacity:.92">Diese App benötigt einen aktuellen Browser. Bitte öffne sie in <b>Google Chrome</b> und aktualisiere Chrome bei Bedarf im Play Store.</div></div>';
+      document.body.appendChild(m);
+    };
+    if(document.body){ show(); } else { document.addEventListener('DOMContentLoaded', show); }
+  }
+})();
+</script>
 
 <div id="toast-wrap"></div>
 
@@ -598,6 +639,10 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
         <input class="fl-input" type="date" id="probe-wdh-bis">
       </div>
     </div>
+    <div style="margin-bottom:10px">
+      <label style="display:block;font-size:.8rem;font-weight:500;margin-bottom:3px;color:#444">📍 Abweichender Ort (optional)</label>
+      <input class="fl-input" type="text" id="probe-ort" placeholder="z.B. Gemeindehaus – nur ausfüllen, falls nicht die übliche Chorprobe">
+    </div>
     <div style="margin-bottom:10px;border:1px dashed #d7dee7;border-radius:9px;padding:10px 12px;background:#fafbfd">
       <label style="display:block;font-size:.8rem;font-weight:600;margin-bottom:6px;color:#444">📚 Mehrere Termine als Stapel (optional)</label>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -656,7 +701,10 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
     <div style="margin-bottom:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;flex-wrap:wrap">
         <span class="card-title" style="margin-bottom:0">📆 Termine</span>
-        <button onclick="exportAlleTermineICS()" style="padding:5px 13px;background:transparent;border:1.5px solid #8e44ad;color:#8e44ad;border-radius:6px;font-size:.82rem;font-weight:500;cursor:pointer;white-space:nowrap">📥 Alle als .ics</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button onclick="openICSAbo()" style="padding:5px 13px;background:#8e44ad;border:1.5px solid #8e44ad;color:#fff;border-radius:6px;font-size:.82rem;font-weight:600;cursor:pointer;white-space:nowrap">🔄 Kalender abonnieren</button>
+          <button onclick="exportAlleTermineICS()" style="padding:5px 13px;background:transparent;border:1.5px solid #8e44ad;color:#8e44ad;border-radius:6px;font-size:.82rem;font-weight:500;cursor:pointer;white-space:nowrap">📥 Einmalig als .ics</button>
+        </div>
       </div>
       <div style="display:flex;gap:5px;flex-wrap:wrap">
         <button id="t-btn-anstehend" class="stab active" onclick="setTerminTab('anstehend')">📌 Anstehend</button>
@@ -731,6 +779,11 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
       <input class="fl-input" type="text" id="m-adresse" placeholder="Adresse">
       <input class="fl-input" type="text" id="m-plz" placeholder="PLZ">
     </div>
+    <div class="form-row" style="align-items:center">
+      <input class="fl-input" type="text" id="m-username" placeholder="Benutzername (für Login)" style="margin-bottom:0">
+      <button class="btn btn-gray btn-sm" type="button" style="white-space:nowrap" onclick="fillUsernameSuggestion('m')">🎲 Vorschlag</button>
+    </div>
+    <div style="font-size:.72rem;color:#999;margin:-4px 0 8px 2px">Ohne Benutzername kann später kein Login-Konto für dieses Mitglied erstellt werden.</div>
     <button class="btn btn-primary" onclick="addMitglied()">＋ Mitglied hinzufügen</button>
   </div>
   <div class="card">
@@ -802,26 +855,46 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
     <div style="margin-top:12px">
       <div style="font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#999;margin-bottom:5px">💡 Vorschläge antippen</div>
       <div id="pl-vorschlaege" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px"></div>
-      <div class="form-row">
-        <input class="fl-input" type="text" id="pl-ort" placeholder="Standort / Geschäft *" style="flex:2;min-width:160px">
-        <input class="fl-input" type="text" id="pl-anzahl" placeholder="Anzahl Plakate" style="flex:1;min-width:90px">
-      </div>
-      <div class="form-row">
-        <select class="fl-input" id="pl-ortschaft" style="flex:1;min-width:150px" onchange="document.getElementById('pl-ortschaft-frei').style.display=this.value==='__frei__'?'':'none'"></select>
-        <input class="fl-input" type="text" id="pl-ortschaft-frei" placeholder="Ortschaft eingeben…" style="flex:1;min-width:140px;display:none">
-      </div>
-      <input class="fl-input" type="text" id="pl-adresse" placeholder="Adresse (optional, für Karten-Link)" style="margin-bottom:8px">
-      <input class="fl-input" type="text" id="pl-notiz" placeholder="Notiz (optional, z. B. Ansprechpartner)" style="margin-bottom:8px">
+      <input class="fl-input" type="text" id="pl-ort" placeholder="Standort / Geschäft *" style="margin-bottom:8px">
+      <input class="fl-input" type="text" id="pl-adresse" placeholder="Adresse (z. B. Straße + Hausnummer)" style="margin-bottom:4px">
+      <div style="font-size:.72rem;color:#999;margin:0 0 10px 2px">📍 Mit Adresse erscheint der Standort automatisch auf der Karte, und wir schlagen die Ortschaft für dich vor.</div>
+      <details style="margin-bottom:10px">
+        <summary style="cursor:pointer;font-size:.8rem;color:#2563b5;font-weight:600;user-select:none">▾ Weitere Angaben (optional)</summary>
+        <div style="margin-top:8px">
+          <div class="form-row">
+            <select class="fl-input" id="pl-ortschaft" style="flex:1;min-width:150px" onchange="this.dataset.touched='1';document.getElementById('pl-ortschaft-frei').style.display=this.value==='__frei__'?'':'none'"></select>
+            <input class="fl-input" type="text" id="pl-ortschaft-frei" placeholder="Ortschaft eingeben…" style="flex:1;min-width:140px;display:none">
+          </div>
+          <input class="fl-input" type="text" id="pl-anzahl" placeholder="Anzahl Plakate" style="margin-bottom:8px">
+          <input class="fl-input" type="text" id="pl-notiz" placeholder="Notiz (z. B. Ansprechpartner)" style="margin-bottom:8px">
+        </div>
+      </details>
+      <div id="pl-geocode-status" style="font-size:.76rem;color:#888;min-height:16px;margin-bottom:6px"></div>
       <button class="btn btn-primary" onclick="addPlakat()">＋ Standort hinzufügen</button>
     </div>
   </details>
+  <div class="card" style="margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <span class="card-title" style="margin-bottom:0">🗺️ Karte</span>
+      <button class="btn btn-sm" style="background:#eef1f5;color:#1d4e96" onclick="togglePlakateKarte()" id="plakate-karte-toggle-btn">Karte anzeigen</button>
+    </div>
+    <div id="plakate-map" style="height:360px;border-radius:10px;display:none"></div>
+    <div style="font-size:.76rem;color:#999;margin-top:6px">🟠 offen · 🟢 übernommen · 🟪 Mitglied (wenn eingeblendet). Standorte ohne Adresse erscheinen nicht auf der Karte.</div>
+    <div style="border-top:1px solid var(--line);margin-top:10px;padding-top:8px">
+      <label style="display:flex;align-items:center;gap:7px;font-size:.82rem;cursor:pointer;user-select:none">
+        <input type="checkbox" id="plakate-map-members-toggle" onchange="togglePlakateMapMembers()" style="accent-color:#8e44ad;width:16px;height:16px">
+        👥 Mitglieder-Standorte einblenden <span style="color:#999;font-weight:400">(zeigt Wohnorte auf der Karte, nur für dich – standardmäßig aus)</span>
+      </label>
+      <div id="plakate-map-members-status" style="font-size:.74rem;color:#999;min-height:14px;margin-top:2px"></div>
+    </div>
+  </div>
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px">
       <span class="card-title" style="margin-bottom:0">📋 Plakat-Standorte</span>
       <span id="plakate-stats" style="font-size:.8rem;color:#888"></span>
     </div>
     <div id="plakate-progress" style="display:none;background:#eef1f5;border-radius:6px;height:8px;overflow:hidden;margin:8px 0 4px"><div id="plakate-progress-fill" style="height:100%;width:0%;background:#27ae60;border-radius:6px;transition:width .3s"></div></div>
-    <div style="font-size:.82rem;color:#666;margin-bottom:12px">Trage dich auf einen Standort ein, wenn du das Plakat dorthin bringst.</div>
+    <div style="font-size:.82rem;color:#666;margin-bottom:12px">Trage dich auf einen Standort ein, wenn du das Plakat dorthin bringst. 💡 Diese Liste pflegen wir gemeinsam: Jede*r darf Standorte anlegen, Adresse/Ortschaft korrigieren oder falsche Einträge löschen (✏️/✕ bei jedem Standort) — du musst dafür kein Admin sein.</div>
     <div id="plakate-list"></div>
   </div>
   <div class="card" id="plakate-ranking-card" style="margin-top:12px;display:none">
@@ -851,6 +924,19 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
     <button id="atab-anwesenheit" class="stab" onclick="setAuswertungTab('anwesenheit')">✅ Anwesenheit</button>
   </div>
   <div id="av-statistik">
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+        <div style="flex:1;min-width:120px"><label style="display:block;font-size:.76rem;font-weight:600;margin-bottom:3px;color:#444">Von</label><input type="date" id="stat-von" class="fl-input" style="margin-bottom:0" onchange="renderStatistik()"></div>
+        <div style="flex:1;min-width:120px"><label style="display:block;font-size:.76rem;font-weight:600;margin-bottom:3px;color:#444">Bis</label><input type="date" id="stat-bis" class="fl-input" style="margin-bottom:0" onchange="renderStatistik()"></div>
+        <div style="flex:1;min-width:130px"><label style="display:block;font-size:.76rem;font-weight:600;margin-bottom:3px;color:#444">Saison</label><select id="stat-saison" class="fl-input" style="margin-bottom:0" onchange="renderStatistik()"><option value="">Alle Saisons</option></select></div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:9px;align-items:center">
+        <button class="btn btn-gray btn-sm" onclick="setStatPreset('12m')">Letzte 12 Monate</button>
+        <button class="btn btn-gray btn-sm" onclick="setStatPreset('year')">Dieses Jahr</button>
+        <button class="btn btn-gray btn-sm" onclick="setStatPreset('all')">Gesamt</button>
+        <button class="btn btn-gray btn-sm" style="margin-left:auto" onclick="resetStatFilter()">↺ Zurücksetzen</button>
+      </div>
+    </div>
     <div id="statistik-content"></div>
   </div>
   <div id="av-anwesenheit" style="display:none">
@@ -1021,6 +1107,8 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
         <div style="font-size:.78rem;color:#aaa;margin-top:4px">Erstellt Konten für alle Mitglieder. Benutzername = 1. Buchstabe Vorname + 1. Buchstabe Nachname + Geburtstag. Initiales Passwort = Benutzername.</div>
         <div id="create-all-result"></div>
       </div>
+      <input type="text" class="search-box" id="uv-search" placeholder="🔍 Nutzer suchen (Name, Benutzername, E-Mail)…" oninput="renderUserVerwaltung()" style="margin-bottom:8px">
+      <div id="uv-count" style="font-size:.78rem;color:#999;margin-bottom:8px"></div>
       <div id="user-verwaltung"></div>
     </div>
     </div>
@@ -1189,6 +1277,10 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
     </div>
     <div id="abw-result" style="font-size:.82rem;min-height:16px;margin-bottom:6px"></div>
     <div id="abw-list"></div>
+    <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:12px">
+      <div style="font-size:.85rem;font-weight:700;color:var(--navy);margin-bottom:8px">📅 Urlaubskalender – wer ist wann weg</div>
+      <div id="urlaub-alle"></div>
+    </div>
     <div class="modal-actions"><button class="btn btn-gray" onclick="closeModal()">Schließen</button></div>
   </div>
 </div>
@@ -1209,6 +1301,25 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
       <button class="btn btn-gray" onclick="closeModal()">Schließen</button>
       <button class="btn btn-primary" onclick="closeModal();showPageByName('termine')">Alle Termine ›</button>
     </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-ics-abo">
+  <div class="modal">
+    <h3>🔄 Kalender abonnieren</h3>
+    <div style="font-size:.83rem;color:#666;margin-bottom:12px">Einmal einrichten – danach erscheinen alle Termine &amp; Proben automatisch in deinem Handy-Kalender, inklusive künftiger Änderungen.</div>
+    <input class="fl-input" type="text" id="ics-abo-link" readonly onclick="this.select()" style="font-size:.78rem">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <button class="btn btn-primary btn-sm" onclick="copyICSLink()">📋 Link kopieren</button>
+      <button class="btn btn-sm" style="background:#8e44ad;color:#fff" onclick="openICSWebcal()">📅 Direkt zum Kalender hinzufügen</button>
+    </div>
+    <div id="ics-abo-result" style="font-size:.82rem;min-height:16px;margin-bottom:10px"></div>
+    <div style="font-size:.78rem;color:#888;line-height:1.5;border-top:1px solid var(--line);padding-top:10px">
+      <strong>iPhone/iPad:</strong> „Direkt zum Kalender hinzufügen" antippen, oder Link kopieren → Einstellungen → Kalender → Accounts → Account hinzufügen → Andere → Kalenderabo hinzufügen.<br>
+      <strong>Android:</strong> Link kopieren → in Google Kalender (Web) unter „Weitere Kalender → Per URL" einfügen.<br>
+      <strong>Computer (Outlook/Google/Apple Kalender):</strong> Link kopieren → „Kalender abonnieren" / „Aus dem Internet".
+    </div>
+    <div class="modal-actions"><button class="btn btn-gray" onclick="closeModal()">Schließen</button></div>
   </div>
 </div>
 
@@ -1236,16 +1347,21 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
   <div class="modal">
     <h3>✏️ Standort bearbeiten</h3>
     <input type="hidden" id="ple-key">
-    <div class="form-row">
-      <input class="fl-input" type="text" id="ple-ort" placeholder="Standort / Geschäft *" style="flex:2;min-width:160px">
-      <input class="fl-input" type="text" id="ple-anzahl" placeholder="Anzahl" style="flex:1;min-width:80px">
-    </div>
-    <div class="form-row">
-      <select class="fl-input" id="ple-ortschaft" style="flex:1;min-width:150px" onchange="document.getElementById('ple-ortschaft-frei').style.display=this.value==='__frei__'?'':'none'"></select>
-      <input class="fl-input" type="text" id="ple-ortschaft-frei" placeholder="Ortschaft eingeben…" style="flex:1;min-width:140px;display:none">
-    </div>
-    <input class="fl-input" type="text" id="ple-adresse" placeholder="Adresse (optional)" style="margin-bottom:8px">
-    <input class="fl-input" type="text" id="ple-notiz" placeholder="Notiz (optional)" style="margin-bottom:8px">
+    <input class="fl-input" type="text" id="ple-ort" placeholder="Standort / Geschäft *" style="margin-bottom:8px">
+    <input class="fl-input" type="text" id="ple-adresse" placeholder="Adresse (z. B. Straße + Hausnummer)" style="margin-bottom:4px">
+    <div style="font-size:.72rem;color:#999;margin:0 0 10px 2px">📍 Mit Adresse erscheint der Standort auf der Karte, Ortschaft wird vorgeschlagen.</div>
+    <details style="margin-bottom:10px">
+      <summary style="cursor:pointer;font-size:.8rem;color:#2563b5;font-weight:600;user-select:none">▾ Weitere Angaben (optional)</summary>
+      <div style="margin-top:8px">
+        <div class="form-row">
+          <select class="fl-input" id="ple-ortschaft" style="flex:1;min-width:150px" onchange="this.dataset.touched='1';document.getElementById('ple-ortschaft-frei').style.display=this.value==='__frei__'?'':'none'"></select>
+          <input class="fl-input" type="text" id="ple-ortschaft-frei" placeholder="Ortschaft eingeben…" style="flex:1;min-width:140px;display:none">
+        </div>
+        <input class="fl-input" type="text" id="ple-anzahl" placeholder="Anzahl" style="margin-bottom:8px">
+        <input class="fl-input" type="text" id="ple-notiz" placeholder="Notiz (optional)" style="margin-bottom:8px">
+      </div>
+    </details>
+    <div id="ple-geocode-status" style="font-size:.76rem;color:#888;min-height:16px;margin-bottom:6px"></div>
     <div class="modal-actions" style="justify-content:space-between">
       <button class="btn btn-gray" onclick="closeModal()">Abbrechen</button>
       <button class="btn btn-success" onclick="savePlakatEdit()">💾 Speichern</button>
@@ -1255,9 +1371,9 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
 
 <div class="modal-overlay" id="modal-hoer">
   <div class="modal">
-    <h3>🎧 Hörbeispiele – <span id="hoer-songname"></span></h3>
+    <h3>🎧 Hörbeispiele &amp; Übungsvideos – <span id="hoer-songname"></span></h3>
     <input type="hidden" id="hoer-songid">
-    <div style="font-size:.8rem;color:#888;margin-bottom:10px">Pro Stimme eine Aufnahme. Admins können mit dem Mikrofon aufnehmen, alle können anhören.</div>
+    <div style="font-size:.8rem;color:#888;margin-bottom:10px">Beliebig viele Aufnahmen/Links pro Stimme. Admins können mit dem Mikrofon aufnehmen und Links (z. B. YouTube-Übungsvideos) hinzufügen, alle können anhören/ansehen.</div>
     <div id="hoer-body"></div>
     <div id="hoer-status" style="font-size:.83rem;min-height:18px;margin-top:8px"></div>
     <div class="modal-actions"><button class="btn btn-gray" onclick="closeHoer()">Schließen</button></div>
@@ -1349,6 +1465,8 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
     <div id="pe-song-picker" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
     <label style="display:block;font-size:.8rem;font-weight:600;margin-bottom:4px;color:#444">Notizen</label>
     <textarea id="pe-notiz" placeholder="z.B. Sopran bei Takt 12 nochmal üben…" style="min-height:55px"></textarea>
+    <label style="display:block;font-size:.8rem;font-weight:600;margin:8px 0 4px;color:#444">📍 Abweichender Ort (optional)</label>
+    <input class="fl-input" type="text" id="pe-ort" placeholder="z.B. Gemeindehaus – nur ausfüllen, falls nicht die übliche Chorprobe">
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal()">Abbrechen</button>
       <button class="btn btn-success" onclick="saveProbeEdit()">💾 Speichern</button>
@@ -1374,6 +1492,11 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
         <option value="Bass">Bass</option>
       </select>
     </div>
+    <div class="form-row" style="align-items:center">
+      <input class="fl-input" type="text" id="edit-m-username" placeholder="Benutzername (für Login)" style="margin-bottom:0">
+      <button class="btn btn-gray btn-sm" type="button" style="white-space:nowrap" onclick="fillUsernameSuggestion('edit-m')">🎲 Vorschlag</button>
+    </div>
+    <div id="edit-m-username-hint" style="font-size:.72rem;color:#999;margin:-4px 0 8px 2px"></div>
     <div class="modal-actions">
       <button class="btn btn-gray" onclick="closeModal()">Abbrechen</button>
       <button class="btn btn-success" onclick="saveMitglied()">💾 Speichern</button>
@@ -1562,6 +1685,7 @@ function showPageByName(id){
 function openAbwesenheit(){
   const res=document.getElementById('abw-result'); if(res) res.textContent='';
   renderAbwesenheit();
+  renderUrlaubskalender();
   document.getElementById('modal-abwesenheit').classList.add('open');
 }
 // Abmelde-Chooser: nächste Probe ODER Urlaub/längere Abwesenheit
@@ -1578,7 +1702,7 @@ function openAbmelden(){
     const selfUrlaub=myAbsent(nextProbe.datum);
     h+=`<div style="border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px">
       <div style="font-weight:700;color:var(--navy)">🎹 Nächste Probe</div>
-      <div style="font-size:.85rem;color:#666;margin:2px 0 10px">${fmt(nextProbe.datum)}${nextProbe.notiz?' · '+esc(nextProbe.notiz):''}</div>`;
+      <div style="font-size:.85rem;color:#666;margin:2px 0 10px">${fmt(nextProbe.datum)}${nextProbe.ort?' · <span style="color:#c0620f;font-weight:600">📍 '+esc(nextProbe.ort)+'</span>':''}${nextProbe.notiz?' · '+esc(nextProbe.notiz):''}</div>`;
     if(selfUrlaub) h+=`<div style="font-size:.82rem;color:#8a6d3b">🏖️ Du bist in diesem Zeitraum bereits als abwesend eingetragen.</div>`;
     else if(selfNein) h+=`<div style="font-size:.84rem;color:#922b21;font-weight:600;margin-bottom:8px">❌ Du bist für diese Probe abgemeldet.</div><button class="btn btn-sm" style="background:#d5f5e3;color:#1a7a40" onclick="abmeldenProbeToggle('${nextProbe.id}')">↩ Doch dabei</button>`;
     else h+=`<button class="btn" style="background:#fdecea;color:#922b21" onclick="abmeldenProbeToggle('${nextProbe.id}')">❌ Für diese Probe abmelden</button>`;
@@ -1665,7 +1789,7 @@ const INIT_MITGLIEDER=[]; // Mitgliederdaten liegen in der Datenbank (login-gesc
 const INIT_TERMINE=[];
 
 let D=null, termine=[], kommentare=[], probenplan=[], mitglieder=[], liedwuensche=[], plakate=[], probenstatus={}, benachrichtigungen=[], anwesenheit={}, anwWork=null, userprofilesCache={}, abwesenheiten={};
-let pinnwand={}, fahrten={}, terminfindungen={};
+let pinnwand={}, fahrten={}, terminfindungen={}, aufgaben={};
 let adminMode = sessionStorage.getItem('chor_admin')==='1';
 let editMode = sessionStorage.getItem('chor_editmode')==='1';
 // Sichtbarkeit von Admin-Bearbeitungs-Elementen: nur wenn Bearbeiten-Modus AN und Berechtigung vorhanden
@@ -1827,6 +1951,7 @@ function renderStart(){
   if(nextProbe){
     const songs=(nextProbe.songIds||[]).map(id=>findSongById(id)).filter(Boolean).map(s=>s.name);
     html+=`<div style="font-size:1.05rem;font-weight:700;margin-top:8px">${fmt(nextProbe.datum)}</div>`;
+    if(nextProbe.ort) html+=`<div style="font-size:.85rem;color:#c0620f;font-weight:600;margin-top:3px">📍 ${esc(nextProbe.ort)}</div>`;
     if(songs.length) html+=`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">${songs.map(n=>`<span style="background:#eef3fa;color:#1b3a6b;border-radius:14px;padding:3px 10px;font-size:.78rem">${esc(n)}</span>`).join('')}</div>`;
     if(nextProbe.notiz) html+=`<div style="font-size:.82rem;color:#777;margin-top:7px">📝 ${esc(nextProbe.notiz)}</div>`;
     html+=buildProbeAttendance(nextProbe);
@@ -2127,8 +2252,8 @@ function buildTbl(songs){
   return '<table><thead><tr><th>Lied</th><th>Letzte Probe</th><th style="text-align:center">Anzahl</th><th>Status</th><th style="text-align:center">Noten</th></tr></thead><tbody>'+songs.map(s=>{
     const openLink = s.pdf?`<a href="${esc(s.pdf)}" target="_blank" rel="noopener" style="text-decoration:none;font-size:1.15rem" title="Noten öffnen">📄</a>`:'';
     const uebenLink = s.uebe?`<a href="${esc(s.uebe)}" target="_blank" rel="noopener" style="text-decoration:none;font-size:1.1rem" title="Stimmcoach – Üben">🎤</a>`:'';
-    const hasHoer = s.hoer && (s.hoer.S||s.hoer.A||s.hoer.T||s.hoer.B);
-    const hoerBtn = (hasHoer||canEdit)?`<button onclick="openHoer('${s.id}')" style="background:none;border:none;cursor:pointer;font-size:1.05rem;padding:0 1px" title="Hörbeispiele (S/A/T/B)">🎧</button>`:'';
+    const hasHoer = _hoerHasAny(s);
+    const hoerBtn = (hasHoer||canEdit)?`<button onclick="openHoer('${s.id}')" style="background:none;border:none;cursor:pointer;font-size:1.05rem;padding:0 1px" title="Hörbeispiele &amp; Übungsvideos">🎧</button>`:'';
     const editBtn = canEdit?`<button onclick="editSongPdf('${s.id}')" style="background:none;border:none;cursor:pointer;font-size:.85rem;opacity:.45;padding:0 2px" title="Noten/Üben bearbeiten">✏️</button>`:'';
     const archBtn = canEdit?(liederView==='archiv'
       ? `<button onclick="toggleSongArchived('${s.id}',false)" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:0 2px" title="Aus Archiv wiederherstellen">↩️</button>`
@@ -2183,9 +2308,24 @@ async function saveSongUebe(){
   closeModal();
 }
 
-// ===== HÖRBEISPIELE (Aufnahme pro Stimme) =====
-const HOER_VOICES=[['S','Sopran','#e67e22'],['A','Alt','#2563b5'],['T','Tenor','#27ae60'],['B','Bass','#8e44ad']];
+// ===== HÖRBEISPIELE (mehrere Aufnahmen/Links pro Stimme + Übungsvideos) =====
+const HOER_VOICES=[['S','Sopran','#e67e22'],['A','Alt','#2563b5'],['T','Tenor','#27ae60'],['B','Bass','#8e44ad'],['ALL','Allgemein / Übungsvideos','#7f8c8d']];
 let _hMediaRec=null, _hChunks=[], _hActive=null, _hTimer=null, _hStream=null;
+// Ein Stimm-Eintrag kann alt (einzelner URL-String) oder neu (Array von {id,type,url,label,ts}) sein -> immer normalisiert als Array liefern.
+function _hoerItems(song, voice){
+  const v=(song.hoer||{})[voice];
+  if(!v) return [];
+  if(Array.isArray(v)) return v;
+  return [{id:'legacy',type:'audio',url:v,label:'Aufnahme',ts:0}]; // altes Einzelformat einlesen
+}
+function _hoerHasAny(song){
+  return HOER_VOICES.some(([k])=>_hoerItems(song,k).length>0);
+}
+// YouTube-Video-ID aus gängigen Link-Formaten extrahieren (für Vorschaubild)
+function youtubeId(url){
+  const m=String(url||'').match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+  return m?m[1]:null;
+}
 function openHoer(id){
   const song=findSongById(id); if(!song) return;
   document.getElementById('hoer-songid').value=id;
@@ -2195,30 +2335,56 @@ function openHoer(id){
   document.getElementById('modal-hoer').classList.add('open');
 }
 function setHoerStatus(t,c){ const el=document.getElementById('hoer-status'); if(el){ el.textContent=t; el.style.color=c||'#666'; } }
+function toggleHoerLinkForm(voice){
+  const box=document.getElementById('hoer-linkform-'+voice); if(!box) return;
+  box.style.display = box.style.display==='none' ? 'flex' : 'none';
+  if(box.style.display==='flex'){ const inp=document.getElementById('hoer-link-url-'+voice); if(inp) inp.focus(); }
+}
+function _hoerItemHtml(item, voice, canEdit){
+  const ytId = item.type==='link' ? youtubeId(item.url) : null;
+  const del = canEdit ? `<button class="btn btn-sm btn-gray" style="font-size:.7rem;flex-shrink:0" onclick="deleteHoer('${voice}','${esc(item.id)}')" title="Löschen">✕</button>` : '';
+  const labelText = esc(item.label||'') || (ytId?'YouTube-Video ansehen':(item.type==='link'?'Link öffnen':'Aufnahme'));
+  let media;
+  if(item.type==='audio'){
+    media = `<div style="flex:1;min-width:0"><audio controls preload="none" src="${esc(item.url)}" style="width:100%;height:34px"></audio>${item.label?`<div style="font-size:.74rem;color:#888;margin-top:1px">${esc(item.label)}</div>`:''}</div>`;
+  } else if(ytId){
+    media = `<a href="${esc(item.url)}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;text-decoration:none;flex:1;min-width:0">
+      <span style="position:relative;flex-shrink:0"><img src="https://img.youtube.com/vi/${ytId}/mqdefault.jpg" alt="" style="width:64px;height:36px;object-fit:cover;border-radius:5px;display:block"><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#fff;text-shadow:0 0 4px rgba(0,0,0,.7)">▶️</span></span>
+      <span style="font-size:.82rem;color:#1b3a6b;text-decoration:underline;word-break:break-word">${labelText}</span>
+    </a>`;
+  } else {
+    media = `<a href="${esc(item.url)}" target="_blank" rel="noopener" style="font-size:.82rem;color:#1b3a6b;text-decoration:underline;flex:1;min-width:0;word-break:break-word">🔗 ${labelText}</a>`;
+  }
+  return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0">${media}${del}</div>`;
+}
 function renderHoer(){
   const id=document.getElementById('hoer-songid').value;
   const song=findSongById(id); if(!song) return;
-  const hoer=song.hoer||{};
   const canRec=hasPermission('lieder');
   document.getElementById('hoer-body').innerHTML=HOER_VOICES.map(([k,name,color])=>{
-    const url=hoer[k];
-    let ctrl='';
-    if(canRec){
-      if(_hActive===k){
-        ctrl=`<button class="btn btn-sm" style="background:#1b3a6b;color:#fff;font-size:.72rem" onclick="stopHoerRecord()">⏹ Stopp & speichern</button>`;
-      } else if(_hActive){
-        ctrl=`<button class="btn btn-sm btn-gray" style="font-size:.72rem;opacity:.5" disabled>🔴 Aufnehmen</button>`;
-      } else {
-        ctrl=`<button class="btn btn-sm" style="background:#e74c3c;color:#fff;font-size:.72rem" onclick="startHoerRecord('${k}')">🔴 ${url?'Neu aufnehmen':'Aufnehmen'}</button>`
-            + (url?`<button class="btn btn-sm btn-gray" style="font-size:.72rem" onclick="deleteHoer('${k}')">🗑</button>`:'');
-      }
+    const items=_hoerItems(song,k);
+    let recCtrl='';
+    if(canRec && k!=='ALL'){ // Mikrofon-Aufnahme nur für einzelne Stimmen sinnvoll, nicht "Allgemein"
+      if(_hActive===k) recCtrl=`<button class="btn btn-sm" style="background:#1b3a6b;color:#fff;font-size:.72rem" onclick="stopHoerRecord()">⏹ Stopp & speichern</button>`;
+      else if(_hActive) recCtrl=`<button class="btn btn-sm btn-gray" style="font-size:.72rem;opacity:.5" disabled>🔴 Aufnehmen</button>`;
+      else recCtrl=`<button class="btn btn-sm" style="background:#e74c3c;color:#fff;font-size:.72rem" onclick="startHoerRecord('${k}')">🔴 Aufnehmen</button>`;
     }
-    return `<div style="padding:8px 0;border-bottom:1px solid #f0f0f0">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <span style="width:52px;font-weight:700;color:${color};font-size:.85rem">${name}</span>
-        <div style="display:flex;gap:5px;flex-wrap:wrap">${ctrl}</div>
+    const linkBtn = canRec ? `<button class="btn btn-sm btn-gray" style="font-size:.72rem" onclick="toggleHoerLinkForm('${k}')">🔗 + Link</button>` : '';
+    const linkForm = canRec ? `<div id="hoer-linkform-${k}" style="display:none;gap:6px;flex-wrap:wrap;margin-top:6px;background:#f6f8fb;border-radius:8px;padding:8px">
+        <input class="fl-input" type="text" id="hoer-link-url-${k}" placeholder="https://youtube.com/… oder anderer Link" style="flex:2;min-width:160px;margin-bottom:0">
+        <input class="fl-input" type="text" id="hoer-link-label-${k}" placeholder="Bezeichnung (optional, z.B. „langsam")" style="flex:1;min-width:120px;margin-bottom:0">
+        <button class="btn btn-primary btn-sm" onclick="addHoerLink('${k}')">Hinzufügen</button>
+      </div>` : '';
+    const list = items.length
+      ? items.map(it=>_hoerItemHtml(it,k,canRec)).join('')
+      : (canRec?'':'<div style="font-size:.78rem;color:#aaa;margin-top:2px">— noch nichts hinterlegt —</div>');
+    return `<div style="padding:9px 0;border-bottom:1px solid #f0f0f0">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+        <span style="min-width:${k==='ALL'?'150px':'52px'};font-weight:700;color:${color};font-size:.85rem">${esc(name)}</span>
+        <div style="display:flex;gap:5px;flex-wrap:wrap">${recCtrl}${linkBtn}</div>
       </div>
-      ${url?`<audio controls preload="none" src="${esc(url)}" style="width:100%;height:36px;margin-top:6px"></audio>`:(canRec?'':`<div style="font-size:.78rem;color:#aaa;margin-top:2px">— noch keine Aufnahme —</div>`)}
+      ${list}
+      ${linkForm}
     </div>`;
   }).join('');
 }
@@ -2252,25 +2418,57 @@ async function uploadHoer(voice){
   if(!blob.size){ _hActive=null; renderHoer(); setHoerStatus('❌ Leere Aufnahme.','#e74c3c'); return; }
   setHoerStatus('⏳ Wird gespeichert…','#2563b5');
   try{
-    const ref=window._fbStorage.ref('noten/hoer-'+id+'-'+voice);  // single-level Pfad (passt zu den Storage-Regeln)
+    const itemId=uid();
+    const ref=window._fbStorage.ref('noten/hoer-'+id+'-'+voice+'-'+itemId);  // single-level Pfad (passt zu den Storage-Regeln)
     await ref.put(blob,{contentType:mime});
     const url=await ref.getDownloadURL();
     const p=songPos(id); const song=D.seasons[p[0]].songs[p[1]];
     if(!song.hoer) song.hoer={};
-    song.hoer[voice]=url;
-    await dbFetch(DB+'/chorproben/seasons/'+p[0]+'/songs/'+p[1]+'/hoer/'+voice+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(url)});
+    const items=_hoerItems(song,voice).slice();
+    items.push({id:itemId,type:'audio',url,label:'',ts:Date.now()});
+    song.hoer[voice]=items;
+    await dbFetch(DB+'/chorproben/seasons/'+p[0]+'/songs/'+p[1]+'/hoer/'+voice+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(items)});
     _hActive=null; renderHoer(); renderLieder();
-    setHoerStatus('✅ Aufnahme gespeichert!','#27ae60'); setTimeout(()=>setHoerStatus('',''),2500);
+    setHoerStatus('✅ Aufnahme hinzugefügt!','#27ae60'); setTimeout(()=>setHoerStatus('',''),2500);
   }catch(e){ _hActive=null; renderHoer(); setHoerStatus('❌ Fehler: '+(e.message||e),'#e74c3c'); }
 }
-async function deleteHoer(voice){
+async function addHoerLink(voice){
   if(!hasPermission('lieder')) return;
-  if(!confirm('Aufnahme dieser Stimme löschen?')) return;
+  const urlInp=document.getElementById('hoer-link-url-'+voice), labelInp=document.getElementById('hoer-link-label-'+voice);
+  const url=(urlInp&&urlInp.value.trim())||'';
+  const label=(labelInp&&labelInp.value.trim())||'';
+  if(!url){ alert('Bitte einen Link eingeben.'); return; }
+  if(!/^https?:\/\//i.test(url)){ alert('Bitte einen vollständigen Link eingeben (muss mit https:// beginnen).'); return; }
   const id=document.getElementById('hoer-songid').value;
   const p=songPos(id); const song=D.seasons[p[0]].songs[p[1]];
-  if(song.hoer) delete song.hoer[voice];
-  await dbFetch(DB+'/chorproben/seasons/'+p[0]+'/songs/'+p[1]+'/hoer/'+voice+'.json',{method:'DELETE'});
-  try{ await window._fbStorage.ref('noten/hoer-'+id+'-'+voice).delete(); }catch(e){}
+  if(!song.hoer) song.hoer={};
+  const items=_hoerItems(song,voice).slice();
+  items.push({id:uid(),type:'link',url,label,ts:Date.now()});
+  song.hoer[voice]=items;
+  await dbFetch(DB+'/chorproben/seasons/'+p[0]+'/songs/'+p[1]+'/hoer/'+voice+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(items)});
+  if(urlInp) urlInp.value=''; if(labelInp) labelInp.value='';
+  const box=document.getElementById('hoer-linkform-'+voice); if(box) box.style.display='none';
+  renderHoer(); renderLieder();
+}
+async function deleteHoer(voice, itemId){
+  if(!hasPermission('lieder')) return;
+  if(!confirm('Diesen Eintrag löschen?')) return;
+  const id=document.getElementById('hoer-songid').value;
+  const p=songPos(id); const song=D.seasons[p[0]].songs[p[1]];
+  const items=_hoerItems(song,voice);
+  const removed=items.find(it=>it.id===itemId);
+  const kept=items.filter(it=>it.id!==itemId);
+  if(song.hoer) song.hoer[voice]=kept;
+  if(kept.length){
+    await dbFetch(DB+'/chorproben/seasons/'+p[0]+'/songs/'+p[1]+'/hoer/'+voice+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(kept)});
+  } else {
+    await dbFetch(DB+'/chorproben/seasons/'+p[0]+'/songs/'+p[1]+'/hoer/'+voice+'.json',{method:'DELETE'});
+  }
+  if(removed && removed.type==='audio' && removed.id!=='legacy'){
+    try{ await window._fbStorage.ref('noten/hoer-'+id+'-'+voice+'-'+removed.id).delete(); }catch(e){}
+  } else if(removed && removed.id==='legacy'){
+    try{ await window._fbStorage.ref('noten/hoer-'+id+'-'+voice).delete(); }catch(e){} // altes Einzelformat
+  }
   renderHoer(); renderLieder();
 }
 function closeHoer(){ stopHoerRecord(); _hActive=null; closeModal(); }
@@ -2355,6 +2553,7 @@ async function saveProbe(){
   let art=document.getElementById('probe-art').value;
   const songIds=getCheckedSongs();
   const notiz=document.getElementById('probe-notiz').value.trim();
+  const ort=document.getElementById('probe-ort').value.trim();
   // Ein zukünftiges Datum kann keine bereits durchgeführte Probe sein → automatisch als geplant speichern
   if(art==='vergangen' && datum>localToday()){
     art='geplant';
@@ -2363,7 +2562,7 @@ async function saveProbe(){
     if(!datum){alert('Für eine durchgeführte Probe bitte oben ein Datum wählen.');return;}
     if(!songIds.length){alert('Bitte mindestens ein Lied auswählen.');return;}
     if(!D.proben) D.proben=[];
-    D.proben.push({id:uid(),datum,songIds,notiz});
+    D.proben.push({id:uid(),datum,songIds,notiz,ort});
     await dbFetch(DB+'/chorproben.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({seasons:D.seasons,proben:D.proben})});
   } else {
     // Wiederkehrende Proben generieren
@@ -2380,15 +2579,16 @@ async function saveProbe(){
     }
     // Stapel-Termine dazu, doppelte entfernen, chronologisch
     const alleDaten=[...new Set([...daten, ..._batchProbeDates])].sort();
-    alleDaten.forEach(dt=>probenplan.push({id:uid(),datum:dt,songIds,notiz}));
+    alleDaten.forEach(dt=>probenplan.push({id:uid(),datum:dt,songIds,notiz,ort}));
     await dbFetch(DB+'/probenplan.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(probenplan)});
     document.getElementById('probe-wdh').value=''; document.getElementById('probe-wdh-bis').value='';
     _batchProbeDates=[]; renderBatchDates(); const _pad=document.getElementById('probe-add-date'); if(_pad) _pad.value='';
-    if(alleDaten.length===1) notifyPush('probe','🎹 Neue Probe geplant', fmt(alleDaten[0]));
-    else notifyPush('probe','🎹 '+alleDaten.length+' Proben geplant', fmt(alleDaten[0])+' bis '+fmt(alleDaten[alleDaten.length-1]));
+    if(alleDaten.length===1) notifyPush('probe','🎹 Neue Probe geplant', fmt(alleDaten[0])+(ort?' · 📍 '+ort:''));
+    else notifyPush('probe','🎹 '+alleDaten.length+' Proben geplant', fmt(alleDaten[0])+' bis '+fmt(alleDaten[alleDaten.length-1])+(ort?' · 📍 '+ort:''));
   }
   document.getElementById('probe-datum').value='';
   document.getElementById('probe-notiz').value='';
+  document.getElementById('probe-ort').value='';
   clearSongPicker();
   renderProben(); renderLieder();
   showToast('Probe(n) gespeichert','ok');
@@ -2433,6 +2633,7 @@ function editProbe(id, geplant){
   document.getElementById('pe-geplant').value=geplant?'1':'';
   document.getElementById('pe-datum').value=p.datum||'';
   document.getElementById('pe-notiz').value=p.notiz||'';
+  document.getElementById('pe-ort').value=p.ort||'';
   buildSongPickerInto(document.getElementById('pe-song-picker'), p.songIds||[]);
   document.getElementById('modal-probe-edit').classList.add('open');
 }
@@ -2444,11 +2645,12 @@ async function saveProbeEdit(){
   if(!datum){ alert('Bitte Datum eingeben.'); return; }
   const songIds=[...document.querySelectorAll('#pe-song-picker input:checked')].map(x=>x.value);
   const notiz=document.getElementById('pe-notiz').value.trim();
+  const ort=document.getElementById('pe-ort').value.trim();
   if(!geplant && !songIds.length){ alert('Bitte mindestens ein Lied auswählen.'); return; }
   const arr = geplant ? probenplan : (D.proben=D.proben||[]);
   const p = arr.find(x=>x.id===id);
   if(!p){ alert('Probe nicht gefunden.'); return; }
-  p.datum=datum; p.songIds=songIds; p.notiz=notiz;
+  p.datum=datum; p.songIds=songIds; p.notiz=notiz; p.ort=ort;
   if(geplant){
     await dbFetch(DB+'/probenplan.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(probenplan)}).catch(e=>console.warn(e));
   } else {
@@ -2490,6 +2692,23 @@ function absentNamesForDate(datum){
   const names=[];
   Object.values(abwesenheiten||{}).forEach(rec=>{ if(rec && rec.name && absenceCovers(rec,datum)) names.push(rec.name); });
   return names;
+}
+// Urlaubskalender: alle Abwesenheiten (laufend + kommend), nach Startdatum
+function renderUrlaubskalender(){
+  const el=document.getElementById('urlaub-alle'); if(!el) return;
+  const today=localToday();
+  const rows=[];
+  Object.values(abwesenheiten||{}).forEach(rec=>{
+    if(!rec) return;
+    const nm=prettyName(rec.name)||rec.name||'—';
+    _periodsOf(rec).forEach(p=>{ if(p&&p.von&&p.bis && p.bis>=today) rows.push({nm, von:p.von, bis:p.bis, aktiv:(today>=p.von&&today<=p.bis)}); });
+  });
+  rows.sort((a,b)=>a.von.localeCompare(b.von));
+  if(!rows.length){ el.innerHTML='<div style="font-size:.82rem;color:#aaa">Aktuell keine eingetragenen Abwesenheiten.</div>'; return; }
+  el.innerHTML=rows.map(r=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid #f2f2f2;font-size:.85rem">
+    <span>🏖️ <strong>${esc(r.nm)}</strong>${r.aktiv?' <span style="color:#e67e22;font-weight:600;font-size:.74rem">· gerade weg</span>':''}</span>
+    <span style="color:#777;white-space:nowrap">${fmt(r.von)} – ${fmt(r.bis)}</span>
+  </div>`).join('');
 }
 function buildProbeAttendance(p){
   const st=(probenstatus && probenstatus[p.id])||{};
@@ -2561,7 +2780,7 @@ async function setProbeStatus(probeId, status){
     await dbFetch(DB+'/probenstatus/'+probeId+'/'+uid+'.json',{method:'DELETE'});
   } else {
     await dbFetch(DB+'/probenstatus/'+probeId+'/'+uid+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,status})});
-    if(status==='nein'){ const dt=probeDatumById(probeId); notifyAdminAbsage('❌ Absage Probe', name+' hat sich für die Probe'+(dt?' am '+fmt(dt):'')+' abgemeldet.'); }
+    if(status==='nein'){ const dt=probeDatumById(probeId); notifyAdminAbsage('❌ Absage Probe', (prettyName(name)||name)+' hat sich für die Probe'+(dt?' am '+fmt(dt):'')+' abgemeldet.'); }
   }
   await loadProbenstatus();
 }
@@ -2941,12 +3160,50 @@ function setAuswertungTab(t){
   document.getElementById('atab-anwesenheit').classList.toggle('active', t==='anwesenheit');
   if(t==='anwesenheit') renderAnwesenheitPage(); else renderStatistik();
 }
+// Auswertung-Filter: Zeitraum-Presets + Zurücksetzen
+function setStatPreset(kind){
+  const von=document.getElementById('stat-von'), bis=document.getElementById('stat-bis');
+  const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const now=new Date();
+  if(kind==='all'){ if(von)von.value=''; if(bis)bis.value=''; }
+  else if(kind==='year'){ if(von)von.value=now.getFullYear()+'-01-01'; if(bis)bis.value=iso(now); }
+  else if(kind==='12m'){ const d=new Date(now); d.setMonth(d.getMonth()-12); if(von)von.value=iso(d); if(bis)bis.value=iso(now); }
+  renderStatistik();
+}
+function resetStatFilter(){
+  ['stat-von','stat-bis'].forEach(id=>{ const e=document.getElementById(id); if(e)e.value=''; });
+  const s=document.getElementById('stat-saison'); if(s)s.value='';
+  renderStatistik();
+}
 function renderStatistik(){
   const el=document.getElementById('statistik-content'); if(!el) return;
   if(!D){ el.innerHTML='<div class="empty" style="padding:20px">Daten werden geladen…</div>'; return; }
-  const proben=(D.proben||[]);
-  const allS=D.seasons.flatMap(s=>(s.songs||[]));
-  const captured=Object.entries(anwesenheit||{}).filter(([,v])=>v&&v.erfasst);
+  // Saison-Auswahl befüllen (Auswahl beibehalten)
+  const selSais=document.getElementById('stat-saison');
+  if(selSais){ const cur=selSais.value; selSais.innerHTML='<option value="">Alle Saisons</option>'+(D.seasons||[]).map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join(''); selSais.value=cur; }
+  // Filterwerte lesen
+  const von=document.getElementById('stat-von')?.value||'';
+  const bis=document.getElementById('stat-bis')?.value||'';
+  const saisonId=document.getElementById('stat-saison')?.value||'';
+  const inRange=datum=> !!datum && (!von||datum>=von) && (!bis||datum<=bis);
+
+  // Proben im Zeitraum; Lieder-Pool nach Saison
+  const proben=(D.proben||[]).filter(p=>inRange(p.datum));
+  const songsPool = saisonId ? ((D.seasons.find(s=>s.id===saisonId)||{}).songs||[]) : D.seasons.flatMap(s=>(s.songs||[]));
+  const poolIds=new Set(songsPool.map(s=>s.id));
+  // Häufigkeit + letzte Probe je Lied AUS DEN GEFILTERTEN PROBEN
+  const freq={}, lastMap={};
+  proben.forEach(p=>{ (p.songIds||[]).forEach(id=>{ freq[id]=(freq[id]||0)+1; if(!lastMap[id]||p.datum>lastMap[id]) lastMap[id]=p.datum; }); });
+  // Erfasste Anwesenheit im Zeitraum (Schlüssel = Probe-ID -> Datum via probeDatumById)
+  const captured=Object.entries(anwesenheit||{}).filter(([k,v])=>v&&v.erfasst && inRange(probeDatumById(k)));
+  const termineCnt=(termine||[]).filter(t=>inRange(t.datum_ende||t.datum)).length;
+
+  // Aktiver-Filter-Hinweis
+  const filterActive = von||bis||saisonId;
+  const fVon = von?fmt(von):'Beginn', fBis = bis?fmt(bis):'heute';
+  const saisonName = saisonId ? ((D.seasons.find(s=>s.id===saisonId)||{}).name||'') : '';
+  let html = filterActive ? `<div style="font-size:.8rem;color:#1d4e96;background:#eef3fb;border-radius:8px;padding:7px 11px;margin-bottom:12px">🔎 ${von||bis?`Zeitraum ${fVon} – ${fBis}`:'Gesamter Zeitraum'}${saisonName?` · Saison „${esc(saisonName)}"`:''}</div>` : '';
+
   // Ø Anwesenheitsquote
   let quote='–';
   if(captured.length && mitglieder.length){
@@ -2954,36 +3211,36 @@ function renderStatistik(){
     quote=Math.round(sum/captured.length*100)+'%';
   }
   // Kacheln
-  let html=`<div class="stats" style="margin-bottom:14px">
-    <div class="stat"><div class="stat-n">${proben.length}</div><div class="stat-l">Proben erfasst</div></div>
+  html+=`<div class="stats" style="margin-bottom:14px">
+    <div class="stat"><div class="stat-n">${proben.length}</div><div class="stat-l">Proben${filterActive?' (Zeitraum)':' erfasst'}</div></div>
     <div class="stat"><div class="stat-n" style="color:#2563b5">${quote}</div><div class="stat-l">Ø Anwesenheit</div></div>
-    <div class="stat"><div class="stat-n" style="color:#27ae60">${allS.filter(s=>!s.archived).length}</div><div class="stat-l">Aktive Lieder</div></div>
-    <div class="stat"><div class="stat-n" style="color:#8e44ad">${(termine||[]).length}</div><div class="stat-l">Termine</div></div>
+    <div class="stat"><div class="stat-n" style="color:#27ae60">${songsPool.filter(s=>!s.archived).length}</div><div class="stat-l">${saisonId?'Lieder (Saison)':'Aktive Lieder'}</div></div>
+    <div class="stat"><div class="stat-n" style="color:#8e44ad">${termineCnt}</div><div class="stat-l">Termine</div></div>
   </div>`;
 
-  // Proben pro Monat (letzte 12)
+  // Proben pro Monat
   const byMonth={};
   proben.forEach(p=>{ if(p.datum){ const m=p.datum.slice(0,7); byMonth[m]=(byMonth[m]||0)+1; } });
   const monthsSorted=Object.keys(byMonth).sort().slice(-12);
   const MN=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
   const monthItems=monthsSorted.map(m=>{ const [y,mo]=m.split('-'); return {label:MN[parseInt(mo)-1]+' '+y.slice(2), value:byMonth[m]}; });
-  html+=`<div class="card"><div class="card-title">📅 Proben pro Monat</div>${monthItems.length?_statBars(monthItems,'#2563b5'):'<div class="empty">Noch keine Proben erfasst.</div>'}</div>`;
+  html+=`<div class="card"><div class="card-title">📅 Proben pro Monat</div>${monthItems.length?_statBars(monthItems,'#2563b5'):'<div class="empty">Keine Proben im Zeitraum.</div>'}</div>`;
 
-  // Top geprobte Lieder (nach Häufigkeit)
-  const songStats=allS.map(s=>({name:s.name, count:getStat(s.id).count})).filter(s=>s.count>0).sort((a,b)=>b.count-a.count).slice(0,12);
+  // Top geprobte Lieder (Saison-Pool, Häufigkeit im Zeitraum)
+  const songStats=songsPool.map(s=>({name:s.name, count:freq[s.id]||0})).filter(s=>s.count>0).sort((a,b)=>b.count-a.count).slice(0,12);
   const songItems=songStats.map(s=>({label:s.name, value:s.count, sub:s.count+'×'}));
-  html+=`<div class="card" style="margin-top:12px"><div class="card-title">🎵 Am häufigsten geprobt</div>${songItems.length?_statBars(songItems,'#27ae60'):'<div class="empty">Noch keine Probendaten.</div>'}</div>`;
+  html+=`<div class="card" style="margin-top:12px"><div class="card-title">🎵 Am häufigsten geprobt</div>${songItems.length?_statBars(songItems,'#27ae60'):'<div class="empty">Keine Probendaten im Zeitraum.</div>'}</div>`;
 
-  // Lange nicht geprobt (aktive Lieder mit ältester/keiner letzter Probe)
-  const stale=allS.filter(s=>!s.archived).map(s=>{const st=getStat(s.id);return {name:s.name, last:st.last, count:st.count};})
+  // Lange nicht geprobt (Saison-Pool, aktive Lieder; letzte Probe im Zeitraum)
+  const stale=songsPool.filter(s=>!s.archived).map(s=>({name:s.name, last:lastMap[s.id]||null}))
     .sort((a,b)=>{ if(!a.last&&!b.last)return 0; if(!a.last)return -1; if(!b.last)return 1; return a.last.localeCompare(b.last); }).slice(0,8);
-  html+=`<div class="card" style="margin-top:12px"><div class="card-title">🕰️ Lange nicht geprobt</div>`;
+  html+=`<div class="card" style="margin-top:12px"><div class="card-title">🕰️ Lange nicht geprobt${von||bis?' (im Zeitraum)':''}</div>`;
   html+= stale.length?('<table class="overview-table" style="width:100%"><thead><tr><th>Lied</th><th style="text-align:right">Zuletzt</th></tr></thead><tbody>'+
     stale.map(s=>`<tr><td>${esc(s.name)}</td><td style="text-align:right;color:${!s.last?'#e74c3c':'#888'}">${s.last?fmt(s.last):'nie'}</td></tr>`).join('')+'</tbody></table>')
     :'<div class="empty">Keine aktiven Lieder.</div>';
   html+='</div>';
 
-  // Anwesenheit pro Stimmgruppe (SATB)
+  // Anwesenheit pro Stimmgruppe (SATB) im Zeitraum
   if(captured.length && mitglieder.length){
     const voices=['Sopran','Alt','Tenor','Bass'];
     const vItems=voices.map(v=>{
@@ -3024,7 +3281,7 @@ function renderProben(){
     else planEl.innerHTML=upcoming.map(p=>{
       const songs=(p.songIds||[]).map(id=>{const s=allS.find(x=>x.id===id);return s?s.name:'?'}).join(', ');
       const isGeplant=p._src==='plan';
-      return`<div class="plan-item"><div style="font-weight:600;color:#1e8449;margin-bottom:2px">🎹 ${fmt(p.datum)}</div>${songs?`<div style="font-size:.8rem;color:#555">🎵 ${esc(songs)}</div>`:''}${p.notiz?`<div style="font-size:.8rem;color:#888;font-style:italic">💬 ${esc(p.notiz)}</div>`:''}${buildProbeAttendance(p)}${uiEdit('proben')?`<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-sm" style="background:#eef1f5;color:#1d4e96" onclick="editProbe('${p.id}',${isGeplant})">✏️ Bearbeiten</button><button class="btn btn-danger btn-sm" onclick="deleteProbe('${p.id}',${isGeplant})">🗑️ Löschen</button></div>`:''}</div>`;
+      return`<div class="plan-item"><div style="font-weight:600;color:#1e8449;margin-bottom:2px">🎹 ${fmt(p.datum)}</div>${p.ort?`<div style="font-size:.8rem;color:#c0620f;font-weight:600">📍 ${esc(p.ort)}</div>`:''}${songs?`<div style="font-size:.8rem;color:#555">🎵 ${esc(songs)}</div>`:''}${p.notiz?`<div style="font-size:.8rem;color:#888;font-style:italic">💬 ${esc(p.notiz)}</div>`:''}${buildProbeAttendance(p)}${uiEdit('proben')?`<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-sm" style="background:#eef1f5;color:#1d4e96" onclick="editProbe('${p.id}',${isGeplant})">✏️ Bearbeiten</button><button class="btn btn-danger btn-sm" onclick="deleteProbe('${p.id}',${isGeplant})">🗑️ Löschen</button></div>`:''}</div>`;
     }).join('');
   }
 
@@ -3040,6 +3297,7 @@ function renderProben(){
           return`<div class="probe-item" style="border-left-color:#f39c12;background:#fffbf0;opacity:.8">
             <div style="font-size:.72rem;font-weight:700;color:#f39c12;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px">Geplant (nicht erfasst)</div>
             <div class="probe-date">📋 ${fmt(p.datum)}</div>
+            ${p.ort?`<div style="font-size:.8rem;color:#c0620f;font-weight:600">📍 ${esc(p.ort)}</div>`:''}
             ${names?`<div class="probe-songs">🎵 ${esc(names)}</div>`:''}
             ${p.notiz?`<div class="probe-notes">💬 ${esc(p.notiz)}</div>`:''}
             ${uiEdit('proben')?`<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-sm" style="background:#eef1f5;color:#1d4e96" onclick="editProbe('${p.id}',true)">✏️ Bearbeiten</button><button class="btn btn-danger btn-sm" onclick="deleteProbe('${p.id}',true)">🗑️ Löschen</button></div>`:''}
@@ -3049,6 +3307,7 @@ function renderProben(){
         const hwHtml=Object.entries(hw).filter(([,v])=>v).map(([g,t])=>`<div style="font-size:.76rem;margin-top:2px"><strong>${esc(g)}:</strong> ${esc(t)}</div>`).join('');
         return`<div class="probe-item">
           <div class="probe-date">📅 ${fmt(p.datum)}</div>
+          ${p.ort?`<div style="font-size:.8rem;color:#c0620f;font-weight:600">📍 ${esc(p.ort)}</div>`:''}
           <div class="probe-songs">🎵 ${esc(names)}</div>
           ${p.notiz?`<div class="probe-notes">💬 ${esc(p.notiz)}</div>`:''}
           ${hwHtml?`<div style="background:#fff8e7;border-radius:5px;padding:6px 8px;margin-top:6px;font-size:.78rem;color:#7d6608"><strong>📝 Hausaufgaben:</strong>${hwHtml}</div>`:''}
@@ -3162,6 +3421,7 @@ function terminHtml(t,past=false){
     ${infoOnly&&t.beschreibung?`<div style="font-size:.85rem;color:#555;margin:2px 0 4px">${esc(t.beschreibung)}</div>`:''}
     ${setlisteHtml(t)}
     ${!past?fahrtenBlock(t):''}
+    ${!past?aufgabenBlock(t):''}
     ${showRueck?rueckmeldungenHtml(t, bd):''}
     <details class="t-coll"><summary>ℹ️ Details${t.beschreibung?' & Beschreibung':''}</summary><div>
       ${t.beschreibung?`<div style="font-size:.84rem;color:#555;margin-bottom:8px">${esc(t.beschreibung)}</div>`:''}
@@ -3236,7 +3496,7 @@ async function abstimmen(id,antwort){
   // Nur die EIGENE Stimme schreiben — kein Ganz-Array-PUT mehr, sonst löschen sich gleichzeitige Stimmen gegenseitig
   ops.push(dbFetch(base+encodeURIComponent(name)+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(antwort)}));
   await Promise.all(ops).catch(e=>console.warn(e));
-  if(antwort==='nein'){ notifyAdminAbsage('❌ Absage Termin', name+' kommt nicht zu „'+(t.titel||'Termin')+'" am '+fmt(t.datum)+'.'); }
+  if(antwort==='nein'){ notifyAdminAbsage('❌ Absage Termin', (prettyName(name)||name)+' kommt nicht zu „'+(t.titel||'Termin')+'" am '+fmt(t.datum)+'.'); }
   // Update just this vote row for instant feedback
   const vrow=document.getElementById('vrow-'+id);
   if(vrow) vrow.innerHTML=buildVoteRow(t);
@@ -3551,16 +3811,44 @@ function renderMitglieder(){
   el.innerHTML=memberHtml+extraHtml;
 }
 
+// Benutzername-Vorschlag: Initialen + Geburtsdatum (TTMMJJ), wie beim ursprünglichen Verteilen (z.B. MW290498).
+// Ohne Geburtsdatum: Initialen + 4 Zufallsziffern (min. 6 Zeichen, Firebase-Passwort-Mindestlänge).
+function suggestUsername(vorname, nachname, geburtstag){
+  const ini=((vorname||'').charAt(0)+(nachname||'').charAt(0)).toUpperCase();
+  let datePart='';
+  const digits=(geburtstag||'').match(/\d+/g)||[];
+  if(digits.length>=3){
+    const dd=digits[0].padStart(2,'0'), mm=digits[1].padStart(2,'0');
+    let yy=digits[2]; yy=(yy.length>2?yy.slice(-2):yy.padStart(2,'0'));
+    datePart=dd+mm+yy;
+  }
+  if(!datePart) datePart=String(Math.floor(1000+Math.random()*9000));
+  return ini+datePart;
+}
+function fillUsernameSuggestion(prefix){
+  const vn=document.getElementById(prefix==='m'?'m-vorname':'edit-m-vorname')?.value||'';
+  const nn=document.getElementById(prefix==='m'?'m-nachname':'edit-m-nachname')?.value||'';
+  const gb=document.getElementById(prefix==='m'?'m-geburtstag':'edit-m-geburtstag')?.value||'';
+  const el=document.getElementById(prefix+'-username'); if(el) el.value=suggestUsername(vn,nn,gb);
+}
+function usernameTaken(name, exceptMember){
+  const n=_norm(name); if(!n) return false;
+  return mitglieder.some(m=>m!==exceptMember && _norm(m.username)===n);
+}
 async function addMitglied(){
   const nachname=document.getElementById('m-nachname').value.trim();
   const vorname=document.getElementById('m-vorname').value.trim();
   if(!nachname||!vorname){alert('Vor- und Nachname erforderlich.');return;}
+  let username=document.getElementById('m-username').value.trim();
+  if(username && usernameTaken(username)){ alert('Dieser Benutzername ist schon vergeben. Bitte einen anderen wählen.'); return; }
   const maxNr=mitglieder.reduce((mx,x)=>Math.max(mx,parseInt(x.nr)||0),0);
-  const newM={id:uid(),nr:maxNr+1,nachname,vorname,handy:document.getElementById('m-handy').value.trim(),telefon:document.getElementById('m-telefon').value.trim(),email:document.getElementById('m-email').value.trim(),geburtstag:document.getElementById('m-geburtstag').value.trim(),adresse:document.getElementById('m-adresse').value.trim(),plz:document.getElementById('m-plz').value.trim(),stimme:document.getElementById('m-stimme')?.value||''};
+  const newM={id:uid(),nr:maxNr+1,nachname,vorname,username,handy:document.getElementById('m-handy').value.trim(),telefon:document.getElementById('m-telefon').value.trim(),email:document.getElementById('m-email').value.trim(),geburtstag:document.getElementById('m-geburtstag').value.trim(),adresse:document.getElementById('m-adresse').value.trim(),plz:document.getElementById('m-plz').value.trim(),stimme:document.getElementById('m-stimme')?.value||''};
   mitglieder.push(newM);
   await saveMitgliederToFB();
-  ['m-nachname','m-vorname','m-handy','m-telefon','m-email','m-geburtstag','m-adresse','m-plz'].forEach(id=>document.getElementById(id).value='');
+  ['m-nachname','m-vorname','m-handy','m-telefon','m-email','m-geburtstag','m-adresse','m-plz','m-username'].forEach(id=>document.getElementById(id).value='');
   renderMitglieder();
+  if(!username) showToast('Mitglied gespeichert – bitte noch einen Benutzernamen vergeben, bevor du das Konto erstellst','info');
+  else showToast('Mitglied gespeichert','ok');
 }
 
 async function deleteMitglied(id){
@@ -3573,17 +3861,40 @@ async function deleteMitglied(id){
 function openEditMitglied(id){
   const m=mitglieder.find(x=>(x.nr||x.id)==id);if(!m)return;
   document.getElementById('edit-m-id').value=id;
-  ['nachname','vorname','handy','telefon','email','geburtstag','adresse','plz','stimme'].forEach(f=>{const el=document.getElementById('edit-m-'+f);if(el)el.value=m[f]||'';});
+  ['nachname','vorname','handy','telefon','email','geburtstag','adresse','plz','stimme','username'].forEach(f=>{const el=document.getElementById('edit-m-'+f);if(el)el.value=m[f]||'';});
+  const unEl=document.getElementById('edit-m-username'), hint=document.getElementById('edit-m-username-hint');
+  const hasAccount=!!m.uid;
+  if(unEl) unEl.readOnly=hasAccount;
+  if(hint) hint.textContent = hasAccount
+    ? 'Hat bereits ein Login-Konto – Benutzername kann hier nicht mehr geändert werden (würde das Konto vom Mitglied trennen).'
+    : 'Ohne Benutzername kann später kein Login-Konto erstellt werden.';
   document.getElementById('modal-mitglied').classList.add('open');
 }
 
 async function saveMitglied(){
   const id=document.getElementById('edit-m-id').value;
   const m=mitglieder.find(x=>(x.nr||x.id)==id);if(!m)return;
-  ['nachname','vorname','handy','telefon','email','geburtstag','adresse','plz','stimme'].forEach(f=>{const el=document.getElementById('edit-m-'+f);if(el)m[f]=el.value.trim();});
+  const hasAccount=!!m.uid;
+  const fields=['nachname','vorname','handy','telefon','email','geburtstag','adresse','plz','stimme'];
+  if(!hasAccount) fields.push('username');
+  if(!hasAccount){
+    const newUn=document.getElementById('edit-m-username')?.value.trim()||'';
+    if(newUn && usernameTaken(newUn, m)){ alert('Dieser Benutzername ist schon vergeben. Bitte einen anderen wählen.'); return; }
+  }
+  const alteAdresse=m.adresse||'';
+  fields.forEach(f=>{const el=document.getElementById('edit-m-'+f);if(el)m[f]=el.value.trim();});
   await saveMitgliederToFB();
   closeModal();
   renderMitglieder();
+  // Adresse geändert -> Kartenposition im Hintergrund nachziehen (für „Mitglieder-Standorte" auf der Plakat-Karte)
+  if(m.adresse !== alteAdresse){
+    const idx=mitglieder.indexOf(m);
+    if(!m.adresse){ m.lat=null; m.lng=null; dbPut('mitglieder/'+idx+'/lat',null).catch(()=>{}); dbPut('mitglieder/'+idx+'/lng',null).catch(()=>{}); }
+    else {
+      const q=[m.adresse, m.plz].filter(Boolean).join(', ');
+      geocodeAddress(q).then(geo=>{ if(!geo) return; m.lat=geo.lat; m.lng=geo.lng; dbPut('mitglieder/'+idx+'/lat',geo.lat).catch(()=>{}); dbPut('mitglieder/'+idx+'/lng',geo.lng).catch(()=>{}); }).catch(()=>{});
+    }
+  }
 }
 
 async function saveMitgliederToFB(){
@@ -3677,7 +3988,7 @@ async function submitReply(parentKey){
   try{
     await dbFetch(DB+'/kommentare.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,text,lied:'',datum:new Date().toISOString(),antwortAuf:parentKey})});
     await loadKommentare();
-    try{ notifyPush('kommentar','💬 Antwort von '+name, text); }catch(e){}
+    try{ notifyPush('kommentar','💬 Antwort von '+(prettyName(name)||name), text); }catch(e){}
     showToast('Antwort gesendet','ok');
   }catch(e){ alert('Fehler: '+e.message); ta.disabled=false; }
 }
@@ -3688,7 +3999,7 @@ async function submitKommentar(){
   if(!name){alert('Bitte deinen Namen eingeben.');return;}
   if(!text){alert('Bitte einen Kommentar schreiben.');return;}
   const btn=document.getElementById('k-btn');btn.textContent='⏳';btn.disabled=true;
-  try{await dbFetch(DB+'/kommentare.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,text,lied:lied||'',datum:new Date().toISOString()})});document.getElementById('k-text').value='';document.getElementById('k-lied').value='';await loadKommentare();notifyPush('kommentar','💬 Neuer Kommentar von '+name,(lied?'['+lied+'] ':'')+text);btn.textContent='✅ Gesendet!';setTimeout(()=>{btn.textContent='💬 Abschicken';btn.disabled=false;},2000);}
+  try{await dbFetch(DB+'/kommentare.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,text,lied:lied||'',datum:new Date().toISOString()})});document.getElementById('k-text').value='';document.getElementById('k-lied').value='';await loadKommentare();notifyPush('kommentar','💬 Neuer Kommentar von '+(prettyName(name)||name),(lied?'['+lied+'] ':'')+text);btn.textContent='✅ Gesendet!';setTimeout(()=>{btn.textContent='💬 Abschicken';btn.disabled=false;},2000);}
   catch(e){alert('Fehler: '+e.message);btn.textContent='💬 Abschicken';btn.disabled=false;}
 }
 
@@ -4119,13 +4430,15 @@ async function createUserAccount(mitglied) {
   const email = mitglied.email;
   const username = mitglied.username;
   if(!email) return {error: 'Keine E-Mail'};
-  
+  if(!username) return {error: 'Kein Benutzername gesetzt – erst bei „Mitglied bearbeiten" vergeben'};
+
   // Default password: username (user should change it)
   const defaultPw = username;
   try {
-    const userCred = await window._fbCreateUser(window._fbAuth, email, defaultPw);
-    const uid = userCred.user.uid;
-    
+    // WICHTIG: auf einer isolierten Zweit-App anlegen — createUserWithEmailAndPassword meldet sonst
+    // automatisch als der neue Nutzer an und würde den Admin aus der eigenen Sitzung werfen.
+    const uid = await window._fbCreateUserIsolated(email, defaultPw);
+
     // Store profile
     const profile = {
       uid, username, email,
@@ -4135,16 +4448,23 @@ async function createUserAccount(mitglied) {
       isAdmin: false,
       erstellt: new Date().toISOString()
     };
-    
+
     await dbFetch(DB+'/userprofiles/'+uid+'.json', {
       method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(profile)
     });
-    
+
     // Store username->email mapping
     await dbFetch(DB+'/usernames/'+username.toLowerCase()+'.json', {
       method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email, uid})
     });
-    
+
+    // Mitglieds-Eintrag gleich mit dem Konto verknüpfen (spart manuelles Verknüpfen in der Nutzerverwaltung)
+    const mi = mitglieder.indexOf(mitglied);
+    if(mi>=0 && !mitglieder[mi].uid){
+      mitglieder[mi].uid = uid;
+      await dbPut('mitglieder/'+mi+'/uid', uid).catch(e=>console.warn(e));
+    }
+
     return {success: true, username, defaultPw};
   } catch(e) {
     if(e.code === 'auth/email-already-in-use') return {error: 'E-Mail bereits registriert'};
@@ -4187,19 +4507,39 @@ async function linkUserToMember(userId, idx){
 async function renderUserVerwaltung() {
   const el = document.getElementById('user-verwaltung');
   if(!el) return;
+  const q=(document.getElementById('uv-search')?.value||'').trim().toLowerCase();
   el.innerHTML = '<div style="color:#aaa;font-size:.85rem">Lade Nutzer…</div>';
-  
+
   const profiles = await loadUserProfiles();
-  const users = Object.values(profiles).sort((a,b) => a.nachname?.localeCompare(b.nachname||'')||0);
-  
-  if(!users.length) {
+  const allUsers = Object.values(profiles).sort((a,b) => a.nachname?.localeCompare(b.nachname||'')||0);
+
+  if(!allUsers.length) {
     el.innerHTML = '<div class="empty">Noch keine Nutzerkonten erstellt.</div>';
+    const cnt=document.getElementById('uv-count'); if(cnt) cnt.textContent='';
+    return;
+  }
+  const users = q ? allUsers.filter(u=>{
+    const hay=[u.vorname,u.nachname,u.username,u.email].filter(Boolean).join(' ').toLowerCase();
+    return hay.includes(q);
+  }) : allUsers;
+
+  const cnt=document.getElementById('uv-count');
+  if(cnt){
+    const adminCount=allUsers.filter(u=>u.isAdmin).length;
+    const unlinkedCount=allUsers.filter(u=>!findMemberForUser(u)).length;
+    cnt.textContent = q
+      ? `${users.length} von ${allUsers.length} Nutzern (Suche aktiv)`
+      : `${allUsers.length} Nutzer · 🔑 ${adminCount} Admin${adminCount===1?'':'s'}${unlinkedCount?` · ⚠️ ${unlinkedCount} ohne Mitglied-Verknüpfung`:''}`;
+  }
+
+  if(!users.length){
+    el.innerHTML = '<div class="empty">Keine Nutzer gefunden für „'+esc(q)+'".</div>';
     return;
   }
 
-  // "Allen senden"-Button oben
-  const allEmails = users.map(u=>u.email).filter(Boolean);
-  const banner = `<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;padding:10px 14px;background:#fff8f0;border:1.5px solid #f39c12;border-radius:8px">
+  // "Allen senden"-Button oben (nur ohne aktive Suche, sonst irreführend "an alle 3 gefilterten")
+  const allEmails = allUsers.map(u=>u.email).filter(Boolean);
+  const banner = q ? '' : `<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;padding:10px 14px;background:#fff8f0;border:1.5px solid #f39c12;border-radius:8px">
     <div style="font-size:.84rem;color:#7d6608">📧 Passwort-Reset-Mail an alle ${allEmails.length} Nutzer senden</div>
     <button class="btn btn-sm" style="background:#f39c12;color:white;font-weight:600" onclick="sendResetAll()">📧 Allen senden</button>
   </div>`;
@@ -4211,6 +4551,13 @@ async function renderUserVerwaltung() {
     const uid = u.uid;
     const chk = (key) => perms.includes(key) ? 'checked' : '';
     const linkedM = findMemberForUser(u);
+    // Kurzfassung für die zugeklappte Kopfzeile: Rechte auf einen Blick, ohne alles aufzuklappen
+    const permChips = u.isAdmin
+      ? '<span style="background:#fdecea;color:#c0392b;font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:8px">🔑 Admin</span>'
+      : (perms.length
+          ? perms.map(p=>`<span style="background:#eef3fa;color:#1d4e96;font-size:.68rem;padding:1px 7px;border-radius:8px">${(permLabels[p]||p)}</span>`).join('')
+          : '<span style="color:#bbb;font-size:.72rem">keine Sonderrechte</span>');
+    const linkDot = linkedM ? '' : '<span title="Kein Mitglied verknüpft" style="color:#f39c12;font-size:.85rem">⚠️</span>';
     const linkHtml = linkedM
       ? `<div style="font-size:.78rem;color:#1a7a40;margin-bottom:8px">✅ Mitglied: <strong>${esc(memberName(linkedM)||'(ohne Name)')}</strong></div>`
       : `<div style="background:#fff8e7;border:1px solid #f9ca8b;border-radius:6px;padding:8px 10px;margin-bottom:8px">
@@ -4223,16 +4570,16 @@ async function renderUserVerwaltung() {
            </div>
          </div>`;
     return `
-    <div style="background:white;border-radius:8px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.07);overflow:hidden">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px">
-        <div>
-          <div style="font-weight:600;font-size:.9rem">${esc(u.vorname||'')} ${esc(u.nachname||'')}
-            ${u.isAdmin?'<span style="background:#e74c3c;color:white;font-size:.68rem;padding:1px 6px;border-radius:8px;margin-left:4px">Admin</span>':''}
+    <details class="uv-card" style="background:white;border-radius:8px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.07);overflow:hidden">
+      <summary style="cursor:pointer;padding:10px 14px">
+        <div style="min-width:0">
+          <div style="font-weight:600;font-size:.9rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span>${esc(u.vorname||'')} ${esc(u.nachname||'')}</span>${linkDot}
           </div>
           <div style="font-size:.78rem;color:#888">👤 ${esc(u.username||'')} &nbsp;·&nbsp; ✉️ ${esc(u.email||'')}</div>
+          <div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">${permChips}</div>
         </div>
-        <button class="btn btn-danger btn-sm" onclick="deleteUserAccount('${uid}','${esc(u.username||'')}')">✕</button>
-      </div>
+      </summary>
       <div style="border-top:1px solid #f0f0f0;padding:10px 14px;background:#fafafa">
         ${linkHtml}
         <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#999;margin-bottom:8px">🛡️ Berechtigungen</div>
@@ -4248,10 +4595,11 @@ async function renderUserVerwaltung() {
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <button class="btn btn-success btn-sm" onclick="saveUserPerms('${uid}')">💾 Speichern</button>
           <button class="btn btn-sm" style="background:#f39c12;color:white" onclick="sendResetForUser('${esc(u.email||'')}','${uid}')">📧 Reset-Mail</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteUserAccount('${uid}','${esc(u.username||'')}')">✕ Konto löschen</button>
           <span id="perm-result-${uid}" style="font-size:.8rem"></span>
         </div>
       </div>
-    </div>`;
+    </details>`;
   }).join('');
 }
 
@@ -4307,11 +4655,24 @@ async function importMembersFromFile() {
 async function createAllAccounts() {
   const btn = document.getElementById('create-all-btn');
   btn.disabled = true; btn.textContent = '⏳ Erstelle Konten…';
+  // Wer hat schon ein Konto? (verlinkt über mitglied.uid ODER passenden Benutzernamen/E-Mail in userprofiles)
+  const profiles = await loadUserProfiles().catch(()=>({}));
+  const usedUsernames = new Set(Object.values(profiles).map(p=>_norm(p.username)).filter(Boolean));
+  const usedEmails = new Set(Object.values(profiles).map(p=>(p.email||'').toLowerCase()).filter(Boolean));
   const results = [];
   for(const m of (mitglieder||[])) {
     if(!m.email) { results.push({name: m.vorname+' '+m.nachname, error:'Keine E-Mail'}); continue; }
+    if(m.uid || usedUsernames.has(_norm(m.username)) || usedEmails.has((m.email||'').toLowerCase())){
+      continue; // schon registriert -> gar nicht erst versuchen (keine unnötigen Fehler/Aufrufe)
+    }
     const r = await createUserAccount(m);
     results.push({name: m.vorname+' '+m.nachname, username: m.username, ...r});
+  }
+  if(!results.length){
+    document.getElementById('create-all-result').innerHTML='<div style="font-size:.82rem;margin-top:8px;color:#888">Alle Mitglieder mit E-Mail haben bereits ein Konto.</div>';
+    btn.disabled = false; btn.textContent = '👥 Alle Mitglieder-Konten erstellen';
+    renderMitglieder(); renderUserVerwaltung();
+    return;
   }
   const ok = results.filter(r=>r.success).length;
   const err = results.filter(r=>r.error).length;
@@ -4321,7 +4682,7 @@ async function createAllAccounts() {
     '<details style="margin-top:6px"><summary style="cursor:pointer;color:#2563b5">Details anzeigen</summary>'+
     '<div style="margin-top:4px">'+results.map(r=>`<div>${r.name}: ${r.success?'✅ '+r.username+' / PW: '+r.defaultPw:'❌ '+r.error}</div>`).join('')+'</div></details></div>';
   btn.disabled = false; btn.textContent = '👥 Alle Mitglieder-Konten erstellen';
-  renderUserVerwaltung();
+  renderMitglieder(); renderUserVerwaltung();
 }
 
 
@@ -4372,37 +4733,43 @@ function saveAutoLogout(){
 }
 
 // ===== ICS KALENDER-EXPORT =====
-function toICSDate(dateStr, timeStr){
-  // dateStr: "2026-06-15", timeStr: "15:00" or ""
+// Robust gegen alle in der DB vorkommenden Freitext-Formate ("19", "19:00", "19.30", "19 Uhr" …)
+function parseUhrzeitClient(s){
+  if(!s) return null;
+  const m=String(s).match(/(\d{1,2})(?:[:.](\d{2}))?/);
+  if(!m) return null;
+  const h=parseInt(m[1],10);
+  if(isNaN(h)||h>23) return null;
+  return {h, min:m[2]?parseInt(m[2],10):0};
+}
+function toICSDate(dateStr, zeit){
+  // dateStr: "2026-06-15", zeit: {h,min} oder null -> nur Datum
   const d = dateStr.replace(/-/g,'');
-  if(timeStr){
-    const t = timeStr.replace(':','')+'00';
-    return d+'T'+t;
-  }
+  if(zeit) return d+'T'+String(zeit.h).padStart(2,'0')+String(zeit.min).padStart(2,'0')+'00';
   return d;
 }
 function terminToVEVENT(t){
   const uid = t.id+'@chor-eisleben';
   const now = new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
-  const isAllDay = !t.uhrzeit;
+  const zeit = parseUhrzeitClient(t.uhrzeit);
+  const isAllDay = !zeit;
   let dtStart, dtEnd;
   if(isAllDay){
-    dtStart = 'DTSTART;VALUE=DATE:'+toICSDate(t.datum,'');
+    dtStart = 'DTSTART;VALUE=DATE:'+toICSDate(t.datum,null);
     const endDate = t.datum_ende || t.datum;
     // ICS all-day end = day after last day
     const ed = new Date(endDate+'T00:00:00');
     ed.setDate(ed.getDate()+1);
     dtEnd = 'DTEND;VALUE=DATE:'+ed.toISOString().split('T')[0].replace(/-/g,'');
   } else {
-    dtStart = 'DTSTART:'+toICSDate(t.datum, t.uhrzeit);
-    // Default duration 2h if no end time
-    const [h,m] = t.uhrzeit.split(':').map(Number);
-    const sd = new Date(t.datum+'T'+t.uhrzeit+':00');
+    dtStart = 'DTSTART:'+toICSDate(t.datum, zeit);
+    // Standarddauer 2h (kein Ende hinterlegt); über Date-Komponenten berechnet (keine String-Parse-Fallstricke,
+    // und sd trägt sein EIGENES Datum -> auch korrekt, falls das Ende über Mitternacht rutscht)
+    const [y,mo,da] = t.datum.split('-').map(Number);
+    const sd = new Date(y, mo-1, da, zeit.h, zeit.min, 0);
     sd.setHours(sd.getHours()+2);
-    const endT = sd.getHours().toString().padStart(2,'0')+sd.getMinutes().toString().padStart(2,'0')+'00';
-    dtEnd = 'DTEND:'+toICSDate(t.datum,'')+t.datum.replace(/-/g,'')+endT;
-    // Fix: rebuild properly
-    dtEnd = 'DTEND:'+toICSDate(t.datum, sd.getHours().toString().padStart(2,'0')+':'+sd.getMinutes().toString().padStart(2,'0'));
+    const endDatum = sd.getFullYear()+'-'+String(sd.getMonth()+1).padStart(2,'0')+'-'+String(sd.getDate()).padStart(2,'0');
+    dtEnd = 'DTEND:'+toICSDate(endDatum, {h:sd.getHours(), min:sd.getMinutes()});
   }
   const typLabels = {konzert:'🎵 Konzert',fest:'🎪 Fest',chorlager:'🏕️ Chorlager',gottesdienst:'⛪ Gottesdienst',probe:'🎹 Probe',sonstiges:'📌 Sonstiges'};
   const summary = (typLabels[t.typ]||'') + ' – ' + t.titel + ' (Regionalchor Eisleben)';
@@ -4448,6 +4815,26 @@ function exportAlleTermineICS(){
   const upcoming = termine.filter(t=>t.datum>=today).sort((a,b)=>a.datum.localeCompare(b.datum));
   const evts = (upcoming.length ? upcoming : termine).map(terminToVEVENT);
   downloadICS(buildICS(evts), 'chor-eisleben-termine-'+today+'.ics');
+}
+// Kalender-Abo: eine feste Adresse mit Geheimnis im Link (Kalender-Apps können sich nicht einloggen)
+const ICS_FEED_URL = 'https://europe-west1-chor-eisleben.cloudfunctions.net/icsFeed?key=e7cdaf3a8d370d8acbc2fa20ed89251582d9e12a';
+function openICSAbo(){
+  const inp=document.getElementById('ics-abo-link'); if(inp) inp.value=ICS_FEED_URL;
+  const r=document.getElementById('ics-abo-result'); if(r) r.textContent='';
+  document.getElementById('modal-ics-abo').classList.add('open');
+}
+async function copyICSLink(){
+  const r=document.getElementById('ics-abo-result');
+  try{
+    await navigator.clipboard.writeText(ICS_FEED_URL);
+    if(r){ r.style.color='#27ae60'; r.textContent='✅ Link kopiert – jetzt in der Kalender-App einfügen.'; }
+  }catch(e){
+    const inp=document.getElementById('ics-abo-link'); if(inp){ inp.select(); inp.setSelectionRange(0,999); }
+    if(r){ r.style.color='#e67e22'; r.textContent='ℹ️ Bitte den markierten Link manuell kopieren.'; }
+  }
+}
+function openICSWebcal(){
+  window.location.href = ICS_FEED_URL.replace(/^https:/,'webcal:');
 }
 
 // ===== LIEDWÜNSCHE =====
@@ -4658,15 +5045,53 @@ async function loadPlakate(){
     renderPlakate();
   }catch(e){console.warn(e);}
 }
+// Adresse -> Koordinaten + Ortschafts-Vorschlag (OpenStreetMap/Nominatim, kostenlos, kein API-Key nötig)
+async function geocodeAddress(query){
+  if(!query) return null;
+  try{
+    const url='https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=1&countrycodes=de&q='+encodeURIComponent(query);
+    const r=await fetch(url,{headers:{'Accept-Language':'de'}});
+    if(!r.ok) return null;
+    const arr=await r.json();
+    if(!arr || !arr.length) return null;
+    const hit=arr[0];
+    const lat=parseFloat(hit.lat), lng=parseFloat(hit.lon);
+    if(isNaN(lat)||isNaN(lng)) return null;
+    const addr=hit.address||{};
+    const candidates=[addr.suburb, addr.city_district, addr.village, addr.town, addr.municipality, addr.county].filter(Boolean);
+    let ortschaft=null;
+    for(const c of candidates){
+      const treffer=PLAKAT_ORTSCHAFTEN.find(o=>o!=='Sonstiges' && (_norm(o)===_norm(c) || _norm(c).includes(_norm(o)) || _norm(o).includes(_norm(c))));
+      if(treffer){ ortschaft=treffer; break; }
+    }
+    return {lat,lng,ortschaft};
+  }catch(e){ console.warn('Geocoding fehlgeschlagen',e); return null; }
+}
 async function addPlakat(){
   const ort=document.getElementById('pl-ort').value.trim();
   if(!ort){alert('Bitte einen Standort eingeben.');return;}
   const anzahl=document.getElementById('pl-anzahl').value.trim();
   const adresse=document.getElementById('pl-adresse').value.trim();
   const notiz=document.getElementById('pl-notiz').value.trim();
-  const ortschaft=_plOrtschaftValue('pl-ortschaft');
-  await dbFetch(DB+'/plakate.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ort,ortschaft,anzahl,adresse,notiz,von:'',erstellt:new Date().toISOString()})});
+  let ortschaft=_plOrtschaftValue('pl-ortschaft');
+  let lat=null, lng=null;
+  const statusEl=document.getElementById('pl-geocode-status');
+  if(adresse){
+    if(statusEl) statusEl.textContent='⏳ Adresse wird gesucht…';
+    const geo=await geocodeAddress(adresse);
+    const sel=document.getElementById('pl-ortschaft');
+    const userTouched=sel && sel.dataset.touched==='1';
+    if(geo){
+      lat=geo.lat; lng=geo.lng;
+      if(geo.ortschaft && !userTouched) ortschaft=geo.ortschaft;
+      if(statusEl) statusEl.textContent='📍 Standort gefunden'+(geo.ortschaft?' · '+geo.ortschaft:'');
+    } else if(statusEl) statusEl.textContent='ℹ️ Adresse nicht gefunden – wird ohne Karten-Position gespeichert.';
+  } else if(statusEl) statusEl.textContent='';
+  const entry={ort,ortschaft,anzahl,adresse,notiz,von:'',erstellt:new Date().toISOString()};
+  if(lat!=null && lng!=null){ entry.lat=lat; entry.lng=lng; }
+  await dbFetch(DB+'/plakate.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(entry)});
   ['pl-ort','pl-anzahl','pl-adresse','pl-notiz'].forEach(id=>document.getElementById(id).value='');
+  if(statusEl) statusEl.textContent='';
   await loadPlakate();
 }
 // Ortschaften rund um Lutherstadt Eisleben für die Auswahl (freie Eingabe über „Andere…" möglich)
@@ -4682,6 +5107,7 @@ function _plFillOrtschaftSelect(selId, current){
   const opts=[...PLAKAT_ORTSCHAFTEN];
   if(current && !opts.includes(current)) opts.unshift(current);
   sel.innerHTML=opts.map(o=>`<option value="${esc(o)}"${o===current?' selected':''}>${esc(o)}</option>`).join('')+'<option value="__frei__">➕ Andere…</option>';
+  delete sel.dataset.touched; // frischer Zustand: noch nicht manuell geändert -> Geocoding darf vorschlagen
   const frei=document.getElementById(selId+'-frei'); if(frei){ frei.style.display='none'; frei.value=''; }
 }
 function _plOrtschaftValue(selId){
@@ -4689,8 +5115,11 @@ function _plOrtschaftValue(selId){
   if(sel.value==='__frei__'){ const frei=document.getElementById(selId+'-frei'); const v=(frei&&frei.value.trim())||''; return v||'Sonstiges'; }
   return sel.value||'Sonstiges';
 }
+// Plakat-Standorte sind eine gemeinsam gepflegte Liste: JEDES angemeldete Mitglied darf
+// Standorte anlegen, bearbeiten und löschen — nicht nur Admins mit „plakate"-Recht.
+function canManagePlakate(){ return !!(typeof currentUser!=='undefined' && currentUser); }
 function editPlakat(key){
-  if(!uiEdit('plakate')) return;
+  if(!canManagePlakate()) return;
   const p=plakate.find(x=>x._key===key); if(!p) return;
   document.getElementById('ple-key').value=key;
   document.getElementById('ple-ort').value=p.ort||'';
@@ -4698,24 +5127,44 @@ function editPlakat(key){
   document.getElementById('ple-adresse').value=p.adresse||'';
   document.getElementById('ple-notiz').value=p.notiz||'';
   _plFillOrtschaftSelect('ple-ortschaft', p.ortschaft||'Sonstiges');
+  const st=document.getElementById('ple-geocode-status'); if(st) st.textContent='';
   document.getElementById('modal-plakat-edit').classList.add('open');
 }
 async function savePlakatEdit(){
-  if(!uiEdit('plakate')){alert('Keine Berechtigung.');return;}
+  if(!canManagePlakate()){alert('Bitte zuerst anmelden.');return;}
   const key=document.getElementById('ple-key').value;
   const ort=document.getElementById('ple-ort').value.trim();
   if(!ort){alert('Bitte Standort eingeben.');return;}
-  const upd={ort,
-    ortschaft:_plOrtschaftValue('ple-ortschaft'),
+  const adresse=document.getElementById('ple-adresse').value.trim();
+  let ortschaft=_plOrtschaftValue('ple-ortschaft');
+  const existing=plakate.find(x=>x._key===key);
+  let lat=(existing&&typeof existing.lat==='number')?existing.lat:null;
+  let lng=(existing&&typeof existing.lng==='number')?existing.lng:null;
+  const statusEl=document.getElementById('ple-geocode-status');
+  const addressChanged=!existing || (existing.adresse||'')!==adresse;
+  if(adresse && addressChanged){
+    if(statusEl) statusEl.textContent='⏳ Adresse wird gesucht…';
+    const geo=await geocodeAddress(adresse);
+    const sel=document.getElementById('ple-ortschaft');
+    const userTouched=sel && sel.dataset.touched==='1';
+    if(geo){
+      lat=geo.lat; lng=geo.lng;
+      if(geo.ortschaft && !userTouched) ortschaft=geo.ortschaft;
+      if(statusEl) statusEl.textContent='📍 Position aktualisiert'+(geo.ortschaft?' · '+geo.ortschaft:'');
+    } else if(statusEl) statusEl.textContent='ℹ️ Adresse nicht gefunden.';
+  } else if(!adresse){ lat=null; lng=null; }
+  const upd={ort, ortschaft,
     anzahl:document.getElementById('ple-anzahl').value.trim(),
-    adresse:document.getElementById('ple-adresse').value.trim(),
-    notiz:document.getElementById('ple-notiz').value.trim()};
+    adresse,
+    notiz:document.getElementById('ple-notiz').value.trim(),
+    lat: (lat!=null?lat:null), lng: (lng!=null?lng:null)};
   await dbFetch(DB+'/plakate/'+key+'.json',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(upd)});
+  if(statusEl) statusEl.textContent='';
   closeModal();
   await loadPlakate();
 }
 async function deletePlakat(key){
-  if(!uiEdit('plakate')) return;
+  if(!canManagePlakate()) return;
   if(!confirm('Standort löschen?'))return;
   await dbFetch(DB+'/plakate/'+key+'.json',{method:'DELETE'});
   await loadPlakate();
@@ -4735,7 +5184,7 @@ async function releasePlakat(key){
 function renderPlakate(){
   const el=document.getElementById('plakate-list');
   if(!el)return;
-  const canManage=uiEdit('plakate');
+  const canManage=canManagePlakate();
   // Formular-Select + Vorschlags-Chips einmalig befüllen (Nutzerwahl nicht überschreiben)
   const formSel=document.getElementById('pl-ortschaft');
   if(formSel && !formSel.options.length) _plFillOrtschaftSelect('pl-ortschaft','Lutherstadt Eisleben');
@@ -4808,6 +5257,154 @@ function renderPlakate(){
     rankCard.style.display=items.length?'':'none';
     rankEl.innerHTML=items.length?_statBars(items,'#8e44ad'):'';
   }
+  // Wenn die Karte gerade offen ist, Marker mit den frischen Daten aktualisieren
+  const mapEl=document.getElementById('plakate-map');
+  if(mapEl && mapEl.style.display!=='none' && window.L && _plakateMapInstance) renderPlakateMapMarkers();
+}
+
+// ===== PLAKATE: KARTE (Leaflet/OpenStreetMap, kostenlos, kein API-Key) =====
+let _leafletLoadPromise=null;
+function loadLeaflet(){
+  if(window.L) return Promise.resolve();
+  if(_leafletLoadPromise) return _leafletLoadPromise;
+  _leafletLoadPromise=new Promise((resolve,reject)=>{
+    const link=document.createElement('link');
+    link.rel='stylesheet'; link.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(link);
+    const script=document.createElement('script');
+    script.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.onload=()=>resolve();
+    script.onerror=()=>{ _leafletLoadPromise=null; reject(new Error('Kartenbibliothek konnte nicht geladen werden.')); };
+    document.body.appendChild(script);
+  });
+  return _leafletLoadPromise;
+}
+let _plakateMapInstance=null, _plakateMarkers=[];
+async function togglePlakateKarte(){
+  const mapEl=document.getElementById('plakate-map');
+  const btn=document.getElementById('plakate-karte-toggle-btn');
+  if(!mapEl || !btn) return;
+  if(mapEl.style.display==='none'){
+    btn.textContent='⏳ Lade Karte…'; btn.disabled=true;
+    try{
+      await loadLeaflet();
+      mapEl.style.display='block';
+      btn.textContent='Karte ausblenden'; btn.disabled=false;
+      if(!_plakateMapInstance){
+        _plakateMapInstance=L.map('plakate-map').setView([51.516,11.918],13); // Halle-Dölau, grobe Mitte
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap-Mitwirkende',maxZoom:19}).addTo(_plakateMapInstance);
+      } else {
+        setTimeout(()=>_plakateMapInstance.invalidateSize(),50);
+      }
+      renderPlakateMapMarkers();
+      initPlakateMapMembersToggle(); // falls vorher aktiviert (nur auf diesem Gerät gemerkt), gleich mit anzeigen
+    }catch(e){
+      btn.textContent='Karte anzeigen'; btn.disabled=false;
+      alert('Karte konnte nicht geladen werden. Prüfe deine Internetverbindung.');
+    }
+  } else {
+    mapEl.style.display='none';
+    btn.textContent='Karte anzeigen';
+  }
+}
+// ===== Mitglieder-Standorte auf der Karte (Wohnorte) — standardmäßig AUS, jede*r schaltet nur für sich selbst =====
+const PLAKATE_MEMBERS_PREF_KEY='chor_plakate_map_members';
+let _plakateMemberMarkers=[];
+function initPlakateMapMembersToggle(){
+  const cb=document.getElementById('plakate-map-members-toggle'); if(!cb) return;
+  let on=false;
+  try{ on = localStorage.getItem(PLAKATE_MEMBERS_PREF_KEY)==='1'; }catch(e){}
+  cb.checked = on;
+  if(on) togglePlakateMapMembers(true);
+}
+async function togglePlakateMapMembers(silentInit){
+  const cb=document.getElementById('plakate-map-members-toggle'); if(!cb) return;
+  const on=cb.checked;
+  if(!silentInit){ try{ localStorage.setItem(PLAKATE_MEMBERS_PREF_KEY, on?'1':'0'); }catch(e){} }
+  const statusEl=document.getElementById('plakate-map-members-status');
+  if(_plakateMapInstance){ _plakateMemberMarkers.forEach(m=>_plakateMapInstance.removeLayer(m)); }
+  _plakateMemberMarkers=[];
+  if(!on){ if(statusEl) statusEl.textContent=''; return; }
+  if(!_plakateMapInstance) return; // Karte noch nicht offen -> wird beim Öffnen automatisch nachgeholt
+  const missing=(mitglieder||[]).filter(m=>m.adresse && typeof m.lat!=='number');
+  if(missing.length){
+    if(statusEl) statusEl.textContent='⏳ Wohnorte werden einmalig gesucht… (0/'+missing.length+')';
+    let done=0;
+    for(const m of missing){
+      const q=[m.adresse, m.plz].filter(Boolean).join(', ');
+      const geo=await geocodeAddress(q);
+      if(geo){
+        m.lat=geo.lat; m.lng=geo.lng;
+        const idx=mitglieder.indexOf(m);
+        dbPut('mitglieder/'+idx+'/lat', geo.lat).catch(()=>{});
+        dbPut('mitglieder/'+idx+'/lng', geo.lng).catch(()=>{});
+      }
+      done++;
+      if(statusEl) statusEl.textContent='⏳ Wohnorte werden einmalig gesucht… ('+done+'/'+missing.length+')';
+      await new Promise(r=>setTimeout(r,1100)); // Nominatim-Rate-Limit (max. 1 Anfrage/Sekunde)
+    }
+    if(statusEl) statusEl.textContent='';
+  }
+  renderPlakateMapMemberMarkers();
+}
+function renderPlakateMapMemberMarkers(){
+  if(!_plakateMapInstance || !window.L) return;
+  _plakateMemberMarkers.forEach(m=>_plakateMapInstance.removeLayer(m));
+  _plakateMemberMarkers=[];
+  (mitglieder||[]).forEach(m=>{
+    if(typeof m.lat!=='number' || typeof m.lng!=='number') return;
+    const icon=L.divIcon({className:'',html:`<div style="width:13px;height:13px;border-radius:3px;background:#8e44ad;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>`,iconSize:[13,13],iconAnchor:[7,7]});
+    const marker=L.marker([m.lat,m.lng],{icon}).addTo(_plakateMapInstance);
+    marker.bindPopup(`👤 ${esc(prettyName(m.username)||memberName(m)||'Mitglied')}`);
+    _plakateMemberMarkers.push(marker);
+  });
+}
+function haversineKm(lat1,lon1,lat2,lon2){
+  const R=6371, toRad=x=>x*Math.PI/180;
+  const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
+  const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function renderPlakateMapMarkers(){
+  if(!_plakateMapInstance || !window.L) return;
+  _plakateMarkers.forEach(m=>_plakateMapInstance.removeLayer(m));
+  _plakateMarkers=[];
+  const pts=[];
+
+  // Eigener Wohnort (falls Konto verknüpft & geocodiert) -> für „nächstgelegene offene Standorte"
+  // Unabhängig vom Mitglieder-Layer-Häkchen: das ist der eigene Standort, kein fremder.
+  const myIdx=myMemberIndex();
+  const myM=myIdx>=0?mitglieder[myIdx]:null;
+  const myLoc=(myM && typeof myM.lat==='number' && typeof myM.lng==='number')?{lat:myM.lat,lng:myM.lng}:null;
+  const openWithDist=[];
+  if(myLoc){
+    (plakate||[]).forEach(p=>{
+      if(typeof p.lat==='number' && typeof p.lng==='number' && !p.von){
+        openWithDist.push({key:p._key, dist:haversineKm(myLoc.lat,myLoc.lng,p.lat,p.lng)});
+      }
+    });
+    openWithDist.sort((a,b)=>a.dist-b.dist);
+  }
+  const distByKey={}; openWithDist.slice(0,3).forEach(x=>{ distByKey[x.key]=x.dist; });
+
+  (plakate||[]).forEach(p=>{
+    if(typeof p.lat!=='number' || typeof p.lng!=='number') return;
+    const done=!!p.von;
+    const isNear = distByKey[p._key]!==undefined;
+    const color=done?'#27ae60':'#f39c12';
+    const size = isNear?20:16;
+    const ring = isNear?'border:3px solid #2563b5;':'border:2px solid #fff;';
+    const icon=L.divIcon({className:'',html:`<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};${ring}box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>`,iconSize:[size,size],iconAnchor:[size/2,size/2]});
+    const marker=L.marker([p.lat,p.lng],{icon}).addTo(_plakateMapInstance);
+    const status=done?('✅ '+esc(prettyName(p.von)||p.von)):'🟠 noch offen';
+    const distTxt = isNear?`<br><span style="color:#2563b5;font-weight:700">📍 ~${distByKey[p._key].toFixed(1)} km von dir</span>`:'';
+    const claimBtn = !done ? `<div style="margin-top:6px"><button onclick="claimPlakat('${p._key}')" style="background:#27ae60;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:.78rem;cursor:pointer;font-family:inherit">✋ Ich übernehme das</button></div>` : '';
+    marker.bindPopup(`<strong>${esc(p.ort)}</strong><br>${esc(p.ortschaft||'')}<br>${status}${distTxt}${claimBtn}`);
+    if(isNear){ try{ marker.bindTooltip('~'+distByKey[p._key].toFixed(1)+' km', {permanent:true, direction:'top', offset:[0,-size/2-2], className:'plakate-dist-tip'}); }catch(e){} }
+    _plakateMarkers.push(marker);
+    pts.push([p.lat,p.lng]);
+  });
+  if(pts.length){ try{ _plakateMapInstance.fitBounds(pts,{padding:[30,30],maxZoom:15}); }catch(e){} }
 }
 
 // ===== GEBURTSTAGE IN TERMINE =====
@@ -5212,6 +5809,7 @@ async function saveMeineKontaktdaten(){
   const i=myMemberIndex();
   const res=document.getElementById('kd-result');
   if(i<0){ if(res){res.style.color='#e74c3c';res.textContent='❌ Kein zugeordnetes Mitglied gefunden.';} return; }
+  const alteAdresse=mitglieder[i].adresse||'';
   const upd={
     handy:document.getElementById('kd-handy').value.trim(),
     telefon:document.getElementById('kd-telefon').value.trim(),
@@ -5226,6 +5824,22 @@ async function saveMeineKontaktdaten(){
     showToast('Kontaktdaten gespeichert','ok');
     setTimeout(()=>{if(res)res.textContent='';},3000);
     if(typeof renderMitglieder==='function') renderMitglieder();
+    // Adresse geändert -> Kartenposition (falls Mitglieder-Standorte irgendwo genutzt werden) im Hintergrund nachziehen
+    if(upd.adresse !== alteAdresse){
+      if(!upd.adresse){
+        mitglieder[i].lat=null; mitglieder[i].lng=null;
+        dbPut('mitglieder/'+i+'/lat', null).catch(()=>{});
+        dbPut('mitglieder/'+i+'/lng', null).catch(()=>{});
+      } else {
+        const q=[upd.adresse, upd.plz].filter(Boolean).join(', ');
+        geocodeAddress(q).then(geo=>{
+          if(!geo) return;
+          mitglieder[i].lat=geo.lat; mitglieder[i].lng=geo.lng;
+          dbPut('mitglieder/'+i+'/lat', geo.lat).catch(()=>{});
+          dbPut('mitglieder/'+i+'/lng', geo.lng).catch(()=>{});
+        }).catch(()=>{});
+      }
+    }
   }catch(e){ if(res){res.style.color='#e74c3c';res.textContent='❌ Speichern fehlgeschlagen: '+e;} showToast('Speichern fehlgeschlagen','err'); }
 }
 
@@ -5349,8 +5963,8 @@ async function sendTestPush(){
   const r=document.getElementById('push-settings-result');
   r.style.color='#2563b5'; r.textContent='⏳ Test wird verschickt…';
   try{
-    await dbFetch(DB+'/pushqueue.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:'Regionalchor Eisleben', body:'🔔 Test-Benachrichtigung', ts:Date.now()})});
-    r.style.color='#27ae60'; r.textContent='✅ Test gesendet – kommt in 1–5 Min. auf abonnierten Geräten an.';
+    await pushSend('Regionalchor Eisleben','🔔 Test-Benachrichtigung', false);
+    r.style.color='#27ae60'; r.textContent='✅ Test gesendet – kommt gleich auf abonnierten Geräten an.';
     setTimeout(()=>{if(r)r.textContent='';},7000);
   }catch(e){ r.style.color='#e74c3c'; r.textContent='❌ Fehler'; }
 }
@@ -5368,7 +5982,7 @@ async function sendBroadcast(){
   r.style.color='#2563b5'; r.textContent='⏳ wird gesendet…';
   try{
     const bTitel=titel||'📢 Regionalchor Eisleben';
-    await dbFetch(DB+'/pushqueue.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:bTitel, body:text, ts:Date.now()})});
+    await pushSend(bTitel, text, false);
     logNotification(bTitel, text);
     titelEl.value=''; textEl.value='';
     r.style.color='#27ae60'; r.textContent='✅ Gesendet – kommt gleich bei allen an.';
@@ -5376,17 +5990,32 @@ async function sendBroadcast(){
   }catch(e){ r.style.color='#e74c3c'; r.textContent='❌ Fehler beim Senden.'; }
 }
 // Legt eine Nachricht in die Warteschlange; ein automatischer Job verschickt sie.
+// Sofort-Versand über die Cloud-Function pushNow; bei Fehler zurück in die Warteschlange (Cron holt es nach)
+async function pushSend(title, body, adminsOnly){
+  try{
+    const u = window._fbAuth && window._fbAuth.currentUser;
+    if(u){
+      const idToken = await u.getIdToken();
+      const r = await fetch(window.PUSH_NOW_URL, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idToken, title, body, adminsOnly:!!adminsOnly})});
+      if(r.ok) return true;
+    }
+  }catch(e){ console.warn('pushNow fehlgeschlagen, nutze Warteschlange', e); }
+  // Fallback: Warteschlange
+  try{
+    const payload = adminsOnly ? {title, body, adminsOnly:true, ts:Date.now()} : {title, body, ts:Date.now()};
+    await dbFetch(DB+'/pushqueue.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  }catch(e){ console.warn('Push-Fallback fehlgeschlagen', e); }
+  return false;
+}
 async function notifyPush(eventKey, title, body){
   logNotification(title, body);           // immer im Glocken-Verlauf anzeigen
   if(!pushSettings || !pushSettings[eventKey]) return;   // Push nur wenn aktiviert
-  try{ await dbFetch(DB+'/pushqueue.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title, body, ts:Date.now()})}); }
-  catch(e){ console.warn('Push-Queue fehlgeschlagen', e); }
+  await pushSend(title, body, false);
 }
 // Nur an die Chorleitung (Admins) – z. B. wenn sich jemand abmeldet
 async function notifyAdminAbsage(title, body){
   if(pushSettings && pushSettings.absage===false) return; // Standard: an
-  try{ await dbFetch(DB+'/pushqueue.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title, body, adminsOnly:true, ts:Date.now()})}); }
-  catch(e){ console.warn('Absage-Push fehlgeschlagen', e); }
+  await pushSend(title, body, true);
 }
 
 // Zeigt beim Öffnen der App eine lokale Benachrichtigung (nur wenn erlaubt, 1x pro Sitzung)
@@ -5560,6 +6189,92 @@ async function removeFahrt(terminId){
   renderTermine();
 }
 
+// ===== AUFGABEN / DIENSTE (pro Termin) =====
+async function loadAufgaben(){
+  try{ const r=await dbFetch(DB+'/aufgaben.json'); if(r.ok){ aufgaben=(await r.json())||{}; } }catch(e){ console.warn('loadAufgaben',e); }
+}
+const AUFGABEN_VORSCHLAEGE=['🎂 Kuchen/Snacks','🪑 Auf-/Abbau','🎼 Noten mitbringen','🚗 Technik transportieren','📷 Fotos machen','🧃 Getränke'];
+// Pro Termin: Aufgaben an/aus (nur Bearbeiter schalten; standardmäßig aus)
+function aufgabenBlock(t){
+  const on = t.aufgaben===true;
+  const canEdit = uiEdit('termine');
+  if(on){
+    const off = canEdit ? `<div style="text-align:right;margin-top:2px"><button class="btn btn-sm" style="background:transparent;color:#e74c3c;font-size:.7rem;padding:1px 6px" onclick="toggleAufgabenAktiv('${esc(t.id)}')">📋 Aufgaben deaktivieren</button></div>` : '';
+    return aufgabenHtml(t)+off;
+  }
+  return canEdit ? `<button class="btn btn-sm" style="background:#eef7f0;color:#1a7a40;font-size:.72rem;margin:3px 0" onclick="toggleAufgabenAktiv('${esc(t.id)}')">📋 Aufgaben/Dienste aktivieren</button>` : '';
+}
+async function toggleAufgabenAktiv(id){
+  if(!uiEdit('termine')){ alert('Nur im Bearbeiten-Modus.'); return; }
+  const t=termine.find(x=>x.id===id); if(!t) return;
+  const idx=termine.indexOf(t);
+  t.aufgaben=!t.aufgaben;
+  await dbPut('termine/'+idx+'/aufgaben', !!t.aufgaben).catch(e=>console.warn(e));
+  renderTermine();
+}
+function aufgabenHtml(t){
+  const a=(aufgaben&&aufgaben[t.id])||{};
+  const tasks=Object.entries(a).map(([k,v])=>Object.assign({_key:k},v||{})).filter(x=>x&&x.text).sort((x,y)=>(x.ts||0)-(y.ts||0));
+  const canEdit=uiEdit('termine');
+  const myk=myKey();
+  const rows=tasks.map(task=>{
+    const mine = myk && task.vonKey===myk;
+    const claimBtn = (typeof currentUser!=='undefined'&&currentUser)
+      ? (task.vonKey
+          ? (mine ? `<button class="btn btn-sm" style="background:#fdecea;color:#922b21;font-size:.72rem;padding:2px 8px" onclick="unclaimAufgabe('${esc(t.id)}','${task._key}')">Doch nicht</button>` : '')
+          : `<button class="btn btn-sm" style="background:#eef1f5;color:#1d4e96;font-size:.72rem;padding:2px 8px" onclick="claimAufgabe('${esc(t.id)}','${task._key}')">Ich übernehme das</button>`)
+      : '';
+    const del = canEdit ? `<button class="btn btn-danger btn-sm" style="opacity:1;position:static;padding:2px 7px" onclick="deleteAufgabe('${esc(t.id)}','${task._key}')">✕</button>` : '';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f2f2f2;font-size:.85rem">
+      <span style="flex:1">${esc(task.text)}${task.vonKey?` <span style="color:#1a7a40;font-weight:600">· ${esc(prettyName(task.von)||task.von)}</span>`:' <span style="color:#bbb">· noch offen</span>'}</span>
+      ${claimBtn}${del}
+    </div>`;
+  }).join('');
+  const addForm = canEdit ? `<div style="margin-top:8px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">${AUFGABEN_VORSCHLAEGE.map(v=>`<button class="btn btn-gray btn-sm" style="font-size:.7rem" onclick="addAufgabe('${esc(t.id)}','${esc(v)}')">${esc(v)}</button>`).join('')}</div>
+      <div style="display:flex;gap:6px">
+        <input class="fl-input" type="text" id="aufg-neu-${esc(t.id)}" placeholder="Eigene Aufgabe…" style="margin-bottom:0;flex:1">
+        <button class="btn btn-sm" style="background:#27ae60;color:#fff" onclick="addAufgabeCustom('${esc(t.id)}')">＋</button>
+      </div>
+    </div>` : '';
+  return `<details class="t-coll"><summary>📋 Aufgaben/Dienste${tasks.length?` · ${tasks.length}`:''}</summary><div>${rows||'<div style="font-size:.8rem;color:#aaa">Noch keine Aufgaben.</div>'}${addForm}</div></details>`;
+}
+async function addAufgabe(terminId, text){
+  if(!uiEdit('termine')) return;
+  const id=uid();
+  const entry={text, ersteller:getUserVoteName()||'—', ts:Date.now()};
+  if(!aufgaben[terminId]) aufgaben[terminId]={};
+  aufgaben[terminId][id]=entry;
+  await dbPut('aufgaben/'+encodeURIComponent(terminId)+'/'+id, entry).catch(e=>console.warn(e));
+  renderTermine();
+}
+function addAufgabeCustom(terminId){
+  const inp=document.getElementById('aufg-neu-'+terminId); if(!inp) return;
+  const text=inp.value.trim(); if(!text) return;
+  inp.value='';
+  addAufgabe(terminId, text);
+}
+async function claimAufgabe(terminId, taskId){
+  const myk=myKey(); if(!myk){ alert('Bitte zuerst anmelden.'); return; }
+  const t=aufgaben[terminId] && aufgaben[terminId][taskId]; if(!t || t.vonKey) return;
+  t.von=getUserVoteName()||'?'; t.vonKey=myk;
+  await dbPatch('aufgaben/'+encodeURIComponent(terminId)+'/'+taskId, {von:t.von, vonKey:myk}).catch(e=>console.warn(e));
+  renderTermine();
+  showToast('Aufgabe übernommen','ok');
+}
+async function unclaimAufgabe(terminId, taskId){
+  const myk=myKey(); const t=aufgaben[terminId] && aufgaben[terminId][taskId]; if(!t || t.vonKey!==myk) return;
+  t.von=null; t.vonKey=null;
+  await dbPatch('aufgaben/'+encodeURIComponent(terminId)+'/'+taskId, {von:null, vonKey:null}).catch(e=>console.warn(e));
+  renderTermine();
+}
+async function deleteAufgabe(terminId, taskId){
+  if(!uiEdit('termine')) return;
+  if(aufgaben[terminId]) delete aufgaben[terminId][taskId];
+  await dbDel('aufgaben/'+encodeURIComponent(terminId)+'/'+taskId).catch(e=>console.warn(e));
+  renderTermine();
+}
+
 // ===== TERMINFINDUNG (Doodle-Stil) =====
 async function loadTerminfindungen(){
   try{ const r=await dbFetch(DB+'/terminfindungen.json'); if(r.ok){ terminfindungen=(await r.json())||{}; } }catch(e){ console.warn('loadTerminfindungen',e); }
@@ -5689,6 +6404,7 @@ async function loadAll(){
     loadUmfragen(),
     loadPinnwand(),
     loadFahrten(),
+    loadAufgaben(),
     loadTerminfindungen(),
     loadUserProfiles().then(p=>{ userprofilesCache=p||{}; }).catch(()=>{})
   ]);
