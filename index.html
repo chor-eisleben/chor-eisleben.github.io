@@ -5097,7 +5097,7 @@ async function addPlakat(){
 // Ortschaften rund um Lutherstadt Eisleben für die Auswahl (freie Eingabe über „Andere…" möglich)
 const PLAKAT_ORTSCHAFTEN=['Lutherstadt Eisleben','Helfta','Wolferode','Unterrißdorf','Volkstedt','Helbra','Wimmelburg','Hergisdorf','Ahlsdorf','Benndorf','Klostermansfeld','Hettstedt','Großörner','Mansfeld','Gerbstedt','Sangerhausen','Wippra','Riestedt','Harzgerode','Dankerode','Blankenheim','Arnstein','Arnstedt','Heiligenthal','Wettin-Löbejün','Salzatal','Sonstiges'];
 // Typische Orte, an denen Chor-Plakate gut aufgehoben sind (Antippen füllt das Formular)
-const PLAKAT_VORSCHLAEGE=['Bäckerei','Apotheke','Supermarkt (Schwarzes Brett)','Kirche / Gemeindehaus','Kita','Grundschule','Arztpraxis','Physiotherapie','Friseur','Bibliothek','Sparkasse / Bank','Schaukasten / Bushaltestelle','Sportverein / Vereinsheim','Café','Gaststätte / Restaurant','Blumenladen','Getränkemarkt','Buchhandlung','Musikschule','Rathaus / Bürgerbüro','Ärztehaus','Seniorenheim'];
+const PLAKAT_VORSCHLAEGE=['Bäckerei','Fleischerei','Apotheke','Kaufhalle','Supermarkt (Schwarzes Brett)','Kirche / Gemeindehaus','Kita','Grundschule','Arztpraxis','Zahnarztpraxis','Physiotherapie','Friseur','Bibliothek','Sparkasse / Bank','Schaukasten / Bushaltestelle','Sportverein / Vereinsheim','Turnhalle','Café','Gaststätte / Restaurant','Blumenladen','Getränkemarkt','Buchhandlung','Musikschule','Rathaus / Bürgerbüro','Ärztehaus','Seniorenheim'];
 function plVorschlag(name){
   const det=document.querySelector('#p-plakate details'); if(det) det.open=true;
   const inp=document.getElementById('pl-ort'); if(inp){ inp.value=name; inp.focus(); }
