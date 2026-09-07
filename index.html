@@ -879,6 +879,15 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
       <button class="btn btn-sm" style="background:#eef1f5;color:#1d4e96" onclick="togglePlakateKarte()" id="plakate-karte-toggle-btn">Karte anzeigen</button>
     </div>
     <div id="plakate-map" style="height:360px;border-radius:10px;display:none"></div>
+    <div id="plakate-map-filter" style="display:none;gap:8px;flex-wrap:wrap;margin-top:8px">
+      <select class="fl-input" id="plakate-map-filter-ort" style="width:auto;min-width:140px;margin-bottom:0;font-size:.8rem" onchange="renderPlakateMapMarkers()"></select>
+      <select class="fl-input" id="plakate-map-filter-status" style="width:auto;margin-bottom:0;font-size:.8rem" onchange="renderPlakateMapMarkers()">
+        <option value="">Alle Standorte</option>
+        <option value="offen">🟠 Nur offene</option>
+        <option value="uebernommen">🟢 Nur übernommene</option>
+      </select>
+    </div>
+    <div id="plakate-map-filter-count" style="font-size:.74rem;color:#999;margin-top:4px"></div>
     <div style="font-size:.76rem;color:#999;margin-top:6px">🟠 offen · 🟢 übernommen · 🟪 Mitglied (wenn eingeblendet). Standorte ohne Adresse erscheinen nicht auf der Karte.</div>
     <div style="border-top:1px solid var(--line);margin-top:10px;padding-top:8px">
       <label style="display:flex;align-items:center;gap:7px;font-size:.82rem;cursor:pointer;user-select:none">
@@ -888,6 +897,32 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
       <div id="plakate-map-members-status" style="font-size:.74rem;color:#999;min-height:14px;margin-top:2px"></div>
     </div>
   </div>
+  <details class="card" style="margin-bottom:12px" ontoggle="if(this.open) renderPlakateAbdeckung()">
+    <summary style="cursor:pointer;font-weight:700;color:#1b3a6b;font-size:.92rem;user-select:none">📊 Wo lohnt sich die Suche nach neuen Standorten?</summary>
+    <div style="margin-top:10px">
+      <div style="font-size:.78rem;color:#888;margin-bottom:8px">Ortschaften, in denen viele Mitglieder wohnen, aber noch wenige Standorte erfasst sind, sind gute Kandidaten.</div>
+      <div id="plakate-abdeckung"></div>
+    </div>
+  </details>
+  <details class="card admin-only" style="margin-bottom:12px" ontoggle="if(this.open) initPlakateVorschlaege()">
+    <summary style="cursor:pointer;font-weight:700;color:#1b3a6b;font-size:.92rem;user-select:none">🔍 Neue Standorte in der Nähe finden <span style="font-weight:400;color:#999;font-size:.78rem">(nur Admins)</span></summary>
+    <div style="margin-top:10px">
+      <div style="font-size:.78rem;color:#888;margin-bottom:8px">Sucht echte Orte (Bäckereien, Kirchen, Vereine, Läden …) aus OpenStreetMap in der Nähe – Standorte, die schon in deiner Liste stehen, werden herausgefiltert.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+        <input class="fl-input" type="text" id="pv-adresse" placeholder="Adresse oder Ortschaft (leer = dein Wohnort)" style="flex:1;min-width:180px;margin-bottom:0">
+        <select class="fl-input" id="pv-radius" style="width:auto;margin-bottom:0">
+          <option value="500">500 m</option>
+          <option value="800" selected>800 m</option>
+          <option value="1200">1,2 km</option>
+          <option value="2000">2 km</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="searchPlakateVorschlaege()">🔍 Suchen</button>
+        <button class="btn btn-sm" style="background:#eef1f5;color:#1d4e96" onclick="searchGapArea()" title="Sucht dort, wo laut Abdeckungs-Tabelle die größte Lücke ist">🎯 Größte Lücke</button>
+      </div>
+      <div id="pv-status" style="font-size:.78rem;color:#888;min-height:16px;margin-bottom:6px"></div>
+      <div id="pv-results"></div>
+    </div>
+  </details>
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px">
       <span class="card-title" style="margin-bottom:0">📋 Plakat-Standorte</span>
@@ -2017,6 +2052,18 @@ function renderStart(){
     const WD=['So','Mo','Di','Mi','Do','Fr','Sa'];
     html+='<div class="card" style="margin-top:12px"><div class="card-title" style="margin-bottom:6px">🎂 Geburtstage diese Woche</div>';
     html+=gebs.map(g=>`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:.9rem"><span>${g.days===0?'🎉 ':''}<strong>${esc(g.name)}</strong></span><span style="color:${g.days===0?'#e67e22':'#888'};font-size:.82rem;font-weight:${g.days===0?'700':'400'}">${g.days===0?'HEUTE!':(g.days===1?'morgen':WD[g.bd.getDay()]+', '+g.bd.getDate()+'.'+(g.bd.getMonth()+1)+'.')}</span></div>`).join('');
+    html+='</div>';
+  }
+
+  // 📍 Plakat-Standorte in der Nähe (nur wenn eigener Wohnort geocodiert ist & es offene Standorte gibt)
+  const nearbyPlakate=(typeof nearestOpenPlakate==='function')?nearestOpenPlakate(3):[];
+  if(nearbyPlakate.length){
+    html+=`<div class="card" style="margin-top:12px;cursor:pointer" onclick="showPageByName('plakate')">
+      <div style="display:flex;justify-content:space-between;align-items:center"><span class="card-title" style="margin-bottom:0">📍 Plakat-Standorte in deiner Nähe</span><span style="font-size:.76rem;color:#2563b5">Alle ›</span></div>`;
+    html+=nearbyPlakate.map(x=>`<div style="border-top:1px solid var(--line);margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;gap:8px;align-items:center">
+        <span style="font-size:.88rem;font-weight:600">${esc(x.p.ort)}</span>
+        <span style="font-size:.76rem;color:#1d4e96;font-weight:700;white-space:nowrap">~${x.dist.toFixed(1)} km</span>
+      </div>`).join('');
     html+='</div>';
   }
 
@@ -3420,6 +3467,7 @@ function terminHtml(t,past=false){
     ${(!past&&!infoOnly)?`<div class="vote-row" id="vrow-${t.id}">${buildVoteRow(t)}</div>`:''}
     ${infoOnly&&t.beschreibung?`<div style="font-size:.85rem;color:#555;margin:2px 0 4px">${esc(t.beschreibung)}</div>`:''}
     ${setlisteHtml(t)}
+    ${ablaufplanBlock(t)}
     ${!past?fahrtenBlock(t):''}
     ${!past?aufgabenBlock(t):''}
     ${showRueck?rueckmeldungenHtml(t, bd):''}
@@ -3892,7 +3940,7 @@ async function saveMitglied(){
     if(!m.adresse){ m.lat=null; m.lng=null; dbPut('mitglieder/'+idx+'/lat',null).catch(()=>{}); dbPut('mitglieder/'+idx+'/lng',null).catch(()=>{}); }
     else {
       const q=[m.adresse, m.plz].filter(Boolean).join(', ');
-      geocodeAddress(q).then(geo=>{ if(!geo) return; m.lat=geo.lat; m.lng=geo.lng; dbPut('mitglieder/'+idx+'/lat',geo.lat).catch(()=>{}); dbPut('mitglieder/'+idx+'/lng',geo.lng).catch(()=>{}); }).catch(()=>{});
+      geocodeAddress(q).then(geo=>{ if(!geo) return; m.lat=geo.lat; m.lng=geo.lng; m.ortschaft=geo.ortschaft||m.ortschaft; dbPut('mitglieder/'+idx+'/lat',geo.lat).catch(()=>{}); dbPut('mitglieder/'+idx+'/lng',geo.lng).catch(()=>{}); if(geo.ortschaft) dbPut('mitglieder/'+idx+'/ortschaft',geo.ortschaft).catch(()=>{}); }).catch(()=>{});
     }
   }
 }
@@ -5046,6 +5094,16 @@ async function loadPlakate(){
   }catch(e){console.warn(e);}
 }
 // Adresse -> Koordinaten + Ortschafts-Vorschlag (OpenStreetMap/Nominatim, kostenlos, kein API-Key nötig)
+// Aus Nominatim-Adressbestandteilen die passende Ortschaft aus PLAKAT_ORTSCHAFTEN ableiten (für Vorwärts- UND Rückwärts-Geocoding)
+function matchOrtschaftFromAddress(addr){
+  if(!addr) return null;
+  const candidates=[addr.suburb, addr.city_district, addr.village, addr.town, addr.municipality, addr.county].filter(Boolean);
+  for(const c of candidates){
+    const treffer=PLAKAT_ORTSCHAFTEN.find(o=>o!=='Sonstiges' && (_norm(o)===_norm(c) || _norm(c).includes(_norm(o)) || _norm(o).includes(_norm(c))));
+    if(treffer) return treffer;
+  }
+  return null;
+}
 async function geocodeAddress(query){
   if(!query) return null;
   try{
@@ -5057,15 +5115,22 @@ async function geocodeAddress(query){
     const hit=arr[0];
     const lat=parseFloat(hit.lat), lng=parseFloat(hit.lon);
     if(isNaN(lat)||isNaN(lng)) return null;
-    const addr=hit.address||{};
-    const candidates=[addr.suburb, addr.city_district, addr.village, addr.town, addr.municipality, addr.county].filter(Boolean);
-    let ortschaft=null;
-    for(const c of candidates){
-      const treffer=PLAKAT_ORTSCHAFTEN.find(o=>o!=='Sonstiges' && (_norm(o)===_norm(c) || _norm(c).includes(_norm(o)) || _norm(o).includes(_norm(c))));
-      if(treffer){ ortschaft=treffer; break; }
-    }
-    return {lat,lng,ortschaft};
+    return {lat,lng,ortschaft:matchOrtschaftFromAddress(hit.address)};
   }catch(e){ console.warn('Geocoding fehlgeschlagen',e); return null; }
+}
+// Koordinaten -> Adresstext + Ortschaft (für POI-Vorschläge und Rückwärts-Auflösung)
+async function reverseGeocode(lat,lng){
+  try{
+    const url='https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&lat='+lat+'&lon='+lng;
+    const r=await fetch(url,{headers:{'Accept-Language':'de'}});
+    if(!r.ok) return null;
+    const hit=await r.json();
+    if(!hit || !hit.address) return null;
+    const a=hit.address;
+    const strasse=[a.road, a.house_number].filter(Boolean).join(' ');
+    const adresse=[strasse, [a.postcode, a.suburb||a.city_district||a.village||a.town].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+    return {adresse, ortschaft:matchOrtschaftFromAddress(a)};
+  }catch(e){ console.warn('Rückwärts-Geocoding fehlgeschlagen',e); return null; }
 }
 async function addPlakat(){
   const ort=document.getElementById('pl-ort').value.trim();
@@ -5202,7 +5267,7 @@ function renderPlakate(){
     return;
   }
   const myName=getUserVoteName();
-  const karte=p=>{
+  const karte=(p,distKm)=>{
     const done=!!p.von;
     const maps=p.adresse?`<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.adresse)}" target="_blank" rel="noopener" style="font-size:.78rem;color:#2563b5;text-decoration:none;white-space:nowrap">🗺️ Karte</a>`:'';
     const del=canManage?`<button class="btn btn-sm" style="flex-shrink:0;padding:2px 8px;background:#eef1f5;color:#1d4e96" title="Bearbeiten" onclick="editPlakat('${p._key}')">✏️</button><button class="btn btn-danger btn-sm" style="flex-shrink:0;padding:2px 8px" onclick="deletePlakat('${p._key}')">✕</button>`:'';
@@ -5212,14 +5277,22 @@ function renderPlakate(){
       : (myName
         ? `<button class="btn btn-sm btn-success" style="font-size:.78rem;flex-shrink:0" onclick="claimPlakat('${p._key}')">✋ Übernehmen</button>`
         : `<span style="display:flex;gap:5px;align-items:center;flex-shrink:0"><input class="fl-input" id="pl-name-${p._key}" placeholder="Dein Name" style="width:110px;padding:5px 8px;font-size:.8rem;margin:0"><button class="btn btn-sm btn-success" style="font-size:.78rem" onclick="claimPlakat('${p._key}')">✋</button></span>`);
+    const distBadge = distKm!=null ? `<span style="background:#eef3fa;color:#1d4e96;font-size:.72rem;font-weight:700;padding:1px 8px;border-radius:10px;margin-left:6px">📍 ~${distKm.toFixed(1)} km</span>` : '';
+    // Zuordnungs-Hilfe: wer wohnt am nächsten? (nur bei offenen Standorten mit Koordinaten, hilft beim gezielten Zuteilen)
+    let nearMembers='';
+    if(!done && typeof p.lat==='number' && typeof p.lng==='number'){
+      const near=nearestMembersToPoint(p.lat,p.lng,3);
+      if(near.length) nearMembers=`<div style="font-size:.72rem;color:#a06020;margin-top:3px">🏠 in der Nähe: ${near.map(x=>esc(prettyName(x.m.username)||memberName(x.m))+' ('+x.dist.toFixed(1)+' km)').join(', ')}</div>`;
+    }
     return `<div style="border-left:4px solid ${done?'#27ae60':'#f39c12'};padding:9px 12px;margin-bottom:7px;background:${done?'#f4faf5':'#fffdf5'};border-radius:0 8px 8px 0">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
         <div style="flex:1;min-width:150px">
-          <span style="font-weight:600;font-size:.9rem;color:#1b3a6b">${esc(p.ort)}</span>
+          <span style="font-weight:600;font-size:.9rem;color:#1b3a6b">${esc(p.ort)}</span>${distBadge}
           ${p.anzahl?`<span style="font-size:.76rem;color:#888"> · ${esc(p.anzahl)}×</span>`:''}
           ${done?`<div style="font-size:.78rem;color:#1a7a40;margin-top:1px">✅ ${esc(p.von)}</div>`:''}
           ${p.adresse?`<div style="font-size:.76rem;color:#777;margin-top:1px">📍 ${esc(p.adresse)} ${maps}</div>`:''}
           ${p.notiz?`<div style="font-size:.76rem;color:#999;font-style:italic;margin-top:1px">💬 ${esc(p.notiz)}</div>`:''}
+          ${nearMembers}
         </div>
         <div style="display:flex;gap:6px;align-items:center">${action}${del}</div>
       </div>
@@ -5229,10 +5302,15 @@ function renderPlakate(){
   const nachOrtschaft=list=>{
     const g={}; list.forEach(p=>{ const k=p.ortschaft||'Sonstiges'; (g[k]=g[k]||[]).push(p); });
     const order=[...PLAKAT_ORTSCHAFTEN.filter(o=>g[o]), ...Object.keys(g).filter(x=>!PLAKAT_ORTSCHAFTEN.includes(x)).sort()];
-    return order.map(o=>`<div style="font-size:.74rem;font-weight:700;color:#8a97a8;margin:9px 0 4px">📍 ${esc(o)} (${g[o].length})</div>`+g[o].map(karte).join('')).join('');
+    return order.map(o=>`<div style="font-size:.74rem;font-weight:700;color:#8a97a8;margin:9px 0 4px">📍 ${esc(o)} (${g[o].length})</div>`+g[o].map(p=>karte(p)).join('')).join('');
   };
   const offen=plakate.filter(p=>!p.von), fertig=plakate.filter(p=>p.von);
   let html='';
+  // „In deiner Nähe" — nur wenn eigener Wohnort bekannt & mind. 1 Treffer, ganz oben vor der Ortschafts-Gliederung
+  const nearby=nearestOpenPlakate(5);
+  if(nearby.length){
+    html+=`<div class="section-label" style="color:#1d4e96">📍 In deiner Nähe</div>`+nearby.map(x=>karte(x.p,x.dist)).join('');
+  }
   if(offen.length){
     html+=`<div class="section-label" style="color:#b9770e">🟠 Noch zu verteilen (${offen.length})</div>`+nachOrtschaft(offen);
   } else if(total){
@@ -5282,6 +5360,7 @@ function loadLeaflet(){
 let _plakateMapInstance=null, _plakateMarkers=[];
 async function togglePlakateKarte(){
   const mapEl=document.getElementById('plakate-map');
+  const filterEl=document.getElementById('plakate-map-filter');
   const btn=document.getElementById('plakate-karte-toggle-btn');
   if(!mapEl || !btn) return;
   if(mapEl.style.display==='none'){
@@ -5289,6 +5368,7 @@ async function togglePlakateKarte(){
     try{
       await loadLeaflet();
       mapEl.style.display='block';
+      if(filterEl) filterEl.style.display='flex';
       btn.textContent='Karte ausblenden'; btn.disabled=false;
       if(!_plakateMapInstance){
         _plakateMapInstance=L.map('plakate-map').setView([51.516,11.918],13); // Halle-Dölau, grobe Mitte
@@ -5296,6 +5376,7 @@ async function togglePlakateKarte(){
       } else {
         setTimeout(()=>_plakateMapInstance.invalidateSize(),50);
       }
+      initPlakateMapFilter();
       renderPlakateMapMarkers();
       initPlakateMapMembersToggle(); // falls vorher aktiviert (nur auf diesem Gerät gemerkt), gleich mit anzeigen
     }catch(e){
@@ -5304,8 +5385,38 @@ async function togglePlakateKarte(){
     }
   } else {
     mapEl.style.display='none';
+    if(filterEl) filterEl.style.display='none';
     btn.textContent='Karte anzeigen';
   }
+}
+// ===== Karte filtern: nach Ortschaft + Status — nur auf diesem Gerät gemerkt =====
+const PLAKATE_MAPFILTER_PREF_KEY='chor_plakate_map_filter';
+function initPlakateMapFilter(){
+  const ortSel=document.getElementById('plakate-map-filter-ort'); if(!ortSel) return;
+  // Nur Ortschaften, in denen tatsächlich Standorte erfasst sind (keine leeren Einträge im Dropdown)
+  const present=new Set((plakate||[]).map(p=>p.ortschaft||'Sonstiges'));
+  const orte=[...PLAKAT_ORTSCHAFTEN.filter(o=>present.has(o)), ...[...present].filter(o=>!PLAKAT_ORTSCHAFTEN.includes(o)).sort()];
+  const prevValue=ortSel.value;
+  ortSel.innerHTML='<option value="">Alle Ortschaften</option>'+orte.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('');
+  let pref=null;
+  try{ pref=JSON.parse(localStorage.getItem(PLAKATE_MAPFILTER_PREF_KEY)||'null'); }catch(e){}
+  ortSel.value = orte.includes(prevValue) ? prevValue : (pref && orte.includes(pref.ort) ? pref.ort : '');
+  const statusSel=document.getElementById('plakate-map-filter-status');
+  if(statusSel && !statusSel.dataset.inited){
+    statusSel.dataset.inited='1';
+    if(pref && pref.status) statusSel.value=pref.status;
+  }
+}
+function filteredPlakateForMap(){
+  const ort=(document.getElementById('plakate-map-filter-ort')||{}).value||'';
+  const status=(document.getElementById('plakate-map-filter-status')||{}).value||'';
+  try{ localStorage.setItem(PLAKATE_MAPFILTER_PREF_KEY, JSON.stringify({ort,status})); }catch(e){}
+  return (plakate||[]).filter(p=>{
+    if(ort && (p.ortschaft||'Sonstiges')!==ort) return false;
+    if(status==='offen' && p.von) return false;
+    if(status==='uebernommen' && !p.von) return false;
+    return true;
+  });
 }
 // ===== Mitglieder-Standorte auf der Karte (Wohnorte) — standardmäßig AUS, jede*r schaltet nur für sich selbst =====
 const PLAKATE_MEMBERS_PREF_KEY='chor_plakate_map_members';
@@ -5334,10 +5445,11 @@ async function togglePlakateMapMembers(silentInit){
       const q=[m.adresse, m.plz].filter(Boolean).join(', ');
       const geo=await geocodeAddress(q);
       if(geo){
-        m.lat=geo.lat; m.lng=geo.lng;
+        m.lat=geo.lat; m.lng=geo.lng; if(geo.ortschaft) m.ortschaft=geo.ortschaft;
         const idx=mitglieder.indexOf(m);
         dbPut('mitglieder/'+idx+'/lat', geo.lat).catch(()=>{});
         dbPut('mitglieder/'+idx+'/lng', geo.lng).catch(()=>{});
+        if(geo.ortschaft) dbPut('mitglieder/'+idx+'/ortschaft', geo.ortschaft).catch(()=>{});
       }
       done++;
       if(statusEl) statusEl.textContent='⏳ Wohnorte werden einmalig gesucht… ('+done+'/'+missing.length+')';
@@ -5359,11 +5471,167 @@ function renderPlakateMapMemberMarkers(){
     _plakateMemberMarkers.push(marker);
   });
 }
+
+// ===== Ortschafts-Abdeckung: wo wohnen viele Mitglieder, aber gibt es wenige Standorte? =====
+// Zentrale Berechnung (auch von searchGapArea genutzt, damit Tabelle & Vorschlag konsistent sind)
+function computeAbdeckungRows(){
+  const byOrt={};
+  (mitglieder||[]).forEach(m=>{ if(m.ortschaft){ const d=(byOrt[m.ortschaft]=byOrt[m.ortschaft]||{mitglieder:0,offen:0,gesamt:0}); d.mitglieder++; } });
+  (plakate||[]).forEach(p=>{
+    const o=p.ortschaft||'Sonstiges';
+    const d=(byOrt[o]=byOrt[o]||{mitglieder:0,offen:0,gesamt:0});
+    d.gesamt++; if(!p.von) d.offen++;
+  });
+  const rows=Object.entries(byOrt).map(([ort,d])=>({ort,...d,luecke:d.mitglieder-d.gesamt}));
+  rows.sort((a,b)=>b.luecke-a.luecke || b.mitglieder-a.mitglieder);
+  return rows;
+}
+// Mittelpunkt aller geocodierten Mitglieder einer Ortschaft — Suchzentrum für „Größte Lücke"
+function centroidForOrtschaft(ort){
+  const pts=(mitglieder||[]).filter(m=>m.ortschaft===ort && typeof m.lat==='number' && typeof m.lng==='number');
+  if(!pts.length) return null;
+  return { lat: pts.reduce((s,m)=>s+m.lat,0)/pts.length, lng: pts.reduce((s,m)=>s+m.lng,0)/pts.length };
+}
+function renderPlakateAbdeckung(){
+  const el=document.getElementById('plakate-abdeckung'); if(!el) return;
+  const rows=computeAbdeckungRows();
+  if(!rows.length){ el.innerHTML='<div class="empty" style="padding:12px">Noch keine Daten. Mitglieder-Wohnorte müssen erst geocodiert sein (z.B. einmal „Mitglieder-Standorte einblenden" auf der Karte antippen).</div>'; return; }
+  el.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;min-width:340px"><thead><tr><th>Ortschaft</th><th style="text-align:center">👥 Mitglieder</th><th style="text-align:center">📋 Standorte</th></tr></thead><tbody>`+
+    rows.map(r=>`<tr><td>${esc(r.ort)}</td><td style="text-align:center">${r.mitglieder}</td><td style="text-align:center">${r.gesamt}${r.offen?` <span style="color:#c0620f">(${r.offen} offen)</span>`:''}</td></tr>`).join('')+
+    `</tbody></table></div>`;
+}
+
+// ===== Neue Standort-Vorschläge (echte Orte via OpenStreetMap/Overpass in der Nähe) =====
+let _pvResults=[];
+function initPlakateVorschlaege(){ /* nur Container, kein Auto-Suchen — schont die kostenlose Overpass-API */ }
+async function searchNearbyPOIs(lat,lng,radiusM){
+  radiusM=radiusM||800;
+  const q='[out:json][timeout:25];('+
+    'nwr["shop"~"^(bakery|convenience|supermarket|hairdresser|florist|beverages|books)$"](around:'+radiusM+','+lat+','+lng+');'+
+    'nwr["amenity"~"^(pharmacy|place_of_worship|kindergarten|doctors|library|bank|cafe|restaurant|fuel|community_centre|school|social_facility|social_centre)$"](around:'+radiusM+','+lat+','+lng+');'+
+    'nwr["leisure"~"^(fitness_centre|sports_centre)$"](around:'+radiusM+','+lat+','+lng+');'+
+    'nwr["club"="sport"](around:'+radiusM+','+lat+','+lng+');'+
+    ');out center tags;';
+  const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(q)});
+  if(!r.ok) throw new Error('Overpass-Fehler '+r.status);
+  const data=await r.json();
+  const CAT_ICON={
+    bakery:'🥖',convenience:'🏪',supermarket:'🛒',hairdresser:'💇',florist:'💐',beverages:'🧃',books:'📚',
+    pharmacy:'💊',place_of_worship:'⛪',kindergarten:'🧸',doctors:'🩺',library:'📖',bank:'🏦',cafe:'☕',restaurant:'🍽️',
+    fuel:'⛽',community_centre:'🏛️',social_centre:'🏛️',school:'🏫',social_facility:'🧓',
+    fitness_centre:'💪',sports_centre:'🏟️',sport:'⚽'
+  };
+  return (data.elements||[]).map(el=>{
+    const tags=el.tags||{}; const name=tags.name; if(!name) return null;
+    const plat=el.type==='node'?el.lat:(el.center&&el.center.lat);
+    const plon=el.type==='node'?el.lon:(el.center&&el.center.lon);
+    if(typeof plat!=='number'||typeof plon!=='number') return null;
+    const cat=tags.shop||tags.amenity||tags.leisure||tags.club||'';
+    return {name, lat:plat, lng:plon, icon:CAT_ICON[cat]||'📍', dist:haversineKm(lat,lng,plat,plon)};
+  }).filter(Boolean).sort((a,b)=>a.dist-b.dist);
+}
+// Duplikat, wenn Name ähnlich ODER ein bestehender geocodierter Standort in <=50m liegt
+// (Name-Abgleich allein übersieht Umbenennungen/Schreibvarianten am selben Ort; Namensabgleich
+// bleibt zusätzlich nötig für Standorte ohne Koordinaten, z.B. „Schaukasten Kinderspielplatz").
+function isDuplicatePlakat(poi){
+  return (plakate||[]).some(p=>{
+    const pn=_norm(p.ort||'');
+    if(pn && (pn.includes(_norm(poi.name))||_norm(poi.name).includes(pn))) return true;
+    if(typeof p.lat==='number' && typeof p.lng==='number'){
+      return haversineKm(p.lat,p.lng,poi.lat,poi.lng) < 0.05; // 50 m ≈ selbes Gebäude
+    }
+    return false;
+  });
+}
+async function runPlakateSuche(lat,lng,label,radiusM){
+  const statusEl=document.getElementById('pv-status'), resEl=document.getElementById('pv-results');
+  radiusM=radiusM||parseInt((document.getElementById('pv-radius')||{}).value,10)||800;
+  const radiusLabel = radiusM>=1000 ? (radiusM/1000).toLocaleString('de-DE',{maximumFractionDigits:1})+' km' : radiusM+' m';
+  if(statusEl) statusEl.textContent='⏳ Suche Orte in der Nähe von '+label+'…';
+  if(resEl) resEl.innerHTML='';
+  try{
+    const pois=await searchNearbyPOIs(lat,lng,radiusM);
+    _pvResults=pois.filter(p=>!isDuplicatePlakat(p));
+    if(!_pvResults.length){ if(statusEl) statusEl.textContent='ℹ️ Keine neuen Vorschläge gefunden (im Umkreis von ~'+radiusLabel+' ist schon alles erfasst, oder es gibt dort nichts Passendes).'; return; }
+    if(statusEl) statusEl.textContent='✅ '+_pvResults.length+' Vorschlag'+(_pvResults.length===1?'':'e')+' gefunden (im Umkreis von ~'+radiusLabel+'):';
+    if(resEl) resEl.innerHTML=_pvResults.slice(0,20).map((p,i)=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px">
+        <span style="font-size:.86rem">${p.icon} ${esc(p.name)} <span style="color:#999;font-size:.76rem">· ~${p.dist.toFixed(1)} km</span></span>
+        <button class="btn btn-sm btn-success" onclick="addSuggestedPlakat(${i})">＋ Übernehmen</button>
+      </div>`).join('');
+  }catch(e){ if(statusEl) statusEl.textContent='❌ Suche fehlgeschlagen (OpenStreetMap gerade nicht erreichbar). Bitte später erneut versuchen.'; }
+}
+async function searchPlakateVorschlaege(){
+  const statusEl=document.getElementById('pv-status');
+  const q=(document.getElementById('pv-adresse').value||'').trim();
+  let lat,lng,label;
+  if(!q){
+    const loc=myLatLng();
+    if(!loc){ if(statusEl) statusEl.textContent='❌ Kein eigener Wohnort bekannt. Bitte eine Adresse eingeben.'; return; }
+    lat=loc.lat; lng=loc.lng; label='deinem Wohnort';
+  } else {
+    if(statusEl) statusEl.textContent='⏳ Adresse wird gesucht…';
+    const geo=await geocodeAddress(q);
+    if(!geo){ if(statusEl) statusEl.textContent='❌ Adresse nicht gefunden.'; return; }
+    lat=geo.lat; lng=geo.lng; label='„'+q+'"';
+  }
+  await runPlakateSuche(lat,lng,label);
+}
+// „🎯 Größte Lücke": sucht automatisch dort, wo laut Abdeckungs-Tabelle am meisten Mitglieder
+// im Verhältnis zu erfassten Standorten wohnen (Mittelpunkt der geocodierten Mitglieder dort).
+async function searchGapArea(){
+  const statusEl=document.getElementById('pv-status');
+  const rows=computeAbdeckungRows();
+  const candidate=rows.find(r=>r.luecke>0 && centroidForOrtschaft(r.ort));
+  if(!candidate){ if(statusEl) statusEl.textContent='ℹ️ Keine Ortschaft mit bekannter Lücke und geocodierten Mitgliedern gefunden.'; return; }
+  const c=centroidForOrtschaft(candidate.ort);
+  const adresseEl=document.getElementById('pv-adresse'); if(adresseEl) adresseEl.value=candidate.ort;
+  await runPlakateSuche(c.lat, c.lng, '„'+candidate.ort+'" (größte Lücke: '+candidate.luecke+')');
+}
+async function addSuggestedPlakat(i){
+  if(!canManagePlakate()){ alert('Bitte zuerst anmelden.'); return; }
+  const p=_pvResults[i]; if(!p) return;
+  const rev=await reverseGeocode(p.lat,p.lng).catch(()=>null);
+  const entry={ ort:p.name, ortschaft:(rev&&rev.ortschaft)||'Sonstiges', adresse:(rev&&rev.adresse)||'', anzahl:'', notiz:'Vorschlag (aus OpenStreetMap gefunden)', von:'', lat:p.lat, lng:p.lng, erstellt:new Date().toISOString() };
+  await dbFetch(DB+'/plakate.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(entry)});
+  showToast(p.name+' als Standort hinzugefügt','ok');
+  await loadPlakate();
+}
+
 function haversineKm(lat1,lon1,lat2,lon2){
   const R=6371, toRad=x=>x*Math.PI/180;
   const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
   const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+// Eigener Wohnort (falls Konto verknüpft & geocodiert) — zentral für Karte/Liste/Startseite
+function myLatLng(){
+  const idx=myMemberIndex(); if(idx<0) return null;
+  const m=mitglieder[idx];
+  return (m && typeof m.lat==='number' && typeof m.lng==='number') ? {lat:m.lat,lng:m.lng} : null;
+}
+// Die N nächstgelegenen OFFENEN Plakat-Standorte zum eigenen Wohnort, sortiert nach Entfernung
+function nearestOpenPlakate(limit){
+  const loc=myLatLng(); if(!loc) return [];
+  const list=[];
+  (plakate||[]).forEach(p=>{
+    if(!p.von && typeof p.lat==='number' && typeof p.lng==='number'){
+      list.push({p, dist:haversineKm(loc.lat,loc.lng,p.lat,p.lng)});
+    }
+  });
+  list.sort((a,b)=>a.dist-b.dist);
+  return limit?list.slice(0,limit):list;
+}
+// Die N nächstgelegenen Mitglieder zu einem Punkt (z.B. einem Plakat-Standort), sortiert nach Entfernung
+function nearestMembersToPoint(lat,lng,limit){
+  const list=[];
+  (mitglieder||[]).forEach(m=>{
+    if(typeof m.lat==='number' && typeof m.lng==='number'){
+      list.push({m, dist:haversineKm(lat,lng,m.lat,m.lng)});
+    }
+  });
+  list.sort((a,b)=>a.dist-b.dist);
+  return limit?list.slice(0,limit):list;
 }
 function renderPlakateMapMarkers(){
   if(!_plakateMapInstance || !window.L) return;
@@ -5371,23 +5639,25 @@ function renderPlakateMapMarkers(){
   _plakateMarkers=[];
   const pts=[];
 
-  // Eigener Wohnort (falls Konto verknüpft & geocodiert) -> für „nächstgelegene offene Standorte"
-  // Unabhängig vom Mitglieder-Layer-Häkchen: das ist der eigene Standort, kein fremder.
-  const myIdx=myMemberIndex();
-  const myM=myIdx>=0?mitglieder[myIdx]:null;
-  const myLoc=(myM && typeof myM.lat==='number' && typeof myM.lng==='number')?{lat:myM.lat,lng:myM.lng}:null;
-  const openWithDist=[];
-  if(myLoc){
-    (plakate||[]).forEach(p=>{
-      if(typeof p.lat==='number' && typeof p.lng==='number' && !p.von){
-        openWithDist.push({key:p._key, dist:haversineKm(myLoc.lat,myLoc.lng,p.lat,p.lng)});
-      }
-    });
-    openWithDist.sort((a,b)=>a.dist-b.dist);
-  }
-  const distByKey={}; openWithDist.slice(0,3).forEach(x=>{ distByKey[x.key]=x.dist; });
+  const filtered=filteredPlakateForMap();
+  const totalGeo=(plakate||[]).filter(p=>typeof p.lat==='number' && typeof p.lng==='number').length;
+  const shownGeo=filtered.filter(p=>typeof p.lat==='number' && typeof p.lng==='number').length;
+  const countEl=document.getElementById('plakate-map-filter-count');
+  if(countEl) countEl.textContent = (shownGeo===totalGeo) ? '' : (shownGeo+' von '+totalGeo+' Standorten angezeigt (gefiltert)');
 
-  (plakate||[]).forEach(p=>{
+  // Eigener Wohnort (falls Konto verknüpft & geocodiert) -> für „nächstgelegene offene Standorte".
+  // Respektiert die aktuelle Filter-Auswahl: bei Filter auf eine Ortschaft sind „die nächsten"
+  // dann die nächsten INNERHALB der Auswahl, nicht app-weit.
+  const distByKey={};
+  const loc=myLatLng();
+  if(loc){
+    filtered.filter(p=>!p.von && typeof p.lat==='number' && typeof p.lng==='number')
+      .map(p=>({p,dist:haversineKm(loc.lat,loc.lng,p.lat,p.lng)}))
+      .sort((a,b)=>a.dist-b.dist).slice(0,3)
+      .forEach(x=>{ distByKey[x.p._key]=x.dist; });
+  }
+
+  filtered.forEach(p=>{
     if(typeof p.lat!=='number' || typeof p.lng!=='number') return;
     const done=!!p.von;
     const isNear = distByKey[p._key]!==undefined;
@@ -5834,9 +6104,10 @@ async function saveMeineKontaktdaten(){
         const q=[upd.adresse, upd.plz].filter(Boolean).join(', ');
         geocodeAddress(q).then(geo=>{
           if(!geo) return;
-          mitglieder[i].lat=geo.lat; mitglieder[i].lng=geo.lng;
+          mitglieder[i].lat=geo.lat; mitglieder[i].lng=geo.lng; if(geo.ortschaft) mitglieder[i].ortschaft=geo.ortschaft;
           dbPut('mitglieder/'+i+'/lat', geo.lat).catch(()=>{});
           dbPut('mitglieder/'+i+'/lng', geo.lng).catch(()=>{});
+          if(geo.ortschaft) dbPut('mitglieder/'+i+'/ortschaft', geo.ortschaft).catch(()=>{});
         }).catch(()=>{});
       }
     }
@@ -6272,6 +6543,80 @@ async function deleteAufgabe(terminId, taskId){
   if(!uiEdit('termine')) return;
   if(aufgaben[terminId]) delete aufgaben[terminId][taskId];
   await dbDel('aufgaben/'+encodeURIComponent(terminId)+'/'+taskId).catch(e=>console.warn(e));
+  renderTermine();
+}
+
+// ===== ABLAUFPLAN (pro Termin, z.B. für mehrtägige Events wie das Chorlager) =====
+// Liegt direkt am Termin (t.ablaufplan, Array {id,zeit,text}) statt in einer eigenen Sammlung,
+// weil nur Bearbeiter schreiben (kein Mitglieder-Beitrag wie bei Fahrten/Aufgaben) — granulare
+// PATCH auf termine/<idx>/ablaufplan, kein Ganz-Array-PUT der gesamten Termine.
+function ablaufplanBlock(t){
+  const canEdit=uiEdit('termine');
+  const items=Array.isArray(t.ablaufplan)?t.ablaufplan:[];
+  if(!items.length && !canEdit) return '';
+  const rows=items.map((it,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #f2f2f2;font-size:.85rem">
+      <span style="font-weight:700;color:#1b3a6b;min-width:56px">${esc(it.zeit||'')}</span>
+      <span style="flex:1">${esc(it.text||'')}</span>
+      ${canEdit?`<span style="display:flex;gap:1px;flex-shrink:0">
+        ${i>0?`<button class="btn btn-sm" style="background:transparent;color:#888;padding:1px 5px;font-size:.72rem" onclick="moveAblaufplanPunkt('${esc(t.id)}','${it.id}',-1)" title="nach oben">↑</button>`:''}
+        ${i<items.length-1?`<button class="btn btn-sm" style="background:transparent;color:#888;padding:1px 5px;font-size:.72rem" onclick="moveAblaufplanPunkt('${esc(t.id)}','${it.id}',1)" title="nach unten">↓</button>`:''}
+        <button class="btn btn-sm" style="background:transparent;color:#1d4e96;padding:1px 5px;font-size:.72rem" onclick="editAblaufplanPunkt('${esc(t.id)}','${it.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" style="opacity:1;position:static;padding:1px 6px;font-size:.72rem" onclick="deleteAblaufplanPunkt('${esc(t.id)}','${it.id}')">✕</button>
+      </span>`:''}
+    </div>`).join('');
+  const addForm=canEdit?`<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+      <input class="fl-input" type="text" id="ap-zeit-${esc(t.id)}" placeholder="Zeit (z.B. Fr 18:00)" style="width:120px;margin-bottom:0;font-size:.8rem">
+      <input class="fl-input" type="text" id="ap-text-${esc(t.id)}" placeholder="Programmpunkt" style="flex:1;min-width:140px;margin-bottom:0;font-size:.8rem">
+      <button class="btn btn-sm btn-primary" style="font-size:.78rem" onclick="addAblaufplanPunkt('${esc(t.id)}')">＋</button>
+    </div>`:'';
+  return `<details class="t-coll"${items.length?' open':''}><summary>📋 Ablaufplan${items.length?` · ${items.length}`:''}</summary><div>
+    ${rows||'<div style="font-size:.8rem;color:#aaa">Noch keine Punkte.</div>'}
+    ${addForm}
+  </div></details>`;
+}
+async function addAblaufplanPunkt(terminId){
+  if(!uiEdit('termine')){ alert('Nur im Bearbeiten-Modus.'); return; }
+  const t=termine.find(x=>x.id===terminId); if(!t) return;
+  const idx=termine.indexOf(t);
+  const zeitEl=document.getElementById('ap-zeit-'+terminId), textEl=document.getElementById('ap-text-'+terminId);
+  const zeit=(zeitEl&&zeitEl.value.trim())||'';
+  const text=(textEl&&textEl.value.trim())||'';
+  if(!text){ alert('Bitte einen Programmpunkt eingeben.'); textEl&&textEl.focus(); return; }
+  if(!Array.isArray(t.ablaufplan)) t.ablaufplan=[];
+  t.ablaufplan.push({id:uid(), zeit, text});
+  await dbPut('termine/'+idx+'/ablaufplan', t.ablaufplan).catch(e=>console.warn(e));
+  if(zeitEl) zeitEl.value=''; if(textEl) textEl.value='';
+  renderTermine();
+}
+async function editAblaufplanPunkt(terminId, itemId){
+  if(!uiEdit('termine')) return;
+  const t=termine.find(x=>x.id===terminId); if(!t) return;
+  const idx=termine.indexOf(t);
+  const item=(t.ablaufplan||[]).find(x=>x.id===itemId); if(!item) return;
+  const zeit=prompt('Zeit:', item.zeit||''); if(zeit===null) return;
+  const text=prompt('Programmpunkt:', item.text||''); if(text===null) return;
+  item.zeit=zeit.trim(); item.text=text.trim();
+  await dbPut('termine/'+idx+'/ablaufplan', t.ablaufplan).catch(e=>console.warn(e));
+  renderTermine();
+}
+async function deleteAblaufplanPunkt(terminId, itemId){
+  if(!uiEdit('termine')) return;
+  const t=termine.find(x=>x.id===terminId); if(!t) return;
+  const idx=termine.indexOf(t);
+  t.ablaufplan=(t.ablaufplan||[]).filter(x=>x.id!==itemId);
+  await dbPut('termine/'+idx+'/ablaufplan', t.ablaufplan).catch(e=>console.warn(e));
+  renderTermine();
+}
+async function moveAblaufplanPunkt(terminId, itemId, dir){
+  if(!uiEdit('termine')) return;
+  const t=termine.find(x=>x.id===terminId); if(!t) return;
+  const idx=termine.indexOf(t);
+  const arr=t.ablaufplan||[];
+  const i=arr.findIndex(x=>x.id===itemId); if(i<0) return;
+  const j=i+dir; if(j<0||j>=arr.length) return;
+  [arr[i],arr[j]]=[arr[j],arr[i]];
+  await dbPut('termine/'+idx+'/ablaufplan', arr).catch(e=>console.warn(e));
   renderTermine();
 }
 
