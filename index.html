@@ -280,7 +280,71 @@ html.dark img, html.dark video, html.dark .no-invert{ filter: invert(1) hue-rota
 .plakate-dist-tip::before{display:none!important}
 .satb-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
 .satb-cell{flex:1;min-width:82px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 9px}
-.satb-name{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+/* Termine/Lieder: Reiter in einer wischbaren Zeile; auf dem Handy ohne äußere Karte (Karte-in-Karte entfällt) */
+.plk-head{margin-bottom:12px}
+.plk-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.plk-top .btn{white-space:nowrap;flex-shrink:0}
+.plk-sub{font-size:.84rem;color:#555;font-weight:600;margin-top:2px}
+.plk-tiles{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-top:10px;padding-bottom:2px}
+.plk-tiles::-webkit-scrollbar{display:none}
+.plk-tile{flex:0 0 auto;min-width:100px;padding:8px 11px;border:1.5px solid var(--line);border-radius:12px;background:#fff;cursor:pointer;text-align:left;font-family:inherit;box-shadow:none}
+.plk-tile.on{border-color:var(--primary);background:#eef4fc}
+.plk-tile b{display:block;font-size:.82rem;color:var(--navy);white-space:nowrap}
+.plk-tile small{font-size:.72rem;color:var(--muted)}
+.plk-bar{height:5px;border-radius:3px;background:#e6ebf2;margin-top:5px;overflow:hidden}
+.plk-bar i{display:block;height:100%;background:#27ae60}
+.plk-seg{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 10px}
+.plk-seg::-webkit-scrollbar{display:none}
+.plk-seg .stab{flex:0 0 auto;white-space:nowrap}
+.plk-row{background:#fff;border:1px solid var(--line);border-left:4px solid #f39c12;border-radius:10px;margin-bottom:6px;overflow:hidden}
+.plk-row.done{border-left-color:#27ae60;background:#f7fbf8}
+.plk-line{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;min-height:54px}
+.plk-t{flex:1;min-width:0}
+.plk-t b{display:block;font-size:.9rem;color:var(--navy);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plk-t small{display:block;font-size:.76rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plk-claim{flex:0 0 auto;border:none;background:#27ae60;color:#fff;border-radius:10px;padding:0 12px;min-height:38px;font-size:.8rem;font-weight:700;cursor:pointer;box-shadow:none}
+.plk-who{flex:0 0 auto;font-size:.78rem;color:#1a7a40;font-weight:700;max-width:42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plk-det{display:none;padding:0 11px 11px;font-size:.82rem;color:#555}
+.plk-row.open .plk-det{display:block}
+.plk-det .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.plk-grp{font-size:.72rem;font-weight:700;color:#8a97a8;text-transform:uppercase;letter-spacing:.05em;margin:12px 2px 5px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.plk-item{display:flex;flex-direction:column;align-items:stretch;gap:6px;border-left:4px solid #f39c12;padding:9px 11px;margin-bottom:7px;background:#fffdf5;border-radius:0 8px 8px 0}
+.plk-side{width:100%}
+.plk-side .btn{flex:1;min-height:38px}
+.plk-side .plk-dots{flex:0 0 auto}
+.plk-side .plk-nm{flex:1}
+.plk-item.done{border-left-color:#27ae60;background:#f4faf5}
+.plk-main{flex:1;min-width:0}
+.plk-name{font-weight:700;font-size:.92rem;color:#1b3a6b;line-height:1.25}
+.plk-cnt{font-weight:400;font-size:.76rem;color:#888}
+.plk-addr{font-size:.78rem;color:#777;margin-top:1px;overflow-wrap:anywhere}
+.plk-note{font-size:.76rem;color:#999;font-style:italic;margin-top:1px}
+.plk-side{display:flex;gap:6px;align-items:center}
+.plk-dots{border:none;background:#eef1f5;color:#556;border-radius:10px;min-width:36px;min-height:36px;font-size:1.1rem;font-weight:700;cursor:pointer;padding:0}
+.plk-edit{display:flex;gap:6px}
+.plk-edit .btn{flex:1}
+.plk-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.plk-sub{border:1px solid var(--line);border-radius:10px;background:#fafbfc;margin:8px 0;padding:10px 12px}
+.t-tabs{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.t-tabs::-webkit-scrollbar{display:none}
+.t-tabs .stab{flex:0 0 auto;white-space:nowrap}
+.stab-s{padding:5px 12px;font-size:.76rem}
+@media(max-width:640px){
+  .t-shell{background:none;box-shadow:none;border:none;padding:0}
+  .t-tabs{gap:4px}
+  .t-tabs .stab{padding:8px 11px;font-size:.78rem}
+  .t-tabs .stab-s{padding:6px 12px}
+}
+/* Termin-Karte: Kurzinfo-Zeile, die alles Weitere aufklappt */
+.t-more{margin-top:8px}
+.t-more-sum{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#fafbfc;user-select:none}
+.t-more-sum::-webkit-details-marker{display:none}
+.tm-chips{flex:1;display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.8rem;font-weight:600;color:var(--navy);min-width:0}
+.tm-c{white-space:nowrap}
+.t-more[open]>.t-more-sum{border-color:var(--primary)}
+.t-more[open]>.t-more-sum .rb-chev{transform:rotate(180deg)}
+.t-more-body{padding-top:2px}
+.satb-name{font-size:.74rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
 .satb-nums{font-size:.84rem;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap}
 
 /* ===== HANDY-OPTIMIERUNG ===== */
@@ -370,6 +434,21 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .tb{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--line);background:#fff;font-size:1.05rem;line-height:1;padding:0;cursor:pointer;box-shadow:none}
 .tb-ja:hover,.tb-ja:active{background:#d5f5e3;border-color:#27ae60}.tb-vl:hover,.tb-vl:active{background:#fef3d6;border-color:#f39c12}.tb-nein:hover,.tb-nein:active{background:#fdecea;border-color:#e74c3c}
 .todo-done{font-size:.84rem;color:#1a7a40;margin:0 2px 14px}
+/* Handy: kein automatisches Vergrößern von Text (Android-„Font Boosting“, iOS-Querformat) und kein Heranzoomen beim Antippen von Eingabefeldern (iOS zoomt bei < 16 px und springt nicht zurück) */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+/* Handy: schlankere Kacheln (Schnellzugriff + Zahlen-Kacheln), Beschriftung bricht nicht mehr um */
+@media(max-width:640px){
+  .qa-row{grid-template-columns:repeat(auto-fit,minmax(68px,1fr));gap:7px;margin-bottom:12px}
+  .qa{padding:8px 3px;gap:3px;border-radius:12px;box-shadow:none;font-size:.72rem;line-height:1.15;min-width:0;min-height:56px}
+  .qa-ic{font-size:1.2rem}
+  .stat{padding:8px 4px;border-radius:10px;box-shadow:none}
+  .stat-n{font-size:1.1rem}
+  .stat-l{font-size:.66rem;margin-top:1px}
+  .stats{gap:6px}
+}
+@media(max-width:820px){
+  input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),select,textarea,.fl-input,.search-box{font-size:16px!important}
+}
 .push-slim{padding:12px 16px;margin-bottom:12px}
 .rb-card{padding:12px 16px}
 .rb-card>summary{display:flex;align-items:center;gap:10px;cursor:pointer;list-style:none}
@@ -502,6 +581,19 @@ html.reduce-motion *,html.reduce-motion *::before,html.reduce-motion *::after{an
     -webkit-overflow-scrolling:touch;scrollbar-width:none;overscroll-behavior-x:contain}
   .konsole-menu::-webkit-scrollbar{display:none}
   .konsole-menu .km{flex:0 0 auto;width:auto;min-height:40px;white-space:nowrap;padding:8px 14px;font-size:.84rem;border-radius:20px}
+}
+/* Konsole: Rubrik-Leiste (kg) über den Bereichen (km) */
+.konsole-menu .kg-bar{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px}
+.konsole-menu .kg{padding:8px 6px;border:1.5px solid var(--line);background:#f3f6fa;border-radius:10px;cursor:pointer;font-size:.8rem;font-weight:700;color:var(--navy);text-align:center}
+.konsole-menu .kg.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.konsole-menu .km-list{display:flex;flex-direction:column;gap:5px}
+.konsole-menu .km.km-off{display:none}
+@media(max-width:680px){
+  .konsole-menu{flex-direction:column;overflow:visible;gap:0;padding-bottom:8px}
+  .konsole-menu .kg-bar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-bottom:6px}
+  .konsole-menu .kg{white-space:nowrap;min-height:38px;border-radius:12px;padding:6px 2px;font-size:.72rem;overflow:hidden;text-overflow:ellipsis}
+  .konsole-menu .km-list{flex-direction:row;overflow-x:auto;gap:6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .konsole-menu .km-list::-webkit-scrollbar{display:none}
 }
 /* Mindest-Tippfläche für alle Knöpfe im Inhalt (Handy) — sonst wirken Chips/Kleinstknöpfe wie 26 px hohe Streifen */
 @media(max-width:640px){
@@ -732,7 +824,6 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
 <div class="main-tabs">
   <div class="mtab active" onclick="showPage('start',this)">🏠 Start</div>
   <div class="mtab" onclick="showPage('lieder',this)">🎵 Lieder</div>
-  <div class="mtab" onclick="showPage('proben',this)">📅 Proben</div>
   <div class="mtab" onclick="showPage('termine',this)">📆 Termine</div>
   <div class="mtab" onclick="showPage('umfragen',this)">📊 Umfragen</div>
   <div class="mtab" onclick="showPage('mitglieder',this)">👥 Mitglieder</div>
@@ -782,7 +873,7 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
       <button class="btn btn-success" onclick="addSaisonInApp()">＋ Saison anlegen</button>
     </div>
   </div>
-  <div class="card">
+  <div class="card t-shell">
     <div class="sub-tabs" id="saison-tabs"></div>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
       <input type="text" class="search-box" id="lied-search" placeholder="🔍 Lied suchen…" oninput="renderLieder()" style="flex:1;margin-bottom:0">
@@ -825,13 +916,13 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
   </div>
 </div>
 
-<div class="page" id="p-proben">
+<div class="page" id="p-termine">
   <div class="admin-section admin-only" data-perm="proben">
     <div class="admin-label">🔑 Admin: Probe erfassen / planen</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
       <div style="flex:1;min-width:150px">
         <label style="display:block;font-size:.8rem;font-weight:500;margin-bottom:3px;color:#444">Datum</label>
-        <input class="fl-input" type="date" id="probe-datum">
+        <input class="fl-input" type="date" id="probe-datum" onchange="updateWdhLabels()">
       </div>
       <div style="flex:1;min-width:150px">
         <label style="display:block;font-size:.8rem;font-weight:500;margin-bottom:3px;color:#444">Art</label>
@@ -843,7 +934,7 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
       <div style="flex:1;min-width:150px">
-        <label style="display:block;font-size:.8rem;font-weight:500;margin-bottom:3px;color:#444">Wiederholen (nur bei geplant)</label>
+        <label style="display:block;font-size:.8rem;font-weight:500;margin-bottom:3px;color:#444">Wiederholen (z. B. jeden Dienstag)</label>
         <select id="probe-wdh" class="fl-input">
           <option value="">Einmalig</option>
           <option value="7">Wöchentlich</option>
@@ -852,16 +943,20 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
         </select>
       </div>
       <div style="flex:1;min-width:150px">
-        <label style="display:block;font-size:.8rem;font-weight:500;margin-bottom:3px;color:#444">… bis Enddatum</label>
+        <label style="display:block;font-size:.8rem;font-weight:500;margin-bottom:3px;color:#444">… bis (leer = 16 Wochen)</label>
         <input class="fl-input" type="date" id="probe-wdh-bis">
       </div>
+    </div>
+    <div style="margin-bottom:10px">
+      <button class="btn btn-gray btn-sm" type="button" onclick="generateProbeSeries()">🔁 Serie erzeugen &amp; prüfen</button>
+      <span style="font-size:.74rem;color:#888;margin-left:6px">zeigt alle Termine unten – Ferien einzeln mit ✕ streichen, dann „Speichern“</span>
     </div>
     <div style="margin-bottom:10px">
       <label style="display:block;font-size:.8rem;font-weight:500;margin-bottom:3px;color:#444">📍 Abweichender Ort (optional)</label>
       <input class="fl-input" type="text" id="probe-ort" placeholder="z.B. Gemeindehaus – nur ausfüllen, falls nicht die übliche Chorprobe">
     </div>
     <div style="margin-bottom:10px;border:1px dashed #d7dee7;border-radius:9px;padding:10px 12px;background:#fafbfd">
-      <label style="display:block;font-size:.8rem;font-weight:600;margin-bottom:6px;color:#444">📚 Mehrere Termine als Stapel (optional)</label>
+      <label style="display:block;font-size:.8rem;font-weight:600;margin-bottom:6px;color:#444">📚 Termine der Serie / einzeln dazugesammelt (optional)</label>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         <input class="fl-input" type="date" id="probe-add-date" style="flex:1;min-width:150px;margin-bottom:0">
         <button class="btn btn-gray btn-sm" type="button" onclick="addBatchDate()">＋ Termin hinzufügen</button>
@@ -875,17 +970,6 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
     <textarea id="probe-notiz" placeholder="z.B. Sopran bei Takt 12 nochmal üben…" style="min-height:55px;margin-bottom:10px"></textarea>
     <button class="btn btn-success" onclick="saveProbe()">✅ Speichern</button>
   </div>
-  <div class="card" style="margin-bottom:12px">
-    <div class="card-title">📋 Geplante Proben</div>
-    <div id="plan-list"></div>
-  </div>
-  <div class="card">
-    <div class="card-title">📜 Probenverlauf</div>
-    <div id="verlauf-list"></div>
-  </div>
-</div>
-
-<div class="page" id="p-termine">
   <div class="admin-section admin-only" data-perm="termine">
     <div class="admin-label">🔑 Admin: Termin hinzufügen</div>
     <div class="form-row">
@@ -914,24 +998,28 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
     </div>
     <button class="btn btn-primary" onclick="addTermin()">＋ Termin hinzufügen</button>
   </div>
-  <div class="card">
+  <div class="card t-shell">
     <div style="margin-bottom:12px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;flex-wrap:wrap">
-        <span class="card-title" style="margin-bottom:0">📆 Termine</span>
-        <div class="ics-btns" style="display:flex;gap:6px;flex-wrap:wrap">
-          <button onclick="openICSAbo()" style="padding:5px 13px;background:#8e44ad;border:1.5px solid #8e44ad;color:#fff;border-radius:6px;font-size:.82rem;font-weight:600;cursor:pointer;white-space:nowrap">🔄 Kalender abonnieren</button>
-          <button onclick="exportAlleTermineICS()" style="padding:5px 13px;background:transparent;border:1.5px solid #8e44ad;color:#8e44ad;border-radius:6px;font-size:.82rem;font-weight:500;cursor:pointer;white-space:nowrap">📥 Als .ics</button>
-        </div>
+      <div class="t-tabs">
+        <button id="t-btn-anstehend" class="stab active" onclick="setTerminTab('anstehend')">Anstehend</button>
+        <button id="t-btn-kalender" class="stab" onclick="setTerminTab('kalender')">Kalender</button>
+        <button id="t-btn-vergangen" class="stab" onclick="setTerminTab('vergangen')">Vergangen</button>
+        <button id="t-btn-geburtstage" class="stab" onclick="setTerminTab('geburtstage')">🎂</button>
       </div>
-      <div style="display:flex;gap:5px;flex-wrap:wrap">
-        <button id="t-btn-anstehend" class="stab active" onclick="setTerminTab('anstehend')">📌 Anstehend</button>
-        <button id="t-btn-kalender" class="stab" onclick="setTerminTab('kalender')">📅 Kalender</button>
-        <button id="t-btn-vergangen" class="stab" onclick="setTerminTab('vergangen')">📜 Vergangen</button>
-        <button id="t-btn-geburtstage" class="stab" onclick="setTerminTab('geburtstage')">🎂 Geburtstage</button>
+      <div id="t-filter" class="t-tabs" style="margin-top:8px">
+        <button id="tfl-alle" class="stab stab-s active" onclick="setTerminFilter('alle')">Alle</button>
+        <button id="tfl-proben" class="stab stab-s" onclick="setTerminFilter('proben')">🎹 Proben</button>
+        <button id="tfl-auftritte" class="stab stab-s" onclick="setTerminFilter('auftritte')">🎤 Auftritte</button>
       </div>
     </div>
     <div id="t-anstehend"></div>
-    <div id="t-kalender" style="display:none"><div id="kal-container"></div></div>
+    <div id="t-kalender" style="display:none">
+      <div class="ics-btns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+        <button onclick="openICSAbo()" style="padding:6px 13px;background:#8e44ad;border:1.5px solid #8e44ad;color:#fff;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer;white-space:nowrap">🔄 Kalender abonnieren</button>
+        <button onclick="exportAlleTermineICS()" style="padding:6px 13px;background:transparent;border:1.5px solid #8e44ad;color:#8e44ad;border-radius:8px;font-size:.82rem;font-weight:500;cursor:pointer;white-space:nowrap">📥 Als .ics</button>
+      </div>
+      <div id="kal-container"></div>
+    </div>
     <div id="t-vergangen" style="display:none"></div>
     <div id="t-geburtstage" style="display:none"><div id="geburtstage-list"></div></div>
   </div>
@@ -1075,7 +1163,18 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
 </div>
 
 <div class="page" id="p-plakate">
-  <details class="card k-form-wrap" style="margin-bottom:12px">
+  <div class="card plk-head">
+    <div class="plk-top">
+      <div style="min-width:0">
+        <div class="card-title" style="margin:0">🏷️ Plakate</div>
+        <div id="plakate-stats" class="plk-sub"></div>
+      </div>
+      <button class="btn btn-sm btn-primary" onclick="plkOpenAdd()">＋ Standort</button>
+    </div>
+    <div id="plakate-progress" style="display:none;background:#eef1f5;border-radius:6px;height:8px;overflow:hidden;margin:10px 0 4px"><div id="plakate-progress-fill" style="height:100%;width:0%;background:#27ae60;border-radius:6px;transition:width .3s"></div></div>
+    <div id="plk-tiles" class="plk-tiles"></div>
+  </div>
+  <details class="card k-form-wrap" id="plk-add" style="margin-bottom:12px">
     <summary style="cursor:pointer;font-weight:700;color:#1b3a6b;font-size:.92rem;user-select:none">＋ Neuen Standort hinzufügen</summary>
     <div style="margin-top:12px">
       <div style="font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#999;margin-bottom:5px">💡 Vorschläge antippen</div>
@@ -1098,7 +1197,11 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
       <button class="btn btn-primary" onclick="addPlakat()">＋ Standort hinzufügen</button>
     </div>
   </details>
-  <div class="card" style="margin-bottom:12px">
+  <div id="plk-seg" class="plk-seg"></div>
+  <div id="plk-search-row" style="margin-bottom:10px"><input type="text" id="plk-search" class="search-box" placeholder="🔍 Standort oder Adresse suchen…" oninput="renderPlakate()" style="margin:0"></div>
+  <div id="plakate-list"></div>
+  <div style="font-size:.78rem;color:#888;margin:2px 2px 12px">Tippe einen Standort an für Details. „Übernehmen“, wenn du dort ein Plakat aufhängst. Die Liste pflegen alle gemeinsam: Fehler korrigieren oder löschen darf jede*r.</div>
+  <div class="card" id="plk-map-card" style="margin-bottom:12px;display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
       <span class="card-title" style="margin-bottom:0">🗺️ Karte</span>
       <button class="btn btn-sm" style="background:#eef1f5;color:#1d4e96" onclick="togglePlakateKarte()" id="plakate-karte-toggle-btn">Karte anzeigen</button>
@@ -1122,21 +1225,28 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
       <div id="plakate-map-members-status" style="font-size:.74rem;color:#999;min-height:14px;margin-top:2px"></div>
     </div>
   </div>
-  <details class="card" style="margin-bottom:12px" ontoggle="if(this.open) renderPlakateAbdeckung()">
+  <div class="card" id="plakate-ranking-card" style="margin-top:12px;display:none">
+    <div class="card-title">🏆 Wer verteilt wie viel?</div>
+    <div id="plakate-ranking"></div>
+  </div>
+  <details class="card plk-tools" style="margin-top:12px">
+    <summary style="cursor:pointer;font-weight:700;color:#1b3a6b;font-size:.92rem;user-select:none">🛠️ Werkzeuge &amp; Auswertung <span style="font-weight:400;color:#999;font-size:.78rem">(Abdeckung, Zuteilung, Standort-Suche)</span></summary>
+    <div style="margin-top:8px">
+  <details class="plk-sub" ontoggle="if(this.open) renderPlakateAbdeckung()">
     <summary style="cursor:pointer;font-weight:700;color:#1b3a6b;font-size:.92rem;user-select:none">📊 Wo lohnt sich die Suche nach neuen Standorten?</summary>
     <div style="margin-top:10px">
       <div style="font-size:.78rem;color:#888;margin-bottom:8px">Ortschaften, in denen viele Mitglieder wohnen, aber noch wenige Standorte erfasst sind, sind gute Kandidaten.</div>
       <div id="plakate-abdeckung"></div>
     </div>
   </details>
-  <details class="card admin-only" style="margin-bottom:12px" ontoggle="if(this.open) renderZuteilungsVorschlaege()">
+  <details class="plk-sub admin-only" ontoggle="if(this.open) renderZuteilungsVorschlaege()">
     <summary style="cursor:pointer;font-weight:700;color:#1b3a6b;font-size:.92rem;user-select:none">🎯 Zuteilungsvorschläge <span style="font-weight:400;color:#999;font-size:.78rem">(nur Admins)</span></summary>
     <div style="margin-top:10px">
       <div style="font-size:.78rem;color:#888;margin-bottom:8px">Offene Standorte, für die ein nahegelegenes Mitglied (≤5 km, max. 2 Vorschläge pro Person) infrage käme — reine Vorschläge, keine automatische Zuweisung. Einfach anrufen/schreiben und fragen.</div>
       <div id="plakate-zuteilung"></div>
     </div>
   </details>
-  <details class="card admin-only" style="margin-bottom:12px" ontoggle="if(this.open) initPlakateVorschlaege()">
+  <details class="plk-sub admin-only" ontoggle="if(this.open) initPlakateVorschlaege()">
     <summary style="cursor:pointer;font-weight:700;color:#1b3a6b;font-size:.92rem;user-select:none">🔍 Neue Standorte in der Nähe finden <span style="font-weight:400;color:#999;font-size:.78rem">(nur Admins)</span></summary>
     <div style="margin-top:10px">
       <div style="font-size:.78rem;color:#888;margin-bottom:8px">Sucht echte Orte (Bäckereien, Kirchen, Vereine, Läden …) aus OpenStreetMap in der Nähe – Standorte, die schon in deiner Liste stehen, werden herausgefiltert.</div>
@@ -1155,19 +1265,8 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
       <div id="pv-results"></div>
     </div>
   </details>
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px">
-      <span class="card-title" style="margin-bottom:0">📋 Plakat-Standorte</span>
-      <span id="plakate-stats" style="font-size:.8rem;color:#888"></span>
     </div>
-    <div id="plakate-progress" style="display:none;background:#eef1f5;border-radius:6px;height:8px;overflow:hidden;margin:8px 0 4px"><div id="plakate-progress-fill" style="height:100%;width:0%;background:#27ae60;border-radius:6px;transition:width .3s"></div></div>
-    <div style="font-size:.82rem;color:#666;margin-bottom:12px">Trage dich auf einen Standort ein, wenn du das Plakat dorthin bringst. 💡 Diese Liste pflegen wir gemeinsam: Jede*r darf Standorte anlegen, Adresse/Ortschaft korrigieren oder falsche Einträge löschen (✏️/✕ bei jedem Standort) — du musst dafür kein Admin sein.</div>
-    <div id="plakate-list"></div>
-  </div>
-  <div class="card" id="plakate-ranking-card" style="margin-top:12px;display:none">
-    <div class="card-title">🏆 Wer verteilt wie viel?</div>
-    <div id="plakate-ranking"></div>
-  </div>
+  </details>
 </div>
 
 
@@ -1522,21 +1621,30 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
     </div>
     </div><!-- /konsole-content -->
     <div class="konsole-menu">
-      <button class="km active" data-kp="bearbeiten" onclick="konsoleNav('bearbeiten')">✏️ Bearbeiten</button>
-      <button class="km" data-kp="chor" onclick="konsoleNav('chor')">🏛️ Chor</button>
-      <button class="km" data-kp="module" onclick="konsoleNav('module')">🧩 Module &amp; Regeln</button>
-      <button class="km" data-kp="app" onclick="konsoleNav('app')">📝 App-Hinweis</button>
-      <button class="km" data-kp="push" onclick="konsoleNav('push')">🔔 Benachrichtigungen</button>
-      <button class="km" data-kp="senden" onclick="konsoleNav('senden')">📢 Nachricht senden</button>
-      <button class="km" data-kp="uebersicht" onclick="konsoleNav('uebersicht')">📊 Übersicht</button>
-      <button class="km" data-kp="datenpflege" onclick="konsoleNav('datenpflege')">🩺 Datenpflege</button>
-      <button class="km" data-kp="daten" onclick="konsoleNav('daten')">💾 Daten &amp; Backup</button>
-      <button class="km" data-kp="sicherheit" onclick="konsoleNav('sicherheit')">🔑 Sicherheit</button>
-      <button class="km" data-kp="benutzer" onclick="konsoleNav('benutzer')">👥 Benutzer</button>
-      <button class="km" data-kp="saisons" onclick="konsoleNav('saisons')">📅 Saisons</button>
-      <button class="km" data-kp="organigramm" onclick="konsoleNav('organigramm')">👔 Organigramm</button>
-      <button class="km" data-kp="stimmen" onclick="konsoleNav('stimmen')">🎚️ Stimmen</button>
-      <button class="km" data-kp="gast" onclick="konsoleNav('gast')">🎫 Gast-Noten</button>
+      <!-- Zwei Ebenen: oben die Rubrik, darunter die Bereiche dieser Rubrik -->
+      <div class="kg-bar">
+        <button class="kg active" data-g="chor" onclick="konsoleGroup('chor')">🎶 Chor</button>
+        <button class="kg" data-g="komm" onclick="konsoleGroup('komm')">📣 Mitteilen</button>
+        <button class="kg" data-g="app" onclick="konsoleGroup('app')">⚙️ App</button>
+        <button class="kg" data-g="daten" onclick="konsoleGroup('daten')">🩺 Daten</button>
+      </div>
+      <div class="km-list">
+      <button class="km active" data-g="chor" data-kp="bearbeiten" onclick="konsoleNav('bearbeiten')">✏️ Bearbeiten</button>
+      <button class="km" data-g="chor" data-kp="chor" onclick="konsoleNav('chor')">🏛️ Chor-Stammdaten</button>
+      <button class="km" data-g="chor" data-kp="saisons" onclick="konsoleNav('saisons')">📅 Saisons</button>
+      <button class="km" data-g="chor" data-kp="organigramm" onclick="konsoleNav('organigramm')">👔 Organigramm</button>
+      <button class="km" data-g="chor" data-kp="stimmen" onclick="konsoleNav('stimmen')">🎚️ Stimmen</button>
+      <button class="km" data-g="chor" data-kp="gast" onclick="konsoleNav('gast')">🎫 Gast-Noten</button>
+      <button class="km" data-g="komm" data-kp="push" onclick="konsoleNav('push')">🔔 Benachrichtigungen</button>
+      <button class="km" data-g="komm" data-kp="senden" onclick="konsoleNav('senden')">📢 Nachricht senden</button>
+      <button class="km" data-g="komm" data-kp="app" onclick="konsoleNav('app')">📝 App-Hinweis</button>
+      <button class="km" data-g="app" data-kp="module" onclick="konsoleNav('module')">🧩 Module &amp; Regeln</button>
+      <button class="km" data-g="app" data-kp="benutzer" onclick="konsoleNav('benutzer')">👥 Benutzer</button>
+      <button class="km" data-g="app" data-kp="sicherheit" onclick="konsoleNav('sicherheit')">🔑 Sicherheit</button>
+      <button class="km" data-g="daten" data-kp="uebersicht" onclick="konsoleNav('uebersicht')">📊 Übersicht</button>
+      <button class="km" data-g="daten" data-kp="datenpflege" onclick="konsoleNav('datenpflege')">🩺 Datenpflege</button>
+      <button class="km" data-g="daten" data-kp="daten" onclick="konsoleNav('daten')">💾 Daten &amp; Backup</button>
+      </div>
     </div>
     </div><!-- /konsole-layout -->
   </div>
@@ -1752,7 +1860,6 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
 <nav class="bottomnav bnav" id="bottomnav">
   <button class="bnav-item active" data-page="start" onclick="bnav('start')"><span class="bnav-ic">🏠</span>Start</button>
   <button class="bnav-item" data-page="lieder" onclick="bnav('lieder')"><span class="bnav-ic">🎵</span>Lieder</button>
-  <button class="bnav-item" data-page="proben" onclick="bnav('proben')"><span class="bnav-ic">📅</span>Proben</button>
   <button class="bnav-item" data-page="termine" onclick="bnav('termine')"><span class="bnav-ic">📆</span>Termine</button>
   <button class="bnav-item" data-page="__more__" onclick="openMoreSheet()"><span class="bnav-ic">☰</span>Mehr</button>
 </nav>
@@ -1764,12 +1871,13 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
     <h4>Mehr</h4>
     <div class="sheet-label">🎶 Chor</div>
     <div class="sheet-grid">
-      <button class="sheet-link" onclick="bnavMore('umfragen')"><span class="si">📊</span>Umfragen</button>
       <button class="sheet-link" onclick="bnavMore('mitglieder')"><span class="si">👥</span>Mitglieder</button>
+      <button class="sheet-link" onclick="bnavMore('organigramm')"><span class="si">🏛️</span>Organigramm</button>
+      <button class="sheet-link" onclick="bnavMore('umfragen')"><span class="si">📊</span>Umfragen</button>
       <button class="sheet-link" onclick="bnavMore('plakate')"><span class="si">📋</span>Plakate</button>
       <button class="sheet-link" onclick="bnavMore('kommentare')"><span class="si">💬</span>Kommentare</button>
     </div>
-    <div class="sheet-label sheet-user" style="display:none">👤 Persönlich</div>
+    <div class="sheet-label sheet-user" style="display:none">👤 Ich</div>
     <div class="sheet-grid">
       <button class="sheet-link sheet-user" style="display:none" onclick="closeMoreSheet();openAbwesenheit()"><span class="si">🏖️</span>Abwesenheit</button>
       <button class="sheet-link sheet-user" id="more-einst" style="display:none" onclick="bnavMore('einstellungen')"><span class="si">⚙️</span>Einstellungen</button>
@@ -1814,6 +1922,27 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
     <input id="pfb-wdh" class="fl-input" maxlength="200" placeholder="z. B. Takt 20–36, Einsätze Tenor und Bass">
     <div style="font-size:.76rem;color:#999;margin-top:8px">Beide Felder leer speichern = Eintrag entfernen.</div>
     <div class="modal-actions"><button class="btn btn-gray" onclick="closeModal()">Abbrechen</button><button class="btn btn-primary" onclick="saveProbeFeedback()">💾 Speichern</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-fahrt">
+  <div class="modal">
+    <h3 id="fa-title">🚗 Fahrgemeinschaft</h3>
+    <div id="fa-sub" style="font-size:.83rem;color:#666;margin-bottom:10px"></div>
+    <input type="hidden" id="fa-termin"><input type="hidden" id="fa-typ">
+    <div id="fa-plaetze-wrap">
+      <label style="display:block;font-size:.8rem;font-weight:500;margin-bottom:4px;color:#444">Freie Plätze (ohne dich)</label>
+      <select id="fa-plaetze" class="fl-input"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select>
+    </div>
+    <label id="fa-ort-lbl" style="display:block;font-size:.8rem;font-weight:500;margin:10px 0 4px;color:#444">📍 Abfahrtsort</label>
+    <input id="fa-ort" class="fl-input" maxlength="80" placeholder="z. B. Dölau Markt">
+    <div id="fa-zeit-wrap">
+      <label style="display:block;font-size:.8rem;font-weight:500;margin:10px 0 4px;color:#444">🕐 Abfahrtszeit (optional)</label>
+      <input id="fa-zeit" type="time" class="fl-input">
+    </div>
+    <label style="display:block;font-size:.8rem;font-weight:500;margin:10px 0 4px;color:#444">💬 Hinweis (optional)</label>
+    <input id="fa-notiz" class="fl-input" maxlength="120" placeholder="z. B. Kofferraum voll, Rückfahrt gegen 22 Uhr">
+    <div class="modal-actions"><button class="btn btn-gray" onclick="closeModal()">Abbrechen</button><button class="btn btn-primary" onclick="saveFahrt()">💾 Speichern</button></div>
   </div>
 </div>
 
@@ -2679,6 +2808,7 @@ function applyAdminMode(){
 
 // PAGE
 function showPage(id,tab){
+  if(id==='proben'){ terminFilter='proben'; showPage('termine',tab); setTerminTab('anstehend'); return; } // Proben sind jetzt Teil der Termine-Seite
   if(id==='organigramm'){ showPage('mitglieder', tab); setMitgliederTab('organigramm'); return; } // Organigramm ist jetzt Unter-Reiter der Mitglieder
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.mtab').forEach(t=>t.classList.remove('active'));
@@ -2686,11 +2816,10 @@ function showPage(id,tab){
   if(tab) tab.classList.add('active');
   if(id==='start') renderStart();
   if(id==='statistik'){ renderStatistik(); if(document.getElementById('av-anwesenheit')?.style.display!=='none') renderAnwesenheitPage(); }
-  if(id==='proben'){renderProben();renderSongPicker();}
-  if(id==='termine') renderTermine();
+  if(id==='termine'){ renderProben(); renderSongPicker(); }
   if(id==='umfragen'){ renderUmfragen(); if(!document.querySelector('#tf-optionen .tf-opt')) resetTfForm(); renderTerminfindung(); }
   if(id==='mitglieder') renderMitglieder();
-  if(id==='konsole') renderKonsole();
+  if(id==='konsole'){ renderKonsole(); const _ka=document.querySelector('#p-konsole .km.active'); konsoleShowGroup(_ka?_ka.getAttribute('data-g'):'chor'); }
   if(id==='einstellungen') renderEinstellungen();
   if(id==='lieder') renderLiedwuensche();
   if(id==='plakate') renderPlakate();
@@ -2699,7 +2828,7 @@ function showPage(id,tab){
 }
 
 // ===== UNTERE TAB-LEISTE (mobil) =====
-const BNAV_PRIMARY=['start','lieder','proben','termine'];
+const BNAV_PRIMARY=['start','lieder','termine'];
 function syncBottomNav(id){
   document.querySelectorAll('.bnav-item').forEach(b=>{
     const p=b.getAttribute('data-page');
@@ -2835,7 +2964,7 @@ function renderStart(){
         :(myName?'<span style="background:#eaeef3;color:#666;border-radius:12px;padding:2px 9px;font-size:.72rem;font-weight:700">⚪ Noch offen</span>':'');
       html+=`<div style="border-top:1px solid var(--line);margin-top:10px;padding-top:10px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">
-          <div><strong>${TYP_IC[t.typ]||'📌'} ${esc(t.titel)}</strong><div style="font-size:.8rem;color:#777;margin-top:2px">${fmt(t.datum)}${t.datum_ende?' – '+fmt(t.datum_ende):''}${t.uhrzeit?' · '+esc(t.uhrzeit):''}</div>${infoOnly&&t.beschreibung?`<div style="font-size:.78rem;color:#888;margin-top:3px">${esc(t.beschreibung)}</div>`:''}</div>
+          <div><strong>${TYP_IC[t.typ]||'📌'} ${esc(t.titel)}</strong><div style="font-size:.8rem;color:#777;margin-top:2px">${fmt(t.datum)}${t.datum_ende?' – '+fmt(t.datum_ende):''}${t.uhrzeit?' · '+esc(t.uhrzeit):''}</div>${(()=>{ if(!fahrtenAn(t)) return ''; const bs=fahrtEntries(t.id).filter(e=>e.typ==='biete'); const fr=bs.reduce((s,e)=>s+Math.max(0,(parseInt(e.plaetze)||0)-fahrtPassengers(e).length),0); return fr?`<div style="font-size:.76rem;color:#1a7a40;margin-top:2px;font-weight:600">🚗 ${fr} ${fr===1?'Platz':'Plätze'} frei</div>`:''; })()}${infoOnly&&t.beschreibung?`<div style="font-size:.78rem;color:#888;margin-top:3px">${esc(t.beschreibung)}</div>`:''}</div>
           ${chip}
         </div>
       </div>`;
@@ -3188,7 +3317,8 @@ function renderLieder(){
   const el=document.getElementById('lieder-list');if(!el)return;
   if(!songs.length){el.innerHTML='<div class="empty">'+(liederView==='archiv'?'Im Archiv nichts gefunden.':(q?'Kein Lied in der laufenden Saison gefunden.':'Keine Lieder vorhanden.'))+'</div>'+archHint;return;}
   let html=liederView==='archiv'?'<div style="font-size:.8rem;color:var(--muted);margin:0 2px 10px">🗄️ Ältere Saisons und archivierte Lieder, neueste zuerst. Zum Wiederverwenden: Lied in eine laufende Saison verschieben (↔️).</div>':uebenSummaryHtml();
-  const _heftBtn=liederheftButtonHtml(songs); // steht unter der Liste, nicht davor
+  html+=liederheftButtonHtml(songs); // gleich oben bei der Liste (unten am Listenende fand man ihn nicht)
+  const _heftBtn='';
   // Admin: ganze Saison ins Archiv / zurück (nur wenn eine konkrete, echte Saison gewählt ist — nicht bei
   // den virtuellen Sammel-Tabs "Alle"/"Aktuell", die keine einzelne Saison sind)
   if(admin && aktiveSaison!=='__all__' && aktiveSaison!=='__current__'){
@@ -3282,7 +3412,7 @@ function liederheftButtonHtml(songs){
   const seen=new Set();
   songs.forEach(s=>{ if(s&&s.pdf&&!s.archived&&!seen.has(s.pdf)){ seen.add(s.pdf); _heftIds.push(s.id); } });
   if(!_heftIds.length) return '';
-  return `<div style="margin:16px 0 4px"><button class="btn btn-sm" style="background:#1b3a6b;color:#fff" onclick="makeLiederheft()">📖 Liederheft als PDF (${_heftIds.length} Lieder)</button> <span id="heft-msg" style="font-size:.78rem;color:#888;margin-left:6px"></span></div>`;
+  return `<div style="margin:0 0 10px"><button class="btn btn-sm" style="background:#1b3a6b;color:#fff" onclick="makeLiederheft()">📖 Liederheft als PDF (${_heftIds.length} Lieder)</button> <span id="heft-msg" style="font-size:.78rem;color:#888;margin-left:6px"></span></div>`;
 }
 async function makeLiederheft(){
   if(_heftBusy || !_heftIds.length) return;
@@ -3668,6 +3798,41 @@ function addBatchDate(){
   renderBatchDates();
 }
 function removeBatchDate(d){ _batchProbeDates=_batchProbeDates.filter(x=>x!==d); renderBatchDates(); }
+// Serie erzeugen: Startdatum + Rhythmus (+ Ende, sonst 16 Wochen). Liegt der Start in der Vergangenheit, zählen nur künftige Termine.
+function _isoDate(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function probeRepeatDates(datum,wdh,bis){
+  const out=[datum];
+  if(!bis||bis<datum){ const e=new Date(datum+'T12:00:00'); e.setDate(e.getDate()+7*16); bis=_isoDate(e); }
+  const base=new Date(datum+'T12:00:00'); const end=new Date(bis+'T12:00:00'); let d=new Date(base), n=0, guard=0;
+  while(guard++<400){
+    n++;
+    if(wdh==='month'){ d=new Date(base); d.setMonth(base.getMonth()+n); } else { d=new Date(base); d.setDate(base.getDate()+n*parseInt(wdh)); }
+    if(d>end) break;
+    out.push(_isoDate(d));
+  }
+  const t=localToday();
+  return out.filter(x=>x>=t);
+}
+// Knopf „Serie erzeugen“: legt die Termine als anklickbare Chips ab – einzelne (z. B. Ferien) lassen sich mit ✕ wieder streichen
+function generateProbeSeries(){
+  const datum=document.getElementById('probe-datum').value, wdh=document.getElementById('probe-wdh').value, bis=document.getElementById('probe-wdh-bis').value;
+  if(!datum){ alert('Bitte oben zuerst das Startdatum (erste Probe) wählen.'); return; }
+  if(!wdh){ alert('Bitte bei „Wiederholen“ einen Rhythmus wählen (z. B. Wöchentlich).'); return; }
+  const dates=probeRepeatDates(datum,wdh,bis);
+  if(!dates.length){ alert('Im gewählten Zeitraum liegt kein künftiger Termin.'); return; }
+  dates.forEach(d=>{ if(!_batchProbeDates.includes(d)) _batchProbeDates.push(d); });
+  _batchProbeDates.sort();
+  document.getElementById('probe-art').value='geplant';
+  document.getElementById('probe-datum').value=''; document.getElementById('probe-wdh').value=''; document.getElementById('probe-wdh-bis').value='';
+  renderBatchDates();
+  showToast(dates.length+' Termine zusammengestellt – unten prüfen, Ferien mit ✕ streichen, dann „Speichern“','ok');
+}
+// Beschriftung des Rhythmus mit dem Wochentag des Startdatums („Jeden Dienstag“)
+function updateWdhLabels(){
+  const d=document.getElementById('probe-datum').value, sel=document.getElementById('probe-wdh'); if(!sel) return;
+  const wd=d?new Date(d+'T12:00:00').toLocaleDateString('de-DE',{weekday:'long'}):'';
+  [...sel.options].forEach(o=>{ if(o.value==='7') o.text=wd?'Jeden '+wd:'Wöchentlich'; if(o.value==='14') o.text=wd?'Alle 2 Wochen ('+wd+')':'Alle 2 Wochen'; });
+}
 function renderBatchDates(){
   const box=document.getElementById('probe-batch-list'); if(!box) return;
   box.innerHTML=_batchProbeDates.map(d=>`<span style="background:#eef3fa;color:#1b3a6b;border-radius:14px;padding:3px 10px;font-size:.8rem;display:inline-flex;align-items:center;gap:6px">${fmt(d)}<span style="cursor:pointer;color:#e74c3c;font-weight:700" onclick="removeBatchDate('${d}')">✕</span></span>`).join('');
@@ -3679,8 +3844,9 @@ async function saveProbe(){
   const songIds=getCheckedSongs();
   const notiz=document.getElementById('probe-notiz').value.trim();
   const ort=document.getElementById('probe-ort').value.trim();
-  // Ein zukünftiges Datum kann keine bereits durchgeführte Probe sein → automatisch als geplant speichern
-  if(art==='vergangen' && datum>localToday()){
+  // Ein zukünftiges Datum kann keine bereits durchgeführte Probe sein → automatisch als geplant speichern.
+  // Dasselbe gilt, wenn eine Wiederholung gewählt ist oder Serien-Termine gesammelt wurden (Serien sind immer „geplant“).
+  if(art==='vergangen' && (datum>localToday() || document.getElementById('probe-wdh').value || (!datum && _batchProbeDates.length))){
     art='geplant';
   }
   if(art==='vergangen'){
@@ -3693,17 +3859,15 @@ async function saveProbe(){
     // Wiederkehrende Proben generieren
     const wdh=document.getElementById('probe-wdh').value;
     const bis=document.getElementById('probe-wdh-bis').value;
-    const daten=datum?[datum]:[];
-    if(datum && wdh && bis && bis>=datum){
-      let d=new Date(datum+'T12:00:00'); const end=new Date(bis+'T12:00:00'); let guard=0;
-      while(guard++<260){
-        if(wdh==='month'){ d.setMonth(d.getMonth()+1); } else { d.setDate(d.getDate()+parseInt(wdh)); }
-        if(d>end) break;
-        daten.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
-      }
-    }
+    // Mit Wiederholung: alle Termine ab dem Startdatum (ohne Enddatum: die nächsten 16 Wochen); sonst nur das eine Datum
+    const daten=(datum&&wdh)?probeRepeatDates(datum,wdh,bis):(datum?[datum]:[]);
     // Stapel-Termine dazu, doppelte entfernen, chronologisch
-    const alleDaten=[...new Set([...daten, ..._batchProbeDates])].sort();
+    // Tage, an denen schon eine Probe steht (geplant oder erfasst), nicht noch einmal anlegen
+    const _vorhanden=new Set([...probenplan.map(p=>p.datum),...((D&&D.proben)||[]).map(p=>p.datum)]);
+    const _roh=[...new Set([...daten, ..._batchProbeDates])].sort();
+    const alleDaten=_roh.filter(dt=>!_vorhanden.has(dt));
+    if(!alleDaten.length){ alert('An diesen Tagen gibt es schon Proben – nichts Neues angelegt.'); return; }
+    if(_roh.length>alleDaten.length) showToast((_roh.length-alleDaten.length)+' Tag(e) übersprungen, da schon eine Probe existiert','ok');
     alleDaten.forEach(dt=>probenplan.push({id:uid(),datum:dt,songIds,notiz,ort}));
     await dbFetch(DB+'/probenplan.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(probenplan)});
     document.getElementById('probe-wdh').value=''; document.getElementById('probe-wdh-bis').value='';
@@ -3719,6 +3883,17 @@ async function saveProbe(){
   showToast('Probe(n) gespeichert','ok');
 }
 
+// Serie bereinigen: diese geplante Probe und alle späteren geplanten Proben löschen (erfasste Proben bleiben unangetastet)
+async function deleteProbeSeries(id){
+  if(!hasPermission('proben')) return;
+  const p=probenplan.find(x=>x.id===id); if(!p) return;
+  const betroffen=probenplan.filter(x=>x.datum>=p.datum);
+  if(!confirm('Diese Probe ('+fmt(p.datum)+') und alle späteren GEPLANTEN Proben löschen?\n\n'+betroffen.length+' Probe'+(betroffen.length===1?'':'n')+' werden entfernt. Bereits erfasste Proben bleiben erhalten.')) return;
+  probenplan=probenplan.filter(x=>x.datum<p.datum);
+  await dbFetch(DB+'/probenplan.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(probenplan)});
+  renderProben(); renderLieder();
+  showToast(betroffen.length+' Probe(n) gelöscht','ok');
+}
 async function deleteProbe(id,geplant=false){
   if(!confirm('Probe löschen?'))return;
   if(geplant){
@@ -4908,10 +5083,16 @@ function localToday(){
   const d=new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
+// Proben stehen jetzt auf der Termine-Seite (gemeinsame Liste mit Filter Alle / Proben / Auftritte).
+// renderProben baut nur noch die Probe-Karten (window._probeItems) und lässt renderTermine die gemeinsame Liste zeichnen.
+function _probeCard(color,badge,inner,extra){
+  return `<div class="termin-card" style="border-left-color:${color};${extra||''}"><span class="t-badge" style="background:${color}">${badge}</span>${inner}</div>`;
+}
 function renderProben(){
-  if(!D)return;
+  if(!D){ renderTermine(); return; }
   const allS=D.seasons.flatMap(s=>s.songs||[]);
   const today=localToday();
+  const longDate=iso=>new Date(iso+'T12:00:00').toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
 
   // Alle Proben aus BEIDEN Quellen zusammenführen, Quelle merken (für korrektes Löschen)
   const _doneIds=new Set((D.proben||[]).map(p=>p.id));
@@ -4920,64 +5101,50 @@ function renderProben(){
     ...((D.proben)||[]).map(p=>({...p,_src:'proben'}))
   ];
   // Einordnung NACH DATUM, nicht nach Quelle:
-  const upcoming=alle.filter(p=>p.datum>=today).sort((a,b)=>a.datum.localeCompare(b.datum));
-  const vergangen=alle.filter(p=>p.datum<today).sort((a,b)=>b.datum.localeCompare(a.datum));
+  const upcoming=alle.filter(p=>p.datum>=today);
+  const vergangen=alle.filter(p=>p.datum<today);
 
   // ===== GEPLANTE PROBEN (heute & zukünftig) =====
-  const planEl=document.getElementById('plan-list');
-  if(planEl){
-    if(!upcoming.length) planEl.innerHTML='<div class="empty" style="padding:16px">Keine Proben geplant.</div>';
-    else planEl.innerHTML=upcoming.map(p=>{
-      const songs=(p.songIds||[]).map(id=>{const s=allS.find(x=>x.id===id);return s?s.name:'?'}).join(', ');
-      const isGeplant=p._src==='plan';
-      if(p.abgesagt){
-        return`<div class="plan-item" style="background:#fdf2f2;border-left-color:#e74c3c"><div style="font-weight:700;color:#c0392b;margin-bottom:2px">❌ ${fmt(p.datum)} – Probe fällt aus</div>${p.abgesagt.grund?`<div style="font-size:.84rem;color:#922b21">Grund: ${esc(p.abgesagt.grund)}</div>`:''}${uiEdit('proben')?`<div class="act-row"><button class="btn btn-sm" style="background:#d5f5e3;color:#1a7a40" onclick="reinstateProbe('${p.id}',${isGeplant})">↩ Findet doch statt</button><button class="btn btn-danger btn-sm" onclick="deleteProbe('${p.id}',${isGeplant})">🗑️ Löschen</button></div>`:''}</div>`;
-      }
-      return`<div class="plan-item"><div style="font-weight:600;color:#1e8449;margin-bottom:2px">🎹 ${fmt(p.datum)}</div>${p.ort?`<div style="font-size:.8rem;color:#c0620f;font-weight:600">📍 ${esc(p.ort)}</div>`:''}${songs?`<div style="font-size:.8rem;color:#555">🎵 ${esc(songs)}</div>`:''}${p.notiz?`<div style="font-size:.8rem;color:#888;font-style:italic">💬 ${esc(p.notiz)}</div>`:''}${buildProbeAttendance(p)}${uiEdit('proben')?`<div class="act-row"><button class="btn btn-sm" style="background:#eef1f5;color:#1d4e96" onclick="editProbe('${p.id}',${isGeplant})">✏️ Bearbeiten</button><button class="btn btn-sm" style="background:#fdecea;color:#c0392b" onclick="cancelProbe('${p.id}',${isGeplant})">❌ Absagen</button><button class="btn btn-danger btn-sm" onclick="deleteProbe('${p.id}',${isGeplant})">🗑️ Löschen</button></div>`:''}</div>`;
-    }).join('');
-  }
+  const plan=upcoming.map(p=>{
+    const songs=(p.songIds||[]).map(id=>{const s=allS.find(x=>x.id===id);return s?s.name:'?'}).join(', ');
+    const isGeplant=p._src==='plan';
+    if(p.abgesagt){
+      return {d:p.datum,html:_probeCard('#e74c3c','❌ Probe fällt aus',`<div class="t-title">${esc(longDate(p.datum))}</div>${p.abgesagt.grund?`<div style="font-size:.84rem;color:#922b21">Grund: ${esc(p.abgesagt.grund)}</div>`:''}${uiEdit('proben')?`<div class="act-row"><button class="btn btn-sm" style="background:#d5f5e3;color:#1a7a40" onclick="reinstateProbe('${p.id}',${isGeplant})">↩ Findet doch statt</button><button class="btn btn-danger btn-sm" onclick="deleteProbe('${p.id}',${isGeplant})">🗑️ Löschen</button></div>`:''}`,'background:#fdf2f2')};
+    }
+    return {d:p.datum,html:_probeCard('#1e8449','🎹 Probe',`<div class="t-title">${esc(longDate(p.datum))}</div>${p.ort?`<div style="font-size:.8rem;color:#c0620f;font-weight:600">📍 ${esc(p.ort)}</div>`:''}${songs?`<div style="font-size:.8rem;color:#555;margin-top:2px">🎵 ${esc(songs)}</div>`:''}${p.notiz?`<div style="font-size:.8rem;color:#888;font-style:italic">💬 ${esc(p.notiz)}</div>`:''}${buildProbeAttendance(p)}${uiEdit('proben')?`<div class="act-row"><button class="btn btn-sm" style="background:#eef1f5;color:#1d4e96" onclick="editProbe('${p.id}',${isGeplant})">✏️ Bearbeiten</button><button class="btn btn-sm" style="background:#fdecea;color:#c0392b" onclick="cancelProbe('${p.id}',${isGeplant})">❌ Absagen</button><button class="btn btn-danger btn-sm" onclick="deleteProbe('${p.id}',${isGeplant})">🗑️ Löschen</button>${isGeplant?`<button class="btn btn-sm" style="background:#fff;border:1px solid #e74c3c;color:#c0392b" onclick="deleteProbeSeries('${p.id}')">🗑️ Ab hier alle</button>`:''}</div>`:''}`)};
+  });
 
   // ===== PROBENVERLAUF (vergangen) =====
-  const verlEl=document.getElementById('verlauf-list');
-  if(verlEl){
-    if(!vergangen.length){verlEl.innerHTML='<div class="empty" style="padding:16px">Noch keine Proben erfasst.</div>';}
-    else {
-      const _wasOpen=!!(document.getElementById('verlauf-aeltere')&&document.getElementById('verlauf-aeltere').open);
-      const _vi=vergangen.map(p=>{
-        const names=(p.songIds||[]).map(id=>{const s=allS.find(x=>x.id===id);return s?s.name:'?'}).join(', ');
-        // Geplante Probe, deren Datum vorbei ist, aber nie erfasst wurde
-        if(p._src==='plan'){
-          return`<div class="probe-item" style="border-left-color:#f39c12;background:#fffbf0;opacity:.8">
-            <div style="font-size:.72rem;font-weight:700;color:#f39c12;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px">Geplant (nicht erfasst)</div>
-            <div class="probe-date">📋 ${fmt(p.datum)}</div>
-            ${p.ort?`<div style="font-size:.8rem;color:#c0620f;font-weight:600">📍 ${esc(p.ort)}</div>`:''}
-            ${names?`<div class="probe-songs">🎵 ${esc(names)}</div>`:''}
-            ${p.notiz?`<div class="probe-notes">💬 ${esc(p.notiz)}</div>`:''}
-            ${uiEdit('proben')?`<div class="act-row"><button class="btn btn-sm" style="background:#eef1f5;color:#1d4e96" onclick="editProbe('${p.id}',true)">✏️ Bearbeiten</button><button class="btn btn-danger btn-sm" onclick="deleteProbe('${p.id}',true)">🗑️ Löschen</button></div>`:''}
-          </div>`;
-        }
-        const hw=p.hausaufgaben||{};
-        const hwHtml=Object.entries(hw).filter(([,v])=>v).map(([g,t])=>`<div style="font-size:.76rem;margin-top:2px"><strong>${esc(g)}:</strong> ${esc(t)}</div>`).join('');
-        return`<div class="probe-item">
-          <div class="probe-date">📅 ${fmt(p.datum)}</div>
-          ${p.ort?`<div style="font-size:.8rem;color:#c0620f;font-weight:600">📍 ${esc(p.ort)}</div>`:''}
-          <div class="probe-songs">🎵 ${esc(names)}</div>
-          ${p.notiz?`<div class="probe-notes">💬 ${esc(p.notiz)}</div>`:''}
-          ${hwHtml?`<div style="background:#fff8e7;border-radius:5px;padding:6px 8px;margin-top:6px;font-size:.78rem;color:#7d6608"><strong>📝 Hausaufgaben:</strong>${hwHtml}</div>`:''}
-          ${uiEdit('proben')?`<div class="act-row">
-            <button class="btn btn-sm" style="background:#eef1f5;color:#1d4e96" onclick="editProbe('${p.id}',false)">✏️ Bearbeiten</button>
-            <button class="btn btn-sm" style="background:#f39c12;color:white" onclick="editHausaufgaben('${p.id}')">📝 HA</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteProbe('${p.id}',false)">🗑️ Löschen</button>
-          </div>`:''}
-        </div>`;
-      });
-      // Die letzten 5 stehen offen da, ältere sind eingeklappt – sonst wird die Seite endlos lang
-      verlEl.innerHTML=_vi.slice(0,5).join('')+(_vi.length>5?`<details id="verlauf-aeltere" class="t-coll" style="margin-top:8px"${_wasOpen?' open':''}><summary style="cursor:pointer;font-size:.85rem;font-weight:700;color:var(--primary);padding:6px 0">Ältere Proben anzeigen (${_vi.length-5})</summary>${_vi.slice(5).join('')}</details>`:'');
+  const verlauf=vergangen.map(p=>{
+    const names=(p.songIds||[]).map(id=>{const s=allS.find(x=>x.id===id);return s?s.name:'?'}).join(', ');
+    // Geplante Probe, deren Datum vorbei ist, aber nie erfasst wurde
+    if(p._src==='plan'){
+      return {d:p.datum,html:_probeCard('#f39c12','📋 Probe (nicht erfasst)',`<div class="t-title">${esc(longDate(p.datum))}</div>
+        ${p.ort?`<div style="font-size:.8rem;color:#c0620f;font-weight:600">📍 ${esc(p.ort)}</div>`:''}
+        ${names?`<div class="probe-songs">🎵 ${esc(names)}</div>`:''}
+        ${p.notiz?`<div class="probe-notes">💬 ${esc(p.notiz)}</div>`:''}
+        ${uiEdit('proben')?`<div class="act-row"><button class="btn btn-sm" style="background:#eef1f5;color:#1d4e96" onclick="editProbe('${p.id}',true)">✏️ Bearbeiten</button><button class="btn btn-danger btn-sm" onclick="deleteProbe('${p.id}',true)">🗑️ Löschen</button></div>`:''}`,'opacity:.75')};
     }
-  }
+    const hw=p.hausaufgaben||{};
+    const hwHtml=Object.entries(hw).filter(([,v])=>v).map(([g,t])=>`<div style="font-size:.76rem;margin-top:2px"><strong>${esc(g)}:</strong> ${esc(t)}</div>`).join('');
+    return {d:p.datum,html:_probeCard('#1e8449','🎹 Probe',`<div class="t-title">${esc(longDate(p.datum))}</div>
+      ${p.ort?`<div style="font-size:.8rem;color:#c0620f;font-weight:600">📍 ${esc(p.ort)}</div>`:''}
+      <div class="probe-songs">🎵 ${esc(names)}</div>
+      ${p.notiz?`<div class="probe-notes">💬 ${esc(p.notiz)}</div>`:''}
+      ${hwHtml?`<div style="background:#fff8e7;border-radius:5px;padding:6px 8px;margin-top:6px;font-size:.78rem;color:#7d6608"><strong>📝 Hausaufgaben:</strong>${hwHtml}</div>`:''}
+      ${uiEdit('proben')?`<div class="act-row">
+        <button class="btn btn-sm" style="background:#eef1f5;color:#1d4e96" onclick="editProbe('${p.id}',false)">✏️ Bearbeiten</button>
+        <button class="btn btn-sm" style="background:#f39c12;color:white" onclick="editHausaufgaben('${p.id}')">📝 HA</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteProbe('${p.id}',false)">🗑️ Löschen</button>
+      </div>`:''}`,'opacity:.8')};
+  });
+  window._probeItems={plan,verlauf};
+  renderTermine();
 }
 
-// TERMINE
+// TERMINE (inkl. Proben)
+let terminFilter='alle'; // 'alle' | 'proben' | 'auftritte'
+function setTerminFilter(f){ terminFilter=f; renderTermine(); }
 function setTerminTab(v){
   aktiveTerminTab=v;
   ['anstehend','kalender','vergangen','geburtstage'].forEach(id=>{
@@ -4986,18 +5153,31 @@ function setTerminTab(v){
     const b=document.getElementById('t-btn-'+id);
     if(b) b.className='stab'+(v===id?' active':'');
   });
+  const _tf=document.getElementById('t-filter'); if(_tf) _tf.style.display=(v==='anstehend'||v==='vergangen')?'flex':'none';
   if(v==='kalender') renderKalender();
   if(v==='geburtstage') renderGeburtstage();
 }
 function renderTermine(){
   const today=new Date().toISOString().split('T')[0];
+  const isP=t=>t.typ==='probe';
+  const fP=terminFilter==='proben', fA=terminFilter==='auftritte';
+  ['alle','proben','auftritte'].forEach(k=>{ const b=document.getElementById('tfl-'+k); if(b) b.className='stab stab-s'+(terminFilter===k?' active':''); });
   const sorted=[...termine].sort((a,b)=>a.datum.localeCompare(b.datum));
-  const upcoming=sorted.filter(t=>(t.datum_ende||t.datum)>=today);
-  const past=sorted.filter(t=>(t.datum_ende||t.datum)<today);
+  const keepT=t=>fP?isP(t):(fA?!isP(t):true);
+  const upcoming=sorted.filter(t=>(t.datum_ende||t.datum)>=today&&keepT(t));
+  const past=sorted.filter(t=>(t.datum_ende||t.datum)<today&&keepT(t));
+  const pi=window._probeItems||{plan:[],verlauf:[]};
   const upEl=document.getElementById('t-anstehend');
   const pastEl=document.getElementById('t-vergangen');
-  if(upEl) upEl.innerHTML=upcoming.length?upcoming.map(t=>terminHtml(t)).join(''):'<div class="empty">Keine bevorstehenden Termine.</div>';
-  if(pastEl) pastEl.innerHTML=past.length?[...past].reverse().map(t=>terminHtml(t,true)).join(''):'<div class="empty">Keine vergangenen Termine.</div>';
+  // Gemeinsame Liste: Termine + Proben nach Datum (Proben zuerst, wenn am selben Tag)
+  const upItems=[...upcoming.map(t=>({d:t.datum,k:1,html:terminHtml(t)})),...(fA?[]:pi.plan.map(x=>({d:x.d,k:0,html:x.html})))].sort((a,b)=>a.d.localeCompare(b.d)||a.k-b.k);
+  if(upEl) upEl.innerHTML=upItems.length?upItems.map(x=>x.html).join(''):'<div class="empty">'+(fP?'Keine Proben geplant.':(fA?'Keine bevorstehenden Termine.':'Nichts geplant.'))+'</div>';
+  const pastItems=[...past.map(t=>({d:t.datum_ende||t.datum,html:terminHtml(t,true)})),...(fA?[]:pi.verlauf.map(x=>({d:x.d,html:x.html})))].sort((a,b)=>b.d.localeCompare(a.d));
+  // Die jüngsten 6 stehen offen da, ältere sind eingeklappt – sonst wird die Seite endlos lang
+  const _wasOpen=!!(document.getElementById('verlauf-aeltere')&&document.getElementById('verlauf-aeltere').open);
+  if(pastEl) pastEl.innerHTML=pastItems.length
+    ? pastItems.slice(0,6).map(x=>x.html).join('')+(pastItems.length>6?`<details id="verlauf-aeltere" class="t-coll" style="margin-top:8px"${_wasOpen?' open':''}><summary style="cursor:pointer;font-size:.85rem;font-weight:700;color:var(--primary);padding:6px 0">Ältere anzeigen (${pastItems.length-6})</summary>${pastItems.slice(6).map(x=>x.html).join('')}</details>`:'')
+    : '<div class="empty">'+(fP?'Noch keine Proben erfasst.':'Keine vergangenen Einträge.')+'</div>';
 }
 // ===== Termin-Rückmeldungen: jede Person genau EINMAL (Entdopplung über alle Namens-Varianten) =====
 const SATB_VOICES=['Sopran','Alt','Tenor','Bass'];
@@ -5113,12 +5293,28 @@ function terminHtml(t,past=false){
     <div class="t-meta">📅 ${dateStr}${t.uhrzeit?' &nbsp;🕐 '+esc(t.uhrzeit):''}${t.frist&&!past&&!infoOnly?` &nbsp;<span style="color:${t.frist<localToday()?'#e74c3c':'#7d6608'}">⏳ bis ${fmt(t.frist)}${t.frist<localToday()?' (abgelaufen)':''}</span>`:''}</div>
     ${(!past&&!infoOnly)?`<div class="vote-row" id="vrow-${t.id}">${buildVoteRow(t)}</div>`:''}
     ${infoOnly&&t.beschreibung?`<div style="font-size:.85rem;color:#555;margin:2px 0 4px">${esc(t.beschreibung)}</div>`:''}
-    ${setlisteHtml(t)}
-    ${ablaufplanBlock(t)}
-    ${checklisteBlock(t)}
-    ${!past?fahrtenBlock(t):''}
-    ${!past?aufgabenBlock(t):''}
-    ${showRueck?rueckmeldungenHtml(t, bd):''}
+    ${terminMoreOpen(t,past,infoOnly,bd,showRueck)}
+  </div>`;
+}
+// Alles unter der Zu-/Absage steht hinter EINER Zeile mit Kurzinfo (Rückmeldungen, Fahrten, Ablauf …) – Antippen klappt alles auf
+const _tmOpenSet=new Set();
+function _tmOpen(id,on){ if(on) _tmOpenSet.add(id); else _tmOpenSet.delete(id); }
+function terminMoreOpen(t,past,infoOnly,bd,showRueck){
+  const chips=[];
+  if(showRueck) chips.push(`<span class="tm-c"><span style="color:#22a559">✅ ${bd.ja.length}</span> <span style="color:#f39c12">❓ ${bd.vl.length}</span> <span style="color:#e74c3c">❌ ${bd.nein.length}</span>${bd.notVoted.length?` <span style="color:#999">· ${bd.notVoted.length} offen</span>`:''}</span>`);
+  if(!past&&fahrtenAn(t)){
+    const bs=fahrtEntries(t.id).filter(e=>e.typ==='biete'); const fr=bs.reduce((s,e)=>s+Math.max(0,(parseInt(e.plaetze)||0)-fahrtPassengers(e).length),0);
+    chips.push(`<span class="tm-c">🚗 ${bs.length?fr+(fr===1?' Platz frei':' Plätze frei'):'Fahrgemeinschaft'}</span>`);
+  }
+  const ck=t.checkliste||{};
+  if(normSetliste(t.setliste).length) chips.push('<span class="tm-c">🎵 Setliste</span>');
+  if(Array.isArray(t.ablaufplan)&&t.ablaufplan.length) chips.push('<span class="tm-c">🕐 Ablauf</span>');
+  if(ck.treffpunkt||ck.treffzeit||ck.kleidung||ck.mappe||(Array.isArray(ck.extra)&&ck.extra.length)) chips.push('<span class="tm-c">📋 Checkliste</span>');
+  if(!past&&t.aufgaben===true) chips.push('<span class="tm-c">🧰 Aufgaben</span>');
+  if(!chips.length) chips.push('<span class="tm-c">ℹ️ Details</span>');
+  const inner=[setlisteHtml(t),ablaufplanBlock(t),checklisteBlock(t),!past?fahrtenBlock(t):'',!past?aufgabenBlock(t):'',showRueck?rueckmeldungenHtml(t,bd):''].join('').replace(/<details class="t-coll">/g,'<details class="t-coll" open>');
+  return `<details class="t-more"${_tmOpenSet.has(t.id)?' open':''} ontoggle="_tmOpen('${esc(t.id)}',this.open)"><summary class="t-more-sum"><span class="tm-chips">${chips.join('')}</span><span class="rb-chev">▾</span></summary><div class="t-more-body">
+    ${inner}
     <details class="t-coll"><summary>ℹ️ Details${t.beschreibung?' & Beschreibung':''}</summary><div>
       ${t.beschreibung?`<div style="font-size:.84rem;color:#555;margin-bottom:8px">${esc(t.beschreibung)}</div>`:''}
       ${t.frist&&!past?`<div style="font-size:.78rem;color:#7d6608;margin-bottom:8px">⏳ Rückmeldefrist: <strong>${fmt(t.frist)}</strong></div>`:''}
@@ -5131,7 +5327,7 @@ function terminHtml(t,past=false){
         `:''}
       </div>
     </div></details>
-  </div>`;
+  </div></details>`;
 }
 // Stabiler Schlüssel zum SPEICHERN von Stimmen: Benutzername (ändert sich nie).
 // Die ANZEIGE läuft über prettyName(), daher schlägt eine Anzeigenamen-Änderung automatisch durch.
@@ -5703,16 +5899,27 @@ async function submitKommentar(){
 
 // ADMIN KONSOLE
 // Konsole: Menü-Navigation rechts
+// Zwei Ebenen: Rubrik (kg) → Bereiche (km). Es sind immer nur die Bereiche der gewählten Rubrik zu sehen.
+function konsoleShowGroup(g){
+  document.querySelectorAll('#p-konsole .kg').forEach(b=>b.classList.toggle('active', b.getAttribute('data-g')===g));
+  document.querySelectorAll('#p-konsole .km').forEach(b=>b.classList.toggle('km-off', b.getAttribute('data-g')!==g));
+}
+function konsoleGroup(g){
+  konsoleShowGroup(g);
+  const first=document.querySelector('#p-konsole .km[data-g="'+g+'"]'); if(first) konsoleNav(first.getAttribute('data-kp'));
+}
 function konsoleNav(id){
   document.querySelectorAll('#p-konsole .konsole-pane').forEach(p=>p.classList.toggle('active', p.id==='kp-'+id));
   document.querySelectorAll('#p-konsole .km').forEach(b=>b.classList.toggle('active', b.getAttribute('data-kp')===id));
+  const ab=document.querySelector('#p-konsole .km[data-kp="'+id+'"]'); if(ab) konsoleShowGroup(ab.getAttribute('data-g'));
   const c=document.querySelector('.konsole-content'); if(c) c.scrollTop=0;
   // Handy: aktiven Menüpunkt in die Mitte der Leiste holen und den Inhalt direkt unter der Leiste zeigen
   try{
-    const act=document.querySelector('#p-konsole .km.active'); const menu=document.querySelector('#p-konsole .konsole-menu');
+    const act=document.querySelector('#p-konsole .km.active'); const menu=document.querySelector('#p-konsole .km-list');
     if(act&&menu&&menu.scrollWidth>menu.clientWidth){ menu.scrollLeft=act.offsetLeft-(menu.clientWidth-act.offsetWidth)/2; }
-    if(c&&menu&&getComputedStyle(menu).position==='sticky'){
-      const top=c.getBoundingClientRect().top+window.scrollY-menu.offsetHeight-8;
+    const sticky=document.querySelector('#p-konsole .konsole-menu');
+    if(c&&sticky&&getComputedStyle(sticky).position==='sticky'){
+      const top=c.getBoundingClientRect().top+window.scrollY-sticky.offsetHeight-8;
       if(window.scrollY>top) window.scrollTo(0,Math.max(0,top));
     }
   }catch(e){}
@@ -7335,6 +7542,26 @@ async function releasePlakat(key){
   await dbFetch(DB+'/plakate/'+key+'/von.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify('')});
   await loadPlakate();
 }
+function plkToggleEdit(key){ const e=document.getElementById('plk-edit-'+key); if(e) e.style.display=(e.style.display==='none')?'flex':'none'; }
+// Kopfkarte: „＋ Standort“ klappt das Formular auf, „🗺️ Karte“ blendet die Karte ein und springt dorthin
+function plkOpenAdd(){ const d=document.getElementById('plk-add'); if(!d) return; d.open=true; try{ d.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){} const i=document.getElementById('pl-ort'); if(i) setTimeout(()=>i.focus(),300); }
+async function plkShowMap(){
+  // Karte als eigene Ansicht: Segment umschalten, Karte laden, dorthin scrollen
+  if(typeof plkView!=='undefined' && plkView!=='karte'){ plkView='karte'; renderPlakate(); }
+  const m=document.getElementById('plakate-map');
+  if(m&&m.style.display==='none') await togglePlakateKarte();
+  const c=document.getElementById('plk-map-card'); if(c){ try{ c.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){} }
+}
+// ===== PLAKATE: Übersicht (Ortschafts-Kacheln) + Ansicht Offen / Übernommen / Meine / Karte + schlanke Zeilen =====
+let plkView='offen', plkOrt='';
+function plkIsMine(p){
+  const mn=getUserVoteName(); if(!mn||!p.von) return false;
+  const a=_norm(p.von);
+  return a===_norm(mn) || a===_norm(prettyName(mn)||'');
+}
+function setPlkView(v){ plkView=v; renderPlakate(); if(v==='karte') plkShowMap(); }
+function setPlkOrt(o){ plkOrt=(plkOrt===o)?'':o; if(plkView==='karte') plkView='offen'; renderPlakate(); }
+function plkToggleRow(k){ const r=document.getElementById('plk-r-'+k); if(r) r.classList.toggle('open'); }
 function renderPlakate(){
   const el=document.getElementById('plakate-list');
   if(!el)return;
@@ -7346,75 +7573,88 @@ function renderPlakate(){
   if(vs && !vs.childElementCount) vs.innerHTML=PLAKAT_VORSCHLAEGE.map(v=>`<button type="button" onclick="plVorschlag('${esc(v)}')" style="background:#eef3fa;color:#1b3a6b;border:1.5px solid transparent;border-radius:16px;padding:4px 11px;font-size:.78rem;cursor:pointer;font-family:inherit">${esc(v)}</button>`).join('');
   const stats=document.getElementById('plakate-stats');
   const total=plakate.length, taken=plakate.filter(p=>p.von).length;
-  if(stats) stats.textContent = total ? (taken+' von '+total+' übernommen') : '';
-  // Fortschrittsbalken
+  if(stats) stats.textContent = total ? (taken+' von '+total+' übernommen · '+(total-taken)+' offen') : 'Noch keine Standorte';
   const prog=document.getElementById('plakate-progress'), fill=document.getElementById('plakate-progress-fill');
   if(prog&&fill){ prog.style.display=total?'':'none'; fill.style.width=total?Math.round(taken/total*100)+'%':'0%'; }
+  const tilesEl=document.getElementById('plk-tiles'), segEl=document.getElementById('plk-seg'), srch=document.getElementById('plk-search-row'), mapCard=document.getElementById('plk-map-card');
   if(!plakate.length){
     el.innerHTML='<div class="empty" style="padding:24px">Noch keine Plakat-Standorte angelegt.</div>';
+    if(tilesEl) tilesEl.innerHTML=''; if(segEl) segEl.innerHTML=''; if(srch) srch.style.display='none'; if(mapCard) mapCard.style.display='none';
     const rc=document.getElementById('plakate-ranking-card'); if(rc) rc.style.display='none';
     return;
   }
   const myName=getUserVoteName();
-  const karte=(p,distKm)=>{
-    const done=!!p.von;
-    const maps=navLinkFor(p);
-    const del=canManage?`<button class="btn btn-sm" style="flex-shrink:0;padding:2px 8px;background:#eef1f5;color:#1d4e96" title="Bearbeiten" onclick="editPlakat('${p._key}')">✏️</button><button class="btn btn-danger btn-sm" style="flex-shrink:0;padding:2px 8px" onclick="deletePlakat('${p._key}')">✕</button>`:'';
-    // Aktion rechts: eingeloggt = nur Button; Gast = Namensfeld + Button
-    const action=done
-      ? `<button class="btn btn-sm btn-gray" style="font-size:.72rem;flex-shrink:0" onclick="releasePlakat('${p._key}')">↩ freigeben</button>`
-      : (myName
-        ? `<button class="btn btn-sm btn-success" style="font-size:.78rem;flex-shrink:0" onclick="claimPlakat('${p._key}')">✋ Übernehmen</button>`
-        : `<span style="display:flex;gap:5px;align-items:center;flex-shrink:0"><input class="fl-input" id="pl-name-${p._key}" placeholder="Dein Name" style="width:110px;padding:5px 8px;font-size:.8rem;margin:0"><button class="btn btn-sm btn-success" style="font-size:.78rem" onclick="claimPlakat('${p._key}')">✋</button></span>`);
-    const distBadge = distKm!=null ? `<span style="background:#eef3fa;color:#1d4e96;font-size:.72rem;font-weight:700;padding:1px 8px;border-radius:10px;margin-left:6px">📍 ~${distKm.toFixed(1)} km</span>` : '';
-    // Zuordnungs-Hilfe: wer wohnt am nächsten? (nur bei offenen Standorten mit Koordinaten, hilft beim gezielten Zuteilen)
-    let nearMembers='';
-    if(!done && typeof p.lat==='number' && typeof p.lng==='number'){
-      const near=nearestMembersToPoint(p.lat,p.lng,3);
-      if(near.length) nearMembers=`<div style="font-size:.72rem;color:#a06020;margin-top:3px">🏠 in der Nähe: ${near.map(x=>esc(prettyName(x.m.username)||memberName(x.m))+' ('+x.dist.toFixed(1)+' km)').join(', ')}</div>`;
+  // --- Kacheln je Ortschaft: Fortschritt auf einen Blick; Tippen filtert die Liste ---
+  const g={}; plakate.forEach(p=>{ const k=p.ortschaft||'Sonstiges'; (g[k]=g[k]||[]).push(p); });
+  const orte=[...PLAKAT_ORTSCHAFTEN.filter(o=>g[o]), ...Object.keys(g).filter(x=>!PLAKAT_ORTSCHAFTEN.includes(x)).sort()];
+  if(tilesEl) tilesEl.innerHTML=orte.map(o=>{ const t=g[o].length, d=g[o].filter(p=>p.von).length; const full=d===t;
+    return `<button class="plk-tile${plkOrt===o?' on':''}" onclick="setPlkOrt('${esc(o).replace(/'/g,'&#39;')}')"><b>${esc(o)}</b><small>${full?'✅ ':''}${d} / ${t}</small><div class="plk-bar"><i style="width:${Math.round(d/t*100)}%${full?';background:#1a7a40':''}"></i></div></button>`; }).join('');
+  // --- Ansicht: Offen / Übernommen / Meine / Karte ---
+  const mine=plakate.filter(plkIsMine);
+  const seg=[['offen','Offen ('+(total-taken)+')'],['fertig','Übernommen ('+taken+')']];
+  if(myName) seg.push(['meine','Meine ('+mine.length+')']);
+  seg.push(['karte','🗺️ Karte']);
+  if(!seg.some(s=>s[0]===plkView)) plkView='offen';
+  if(segEl) segEl.innerHTML=seg.map(([k,l])=>`<button class="stab stab-s${plkView===k?' active':''}" onclick="setPlkView('${k}')">${l}</button>`).join('');
+  if(srch) srch.style.display=(plkView==='karte')?'none':'';
+  if(mapCard) mapCard.style.display=(plkView==='karte')?'':'none';
+  el.style.display=(plkView==='karte')?'none':'';
+  // --- Zeilen ---
+  const _q=((document.getElementById('plk-search')||{}).value||'').trim().toLowerCase();
+  const _hit=p=>(!plkOrt||(p.ortschaft||'Sonstiges')===plkOrt)&&(!_q||[p.ort,p.adresse,p.ortschaft,p.notiz,p.von].some(x=>String(x||'').toLowerCase().includes(_q)));
+  const row=(p,distKm)=>{
+    const done=!!p.von, key=p._key, maps=navLinkFor(p);
+    const sub=[p.adresse||'', distKm!=null?'~'+distKm.toFixed(1)+' km':'', p.anzahl?p.anzahl+'×':''].filter(Boolean).join(' · ');
+    const claim = done
+      ? `<span class="plk-who">✅ ${esc(prettyName(p.von)||p.von)}</span>`
+      : (myName ? `<button class="plk-claim" onclick="event.stopPropagation();claimPlakat('${key}')">✋ Übernehmen</button>` : `<button class="plk-claim" onclick="event.stopPropagation();plkToggleRow('${key}')">✋ Übernehmen</button>`);
+    let near='';
+    if(!done && canPin() && editMode && typeof p.lat==='number' && typeof p.lng==='number'){
+      const nm=nearestMembersToPoint(p.lat,p.lng,3);
+      if(nm.length) near=`<div style="color:#a06020;margin-top:4px">🏠 in der Nähe: ${nm.map(x=>esc(prettyName(x.m.username)||memberName(x.m))+' ('+x.dist.toFixed(1)+' km)').join(', ')}</div>`;
     }
-    return `<div style="border-left:4px solid ${done?'#27ae60':'#f39c12'};padding:9px 12px;margin-bottom:7px;background:${done?'#f4faf5':'#fffdf5'};border-radius:0 8px 8px 0">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
-        <div style="flex:1;min-width:150px">
-          <span style="font-weight:600;font-size:.9rem;color:#1b3a6b">${esc(p.ort)}</span>${distBadge}
-          ${p.anzahl?`<span style="font-size:.76rem;color:#888"> · ${esc(p.anzahl)}×</span>`:''}
-          ${done?`<div style="font-size:.78rem;color:#1a7a40;margin-top:1px">✅ ${esc(p.von)}</div>`:''}
-          ${(p.adresse||maps)?`<div style="font-size:.76rem;color:#777;margin-top:1px">${p.adresse?'📍 '+esc(p.adresse)+' ':''}${maps}</div>`:''}
-          ${p.notiz?`<div style="font-size:.76rem;color:#999;font-style:italic;margin-top:1px">💬 ${esc(p.notiz)}</div>`:''}
-          ${nearMembers}
-        </div>
-        <div style="display:flex;gap:6px;align-items:center">${action}${del}</div>
-      </div>
-    </div>`;
+    const guest=(!myName&&!done)?`<div style="display:flex;gap:6px;margin-top:8px"><input class="fl-input" id="pl-name-${key}" placeholder="Dein Name" style="margin:0;flex:1"><button class="btn btn-sm btn-success" onclick="claimPlakat('${key}')">✋ Eintragen</button></div>`:'';
+    const acts=`<div class="acts">${done?`<button class="btn btn-sm btn-gray" onclick="releasePlakat('${key}')">↩ Freigeben</button>`:''}${canManage?`<button class="btn btn-sm" style="background:#eef1f5;color:#1d4e96" onclick="editPlakat('${key}')">✏️ Bearbeiten</button><button class="btn btn-danger btn-sm" onclick="deletePlakat('${key}')">✕ Löschen</button>`:''}</div>`;
+    return `<div class="plk-row${done?' done':''}" id="plk-r-${key}">
+      <div class="plk-line" onclick="plkToggleRow('${key}')"><div class="plk-t"><b>${esc(p.ort)}</b>${sub?`<small>${esc(sub)}</small>`:''}</div>${claim}</div>
+      <div class="plk-det">
+        ${p.adresse?`<div>📍 ${esc(p.adresse)}</div>`:''}${maps?`<div style="margin-top:2px">${maps}</div>`:''}
+        ${p.ortschaft?`<div style="margin-top:2px">🏘️ ${esc(p.ortschaft)}</div>`:''}
+        ${p.notiz?`<div style="margin-top:2px;font-style:italic;color:#888">💬 ${esc(p.notiz)}</div>`:''}
+        ${done?`<div style="margin-top:2px;color:#1a7a40">✅ Übernommen von <b>${esc(prettyName(p.von)||p.von)}</b></div>`:''}
+        ${near}${guest}${acts}
+      </div></div>`;
   };
-  // Oben: Offen / Übernommen — darunter jeweils nach Ortschaft unterteilt
-  const nachOrtschaft=list=>{
-    const g={}; list.forEach(p=>{ const k=p.ortschaft||'Sonstiges'; (g[k]=g[k]||[]).push(p); });
-    const order=[...PLAKAT_ORTSCHAFTEN.filter(o=>g[o]), ...Object.keys(g).filter(x=>!PLAKAT_ORTSCHAFTEN.includes(x)).sort()];
-    return order.map(o=>`<div style="font-size:.74rem;font-weight:700;color:#8a97a8;margin:9px 0 4px">📍 ${esc(o)} (${g[o].length})</div>`+g[o].map(p=>karte(p)).join('')).join('');
+  const gruppen=list=>{
+    const gg={}; list.forEach(p=>{ const k=p.ortschaft||'Sonstiges'; (gg[k]=gg[k]||[]).push(p); });
+    const ord=[...PLAKAT_ORTSCHAFTEN.filter(o=>gg[o]), ...Object.keys(gg).filter(x=>!PLAKAT_ORTSCHAFTEN.includes(x)).sort()];
+    const showHead=ord.length>1 || !plkOrt;
+    return ord.map(o=>(showHead?`<div class="plk-grp"><span>${esc(o)} (${gg[o].length})</span></div>`:'')+gg[o].sort((a,b)=>String(a.ort).localeCompare(String(b.ort),'de')).map(p=>row(p)).join('')).join('');
   };
-  const offen=plakate.filter(p=>!p.von), fertig=plakate.filter(p=>p.von);
   let html='';
-  // „In deiner Nähe" — nur wenn eigener Wohnort bekannt & mind. 1 Treffer, ganz oben vor der Ortschafts-Gliederung
-  const nearby=nearestOpenPlakate(5);
-  if(nearby.length){
-    const routeBtn = nearby.length>1 ? `<button class="btn btn-sm" style="background:#eef3fa;color:#1b3a6b;font-size:.72rem;padding:3px 10px;flex-shrink:0" onclick="openPlakateRoute()">🗺️ Route planen (${nearby.length})</button>` : '';
-    html+=`<div class="section-label" style="color:#1d4e96;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap"><span>📍 In deiner Nähe</span>${routeBtn}</div>`+nearby.map(x=>karte(x.p,x.dist)).join('');
-  }
-  if(offen.length){
-    html+=`<div class="section-label" style="color:#b9770e">🟠 Noch zu verteilen (${offen.length})</div>`+nachOrtschaft(offen);
-  } else if(total){
-    html+=`<div style="background:#d5f5e3;color:#1a7a40;border-radius:8px;padding:10px 14px;font-size:.88rem;font-weight:600;margin-bottom:10px">🎉 Alle Standorte sind übernommen!</div>`;
-  }
-  if(fertig.length){
-    html+=`<details class="t-coll" style="margin-top:10px"><summary>✅ Übernommen (${fertig.length})</summary><div style="padding-top:4px">${nachOrtschaft(fertig)}</div></details>`;
+  if(plkView==='offen'){
+    let list=plakate.filter(p=>!p.von&&_hit(p));
+    // „In deiner Nähe“ nur ohne Filter: die nächsten offenen Standorte zum eigenen Wohnort, mit Route
+    const nb=(!plkOrt&&!_q)?nearestOpenPlakate(5):[];
+    if(nb.length){
+      const rb=nb.length>1?`<button class="btn btn-sm" style="background:#eef3fa;color:#1b3a6b;padding:3px 10px" onclick="openPlakateRoute()">🧭 Route (${nb.length})</button>`:'';
+      html+=`<div class="plk-grp" style="color:#1d4e96"><span>📍 In deiner Nähe</span>${rb}</div>`+nb.map(x=>row(x.p,x.dist)).join('');
+      const ids=new Set(nb.map(x=>x.p._key)); list=list.filter(p=>!ids.has(p._key));
+    }
+    html+= list.length ? gruppen(list) : (nb.length?'':(total-taken===0?'<div style="background:#d5f5e3;color:#1a7a40;border-radius:10px;padding:12px 14px;font-weight:700">🎉 Alle Standorte sind übernommen!</div>':'<div class="empty">Keine passenden Standorte.</div>'));
+  } else if(plkView==='fertig'){
+    const list=plakate.filter(p=>p.von&&_hit(p));
+    html=list.length?gruppen(list):'<div class="empty">Noch nichts übernommen.</div>';
+  } else if(plkView==='meine'){
+    const list=plakate.filter(p=>plkIsMine(p)&&_hit(p));
+    html=list.length?gruppen(list):'<div class="empty">Du hast noch keinen Standort übernommen.</div>';
   }
   el.innerHTML=html;
   // 🏆 Verteiler-Statistik: Standorte (und Plakat-Anzahl, falls erfasst) pro Person
   const rankCard=document.getElementById('plakate-ranking-card'), rankEl=document.getElementById('plakate-ranking');
   if(rankCard && rankEl){
     const rank={};
-    fertig.forEach(p=>{
+    plakate.filter(p=>p.von).forEach(p=>{
       const n=prettyName(p.von)||p.von;
       if(!rank[n]) rank[n]={standorte:0, stueck:0};
       rank[n].standorte++;
@@ -8903,69 +9143,193 @@ async function markPinnwandRead(id){
 }
 
 // ===== FAHRGEMEINSCHAFTEN (pro Termin) =====
+// Daten: fahrten/<terminId>/<Schlüssel> = {typ:'biete'|'suche', name, plaetze, ort, zeit, notiz, ts, mitfahrer:{<Schlüssel>:{name,ts}}}
+//  - „biete“: Fahrer*in mit Plätzen; andere treten über „Mitfahren“ bei (mitfahrer)
+//  - „suche“: sucht noch eine Mitfahrgelegenheit; Fahrer*innen können sie mit „Mitnehmen“ aufnehmen
 async function loadFahrten(){ const d=await dbGet('fahrten',{}); if(d!==undefined) fahrten=d; }
-// Pro Termin: Fahrgemeinschaften an/aus (nur Bearbeiter schalten; standardmäßig aus)
+// Standard: für alle Termine außer Proben an (Bearbeiter können pro Termin ein-/ausschalten)
+function fahrtenAn(t){ return t.fahrten===true || (t.fahrten===undefined && t.typ!=='probe'); }
 function fahrtenBlock(t){
-  const on = t.fahrten===true;
-  const canEdit = uiEdit('termine');
+  const on=fahrtenAn(t);
+  const canEdit=uiEdit('termine');
   if(on){
-    const off = canEdit ? `<div style="text-align:right;margin-top:2px"><button class="btn btn-sm" style="background:transparent;color:#e74c3c;font-size:.7rem;padding:1px 6px" onclick="toggleFahrtenAktiv('${esc(t.id)}')">🚗 Fahrgemeinschaften deaktivieren</button></div>` : '';
+    const off=canEdit?`<div style="text-align:right;margin-top:2px"><button class="btn btn-sm" style="background:transparent;color:#e74c3c;font-size:.7rem;padding:1px 6px" onclick="toggleFahrtenAktiv('${esc(t.id)}')">🚗 Fahrgemeinschaften deaktivieren</button></div>`:'';
     return fahrtenHtml(t)+off;
   }
-  return canEdit ? `<button class="btn btn-sm" style="background:#eef7f0;color:#1a7a40;font-size:.72rem;margin:3px 0" onclick="toggleFahrtenAktiv('${esc(t.id)}')">🚗 Fahrgemeinschaften aktivieren</button>` : '';
+  return canEdit?`<button class="btn btn-sm" style="background:#eef7f0;color:#1a7a40;font-size:.72rem;margin:3px 0" onclick="toggleFahrtenAktiv('${esc(t.id)}')">🚗 Fahrgemeinschaften aktivieren</button>`:'';
 }
 async function toggleFahrtenAktiv(id){
   if(!uiEdit('termine')){ alert('Nur im Bearbeiten-Modus.'); return; }
   const t=termine.find(x=>x.id===id); if(!t) return;
   const idx=termine.indexOf(t);
-  t.fahrten=!t.fahrten;
+  t.fahrten=!fahrtenAn(t);
   await dbPut('termine/'+idx+'/fahrten', !!t.fahrten).catch(e=>console.warn(e));
   renderTermine();
 }
+const _fk=k=>encodeURIComponent(String(k)).replace(/'/g,'%27');
+const _fdk=k=>decodeURIComponent(String(k));
+function fahrtEntries(terminId){
+  const f=(fahrten&&fahrten[terminId])||{};
+  return Object.entries(f).map(([k,v])=>Object.assign({_key:k},v||{})).filter(x=>x&&x.typ);
+}
+function fahrtPassengers(e){ return Object.entries(e.mitfahrer||{}).map(([k,v])=>({key:k,name:(v&&v.name)||'?'})); }
+// Wo bin ich in diesem Termin eingetragen? -> {rolle:'fahrer'|'mitfahrer'|'sucht', entry}
+function fahrtMine(entries,myk){
+  if(!myk) return null;
+  const own=entries.find(e=>e._key===myk);
+  if(own) return {rolle:own.typ==='biete'?'fahrer':'sucht',entry:own};
+  const drv=entries.find(e=>e.typ==='biete'&&e.mitfahrer&&e.mitfahrer[myk]);
+  return drv?{rolle:'mitfahrer',entry:drv}:null;
+}
 function fahrtenHtml(t){
-  const f=(fahrten&&fahrten[t.id])||{};
-  const entries=Object.entries(f).map(([k,v])=>Object.assign({_key:k},v||{})).filter(x=>x&&x.typ);
-  const biete=entries.filter(e=>e.typ==='biete');
+  const entries=fahrtEntries(t.id);
+  const biete=entries.filter(e=>e.typ==='biete').sort((a,b)=>(a.zeit||'').localeCompare(b.zeit||'')||(a.ts||0)-(b.ts||0));
   const suche=entries.filter(e=>e.typ==='suche');
   const myk=myKey();
-  const mine=myk?entries.find(e=>e._key===myk):null;
-  const freeSeats=biete.reduce((s,e)=>s+(parseInt(e.plaetze)||0),0);
-  const row=(e,ic)=>`<div style="display:flex;align-items:center;gap:6px;font-size:.82rem;padding:2px 0">
-      <span>${ic}</span><span style="flex:1">${esc(prettyName(e.name)||e.name||'?')}${e.ort?` <span style="color:#888">· ab ${esc(e.ort)}</span>`:''}${e.typ==='biete'?` <span style="color:#27ae60">(${parseInt(e.plaetze)||0} Pl.)</span>`:''}</span>
-      ${(e._key===myk)?`<button class="btn btn-danger btn-sm" style="opacity:1;position:static;padding:2px 7px" onclick="removeFahrt('${esc(t.id)}')">✕</button>`:''}
+  const loggedIn=(typeof currentUser!=='undefined'&&currentUser);
+  const mine=fahrtMine(entries,myk);
+  const tid=esc(t.id);
+  const free=e=>Math.max(0,(parseInt(e.plaetze)||0)-fahrtPassengers(e).length);
+  const freeTotal=biete.reduce((s,e)=>s+free(e),0);
+  const pn=n=>esc(prettyName(n)||n||'?');
+
+  const offerCard=e=>{
+    const pass=fahrtPassengers(e), fr=free(e), isMine=e._key===myk, iAmPass=!!(e.mitfahrer&&e.mitfahrer[myk]);
+    const meta=[e.zeit?'🕐 '+esc(e.zeit):'', e.ort?'📍 ab '+esc(e.ort):''].filter(Boolean).join(' · ');
+    const passHtml=pass.length?pass.map(p=>`<span class="org-chip">${pn(p.name)}${(isMine||p.key===myk)?`<button aria-label="Entfernen" onclick="leaveFahrt('${tid}','${_fk(e._key)}','${_fk(p.key)}')">✕</button>`:''}</span>`).join(''):'<span style="font-size:.78rem;color:#aaa">noch niemand</span>';
+    let act='';
+    if(loggedIn){
+      if(isMine) act=`<button class="btn btn-sm" style="background:#fdecea;color:#c0392b" onclick="removeFahrt('${tid}')">Angebot löschen</button>`;
+      else if(iAmPass) act=`<button class="btn btn-sm" style="background:#eef1f5;color:#1d4e96" onclick="leaveFahrt('${tid}','${_fk(e._key)}','${_fk(myk)}')">Aussteigen</button>`;
+      else if(!mine||mine.rolle==='sucht'||mine.rolle==='mitfahrer') act=fr>0?`<button class="btn btn-sm" style="background:#27ae60;color:#fff" onclick="joinFahrt('${tid}','${_fk(e._key)}')">🚗 ${mine&&mine.rolle==='mitfahrer'?'Hierher wechseln':'Mitfahren'}</button>`:'<span style="font-size:.76rem;color:#c0392b;font-weight:700">voll</span>';
+    }
+    return `<div class="org-post" style="margin:6px 0 0">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap"><strong style="font-size:.9rem">🚗 ${pn(e.name)}</strong><span style="font-size:.78rem;font-weight:700;color:${fr?'#1a7a40':'#c0392b'}">${fr?fr+' von '+(parseInt(e.plaetze)||0)+' Plätzen frei':'voll'}</span></div>
+      ${meta?`<div style="font-size:.8rem;color:#666;margin-top:3px">${meta}</div>`:''}
+      ${e.notiz?`<div style="font-size:.78rem;color:#888;margin-top:2px">💬 ${esc(e.notiz)}</div>`:''}
+      <div style="margin-top:6px">${passHtml}</div>
+      ${act?`<div style="margin-top:6px">${act}</div>`:''}
     </div>`;
+  };
+  const myOfferOpen=mine&&mine.rolle==='fahrer'&&free(mine.entry)>0;
+  const seekRow=e=>{
+    const isMine=e._key===myk;
+    const take=(myOfferOpen&&!isMine)?`<button class="btn btn-sm" style="background:#27ae60;color:#fff;padding:3px 9px" onclick="takeSeeker('${tid}','${_fk(e._key)}')">Mitnehmen</button>`:'';
+    return `<div style="display:flex;align-items:center;gap:8px;font-size:.84rem;padding:3px 0;flex-wrap:wrap"><span style="flex:1;min-width:120px">🙋 ${pn(e.name)}${e.ort?` <span style="color:#888">· Zustieg ${esc(e.ort)}</span>`:''}${e.notiz?` <span style="color:#888">· ${esc(e.notiz)}</span>`:''}</span>${take}${isMine?`<button class="btn btn-danger btn-sm" style="opacity:1;position:static;padding:2px 7px" onclick="removeFahrt('${tid}')">✕</button>`:''}</div>`;
+  };
   const lists=`
-    ${biete.length?`<div style="margin-top:4px"><strong style="font-size:.76rem;color:#1a7a40">🚗 Bietet Mitfahrt (${freeSeats} Plätze):</strong>${biete.map(e=>row(e,'🚗')).join('')}</div>`:''}
-    ${suche.length?`<div style="margin-top:4px"><strong style="font-size:.76rem;color:#a05a00">🙋 Sucht Mitfahrt (${suche.length}):</strong>${suche.map(e=>row(e,'🙋')).join('')}</div>`:''}
-    ${(!biete.length&&!suche.length)?'<div style="font-size:.8rem;color:#aaa;margin-top:4px">Noch keine Einträge.</div>':''}`;
-  const actions = (typeof currentUser!=='undefined'&&currentUser) ? (mine
-    ? `<div style="font-size:.76rem;color:#888;margin-top:8px">Dein Eintrag: ${mine.typ==='biete'?'🚗 du bietest Mitfahrt':'🙋 du suchst Mitfahrt'} · <a href="#" onclick="removeFahrt('${esc(t.id)}');return false" style="color:#e74c3c">entfernen</a></div>`
-    : `<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
-        <button class="btn btn-sm" style="background:#27ae60;color:#fff;font-size:.74rem" onclick="addFahrt('${esc(t.id)}','biete')">🚗 Ich biete Plätze</button>
-        <button class="btn btn-sm" style="background:#e67e22;color:#fff;font-size:.74rem" onclick="addFahrt('${esc(t.id)}','suche')">🙋 Ich suche Mitfahrt</button>
-      </div>`) : '';
-  const total=entries.length;
-  return `<details class="t-coll"><summary>🚗 Fahrgemeinschaft${total?` · ${total}`:''}</summary><div>${lists}${actions}</div></details>`;
+    ${biete.length?biete.map(offerCard).join(''):'<div style="font-size:.82rem;color:#aaa;margin-top:6px">Noch kein Fahrangebot.</div>'}
+    ${suche.length?`<div style="margin-top:10px"><strong style="font-size:.78rem;color:#a05a00">🙋 Suchen noch eine Mitfahrgelegenheit (${suche.length}):</strong>${suche.map(seekRow).join('')}</div>`:''}`;
+  let actions='';
+  if(loggedIn){
+    if(!mine) actions=`<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn btn-sm" style="background:#27ae60;color:#fff" onclick="openFahrtForm('${tid}','biete')">🚗 Ich biete Plätze an</button>
+        <button class="btn btn-sm" style="background:#e67e22;color:#fff" onclick="openFahrtForm('${tid}','suche')">🙋 Ich suche eine Mitfahrt</button></div>`;
+    else if(mine.rolle==='sucht') actions=`<div style="font-size:.78rem;color:#888;margin-top:8px">Du suchst eine Mitfahrt – tippe bei einem Angebot auf „Mitfahren“ · <a href="#" onclick="removeFahrt('${tid}');return false" style="color:#e74c3c">Gesuch zurücknehmen</a></div>`;
+    else if(mine.rolle==='mitfahrer') actions=`<div style="font-size:.78rem;color:#1a7a40;margin-top:8px">✅ Du fährst bei ${pn(mine.entry.name)} mit.</div>`;
+    else actions=`<div style="font-size:.78rem;color:#1a7a40;margin-top:8px">✅ Du fährst selbst – Mitfahrer erscheinen oben in deinem Angebot.</div>`;
+  } else actions='<div style="font-size:.78rem;color:#888;margin-top:8px">Zum Mitfahren bitte anmelden.</div>';
+  const label=biete.length?`${freeTotal} ${freeTotal===1?'Platz':'Plätze'} frei`:(suche.length?suche.length+' suchen':'');
+  return `<details class="t-coll"><summary>🚗 Fahrgemeinschaft${label?` · ${label}`:''}</summary><div>${lists}${actions}</div></details>`;
 }
-async function addFahrt(terminId, typ){
+// Dialog „Plätze anbieten“ / „Mitfahrt suchen“
+function openFahrtForm(terminId,typ){
   const myk=myKey(); if(!myk){ alert('Bitte zuerst anmelden.'); return; }
-  let plaetze=1, ort='';
-  if(typ==='biete'){
-    const p=prompt('Wie viele Plätze bietest du an?','3'); if(p===null) return;
-    plaetze=Math.max(1,parseInt(p)||1);
-  }
-  const o=prompt(typ==='biete'?'Ab wo / Treffpunkt? (optional)':'Wo möchtest du zusteigen? (optional)',''); if(o===null) return; ort=o.trim();
-  const entry={typ, plaetze, ort, name:getUserVoteName()||'?', ts:Date.now()};
+  const t=termine.find(x=>x.id===terminId);
+  document.getElementById('fa-termin').value=terminId; document.getElementById('fa-typ').value=typ;
+  document.getElementById('fa-title').textContent=typ==='biete'?'🚗 Plätze anbieten':'🙋 Mitfahrt suchen';
+  document.getElementById('fa-sub').textContent=t?(t.titel+' · '+fmt(t.datum)):'';
+  document.getElementById('fa-plaetze-wrap').style.display=typ==='biete'?'':'none';
+  document.getElementById('fa-zeit-wrap').style.display=typ==='biete'?'':'none';
+  document.getElementById('fa-ort-lbl').textContent=typ==='biete'?'📍 Abfahrtsort / Treffpunkt':'📍 Wo kannst du zusteigen?';
+  document.getElementById('fa-plaetze').value='3'; document.getElementById('fa-zeit').value='';
+  document.getElementById('fa-ort').value=''; document.getElementById('fa-notiz').value='';
+  document.getElementById('modal-fahrt').classList.add('open');
+}
+async function saveFahrt(){
+  const myk=myKey(); if(!myk) return;
+  const terminId=document.getElementById('fa-termin').value, typ=document.getElementById('fa-typ').value;
+  const entry={typ,name:getUserVoteName()||'?',ort:document.getElementById('fa-ort').value.trim(),notiz:document.getElementById('fa-notiz').value.trim(),ts:Date.now()};
+  if(typ==='biete'){ entry.plaetze=Math.max(1,Math.min(8,parseInt(document.getElementById('fa-plaetze').value)||1)); entry.zeit=document.getElementById('fa-zeit').value; }
+  // Wer schon irgendwo mitfährt, wird dort ausgetragen
+  await fahrtDetach(terminId,myk);
   if(!fahrten[terminId]) fahrten[terminId]={};
   fahrten[terminId][myk]=entry;
+  closeModal();
   await dbPut('fahrten/'+encodeURIComponent(terminId)+'/'+encodeURIComponent(myk), entry).catch(e=>console.warn(e));
   renderTermine();
-  showToast(typ==='biete'?'Mitfahrt angeboten':'Als Mitfahrer eingetragen','ok');
+  showToast(typ==='biete'?'Mitfahrt angeboten':'Gesuch eingetragen','ok');
 }
+// Mich überall in diesem Termin austragen (als Mitfahrer bzw. Gesuch)
+async function fahrtDetach(terminId,myk){
+  const f=fahrten[terminId]||{};
+  for(const [k,e] of Object.entries(f)){
+    if(e&&e.typ==='biete'&&e.mitfahrer&&e.mitfahrer[myk]){
+      delete e.mitfahrer[myk];
+      await dbDel('fahrten/'+encodeURIComponent(terminId)+'/'+encodeURIComponent(k)+'/mitfahrer/'+encodeURIComponent(myk)).catch(e2=>console.warn(e2));
+    }
+  }
+  if(f[myk]&&f[myk].typ==='suche'){ delete f[myk]; await dbDel('fahrten/'+encodeURIComponent(terminId)+'/'+encodeURIComponent(myk)).catch(e=>console.warn(e)); }
+}
+async function joinFahrt(terminId,driverKeyEnc){
+  const myk=myKey(); if(!myk){ alert('Bitte zuerst anmelden.'); return; }
+  const dk=_fdk(driverKeyEnc);
+  // Aktuellen Stand des Angebots frisch lesen (jemand anderes könnte gerade den letzten Platz genommen haben)
+  const cur=await dbGet('fahrten/'+encodeURIComponent(terminId)+'/'+encodeURIComponent(dk),null);
+  if(!cur||cur.typ!=='biete'){ showToast('Das Angebot gibt es nicht mehr','err'); await loadFahrten(); renderTermine(); return; }
+  if(dk===myk){ return; }
+  const already=cur.mitfahrer&&cur.mitfahrer[myk];
+  if(!already&&Object.keys(cur.mitfahrer||{}).length>=(parseInt(cur.plaetze)||0)){ showToast('Leider schon voll','err'); fahrten[terminId]=fahrten[terminId]||{}; fahrten[terminId][dk]=cur; renderTermine(); return; }
+  // Eigenes Angebot kann man nicht gleichzeitig haben
+  const own=(fahrten[terminId]||{})[myk];
+  if(own&&own.typ==='biete'){ showToast('Du bietest selbst schon Plätze an','err'); return; }
+  await fahrtDetach(terminId,myk);
+  const me={name:getUserVoteName()||'?',ts:Date.now()};
+  await dbPut('fahrten/'+encodeURIComponent(terminId)+'/'+encodeURIComponent(dk)+'/mitfahrer/'+encodeURIComponent(myk), me).catch(e=>console.warn(e));
+  // Gegenprobe: waren wir zu zweit für den letzten Platz? Dann gewinnt, wer zuerst eingetragen war.
+  const after=await dbGet('fahrten/'+encodeURIComponent(terminId)+'/'+encodeURIComponent(dk),null);
+  if(after){
+    const list=Object.entries(after.mitfahrer||{}).sort((a,b)=>((a[1]&&a[1].ts)||0)-((b[1]&&b[1].ts)||0));
+    const cap=parseInt(after.plaetze)||0;
+    if(list.length>cap && list.slice(cap).some(([k])=>k===myk)){
+      await dbDel('fahrten/'+encodeURIComponent(terminId)+'/'+encodeURIComponent(dk)+'/mitfahrer/'+encodeURIComponent(myk)).catch(e=>console.warn(e));
+      delete after.mitfahrer[myk];
+      showToast('Leider gerade vergeben – der Platz ging knapp an jemand anderen','err');
+    } else showToast('Du fährst mit 🚗','ok');
+    fahrten[terminId]=fahrten[terminId]||{}; fahrten[terminId][dk]=after;
+  }
+  await loadFahrten();
+  renderTermine(); try{ renderStart(); }catch(e){}
+}
+async function leaveFahrt(terminId,driverKeyEnc,passKeyEnc){
+  const dk=_fdk(driverKeyEnc), pk=_fdk(passKeyEnc);
+  const myk=myKey();
+  if(pk!==myk && dk!==myk) return; // nur selbst oder als Fahrer*in
+  if(fahrten[terminId]&&fahrten[terminId][dk]&&fahrten[terminId][dk].mitfahrer) delete fahrten[terminId][dk].mitfahrer[pk];
+  await dbDel('fahrten/'+encodeURIComponent(terminId)+'/'+encodeURIComponent(dk)+'/mitfahrer/'+encodeURIComponent(pk)).catch(e=>console.warn(e));
+  renderTermine();
+}
+// Fahrer*in nimmt jemanden aus der Suche mit
+async function takeSeeker(terminId,seekerKeyEnc){
+  const myk=myKey(); const sk=_fdk(seekerKeyEnc);
+  const mine=(fahrten[terminId]||{})[myk], seeker=(fahrten[terminId]||{})[sk];
+  if(!mine||mine.typ!=='biete'||!seeker||seeker.typ!=='suche') return;
+  if(Object.keys(mine.mitfahrer||{}).length>=(parseInt(mine.plaetze)||0)){ showToast('Dein Auto ist schon voll','err'); return; }
+  const p={name:seeker.name||'?',ts:Date.now()};
+  if(!mine.mitfahrer) mine.mitfahrer={};
+  mine.mitfahrer[sk]=p; delete fahrten[terminId][sk];
+  await dbPut('fahrten/'+encodeURIComponent(terminId)+'/'+encodeURIComponent(myk)+'/mitfahrer/'+encodeURIComponent(sk), p).catch(e=>console.warn(e));
+  await dbDel('fahrten/'+encodeURIComponent(terminId)+'/'+encodeURIComponent(sk)).catch(e=>console.warn(e));
+  renderTermine();
+  showToast(prettyName(p.name)+' fährt mit dir','ok');
+}
+// Eigenes Angebot/Gesuch entfernen (ein Angebot nimmt seine Mitfahrer mit heraus – sie stehen danach wieder ohne Fahrt da)
 async function removeFahrt(terminId){
   const myk=myKey(); if(!myk) return;
+  const e=(fahrten[terminId]||{})[myk];
+  if(e&&e.typ==='biete'&&Object.keys(e.mitfahrer||{}).length&&!confirm('Dein Angebot hat schon Mitfahrer. Wirklich löschen?')) return;
   if(fahrten[terminId]) delete fahrten[terminId][myk];
-  await dbDel('fahrten/'+encodeURIComponent(terminId)+'/'+encodeURIComponent(myk)).catch(e=>console.warn(e));
+  await dbDel('fahrten/'+encodeURIComponent(terminId)+'/'+encodeURIComponent(myk)).catch(e2=>console.warn(e2));
   renderTermine();
 }
 
