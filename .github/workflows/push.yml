@@ -1,0 +1,48 @@
+name: Push-Warteschlange und Backup
+
+# Ruft die geschützten Cloud Functions von chor-eisleben auf (Schlüssel liegt als Repository-Secret QUEUE_KEY).
+#  - alle 15 Min: processQueue  -> liegengebliebene Push-Meldungen nachholen + Termin-/Proben-Erinnerungen
+#  - sonntags 03:00 UTC: backupCron -> Datenbank-Backup in den Storage-Bucket (letzte 12 Stände bleiben)
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+    inputs:
+      aktion:
+        description: 'Was soll laufen?'
+        type: choice
+        options: [queue, backup]
+        default: queue
+
+# Läufe nacheinander, kein Doppelversand
+concurrency:
+  group: push-cron
+  cancel-in-progress: false
+
+jobs:
+  queue:
+    if: github.event.schedule != '0 3 * * 0' && github.event.inputs.aktion != 'backup'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Warteschlange und Erinnerungen verarbeiten
+        env:
+          QUEUE_KEY: ${{ secrets.QUEUE_KEY }}
+        run: |
+          curl -fsS --retry 2 --max-time 90 \
+            "https://europe-west1-chor-eisleben.cloudfunctions.net/processQueue?key=${QUEUE_KEY}"
+          echo
+
+  backup:
+    if: github.event.schedule == '0 3 * * 0' || github.event.inputs.aktion == 'backup'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Datenbank-Backup anstoßen
+        env:
+          QUEUE_KEY: ${{ secrets.QUEUE_KEY }}
+        run: |
+          curl -fsS --retry 2 --max-time 120 \
+            "https://europe-west1-chor-eisleben.cloudfunctions.net/backupCron?key=${QUEUE_KEY}"
+          echo
