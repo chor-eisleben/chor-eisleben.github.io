@@ -281,6 +281,22 @@ html.dark img, html.dark video, html.dark .no-invert{ filter: invert(1) hue-rota
 .satb-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
 .satb-cell{flex:1;min-width:82px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 9px}
 /* Termine/Lieder: Reiter in einer wischbaren Zeile; auf dem Handy ohne äußere Karte (Karte-in-Karte entfällt) */
+.m-row{border-bottom:1px solid var(--line)}
+.m-row:last-child{border-bottom:0}
+.m-line{display:flex;align-items:center;gap:10px;padding:9px 2px;min-height:56px;cursor:pointer}
+.m-line .mitglied-avatar{flex-shrink:0}
+.m-t{flex:1;min-width:0}
+.m-t b{display:block;font-size:.92rem;color:var(--navy);line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m-t small{display:inline-block;margin-top:2px;padding:1px 8px;border-radius:8px;font-size:.72rem;font-weight:600;color:#333}
+.m-call{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;background:#e8f6ee;font-size:1.15rem;text-decoration:none}
+.m-chev{color:#9aa7b4;font-size:1rem;transition:transform .15s;flex-shrink:0}
+.m-row.open .m-chev{transform:rotate(180deg)}
+.m-det{display:none;padding:0 2px 12px 52px;font-size:.84rem;color:#555}
+.m-row.open .m-det{display:block}
+.m-acts{display:flex;flex-direction:column;gap:6px;margin-bottom:6px}
+.m-act{display:flex;align-items:center;gap:6px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#f7f9fc;color:var(--navy);text-decoration:none;font-weight:600;overflow-wrap:anywhere;min-height:42px}
+.m-line2{margin-top:3px}
+.m-adm{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .plk-head{margin-bottom:12px}
 .plk-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .plk-top .btn{white-space:nowrap;flex-shrink:0}
@@ -458,6 +474,13 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .rb-chev{color:var(--primary);font-size:1rem;transition:transform .15s}
 .rb-card[open] .rb-chev{transform:rotate(180deg)}
 .rb-card[open] .rb-prev{display:none}
+#pinnwand-card .card{padding:10px 12px}
+#pinnwand-card .card-title{font-size:.9rem;margin-bottom:6px!important}
+#pinnwand-card .pin-note{padding:8px 10px}
+.pin-det>summary{cursor:pointer;list-style:none;font-size:.9rem;color:#333}
+.pin-det>summary::-webkit-details-marker{display:none}
+.pin-weiter{color:var(--primary);font-weight:700;white-space:nowrap}
+.pin-det[open]>summary{display:none}
 .pw-compose>summary{cursor:pointer;font-size:.84rem;font-weight:700;color:var(--primary);padding:4px 0;list-style:none}
 .pw-compose>summary::-webkit-details-marker{display:none}
 .pin-note{border-left:3px solid #e67e22;background:#fff8f1;border-radius:8px;padding:10px 12px;margin-top:8px}
@@ -491,18 +514,22 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
    EINSTELLUNGEN + HANDY-FEINSCHLIFF (2026-10)
    ============================================================ */
 /* Einstellungen: Profilkopf, Reiter, Zeilen mit Schaltern */
-.set-hero{display:flex;gap:14px;align-items:center;max-width:520px}
+.set-hero{display:flex;gap:14px;align-items:center;max-width:640px}
 .set-avatar{flex:0 0 56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#1b3a6b,#2563b5);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;letter-spacing:.02em}
 .set-name{font-weight:800;font-size:1.1rem;color:var(--navy);line-height:1.2}
 .set-sub{font-size:.8rem;color:var(--muted);margin-top:2px;word-break:break-all}
 .set-chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
 .set-chip{background:var(--primary-50);color:var(--primary-dark);border-radius:10px;padding:2px 9px;font-size:.7rem;font-weight:700}
 .set-chip.adm{background:#fdecea;color:#c0392b}
-.set-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:12px;max-width:520px;padding-bottom:2px}
-.set-tabs::-webkit-scrollbar{display:none}
+/* Einstellungen: am PC umbrechende Reiter (nichts abgeschnitten), am Handy wischbare Zeile */
+.set-tabs{flex-wrap:wrap;margin-bottom:12px;max-width:640px;padding-bottom:2px}
 .set-tabs .stab{white-space:nowrap;flex-shrink:0}
-.set-pane{display:none;max-width:520px}.set-pane.active{display:block}
-.set-pane .card{max-width:520px}
+@media(max-width:640px){
+  .set-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .set-tabs::-webkit-scrollbar{display:none}
+}
+.set-pane{display:none;max-width:640px}.set-pane.active{display:block}
+.set-pane .card{max-width:640px}
 .set-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
 .set-row:first-of-type{border-top:none}
 .set-row .set-lbl{font-size:.9rem;font-weight:600;color:var(--ink)}
@@ -541,9 +568,14 @@ html.reduce-motion *,html.reduce-motion *::before,html.reduce-motion *::after{an
 .stats-line{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin:0 2px 12px}
 .arch-btn{padding:6px 12px;font-size:.78rem;flex-shrink:0}
 .stats-line b{color:var(--navy)}
-#saison-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:10px}
-#saison-tabs::-webkit-scrollbar{display:none}
-#saison-tabs .stab{flex:0 0 auto;white-space:nowrap}
+/* Saison-Reiter: am PC umbrechen (nichts abgeschnitten), nur am Handy als wischbare Zeile */
+#saison-tabs{flex-wrap:wrap;margin-bottom:10px}
+#saison-tabs .stab{white-space:nowrap}
+@media(max-width:640px){
+  #saison-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  #saison-tabs::-webkit-scrollbar{display:none}
+  #saison-tabs .stab{flex:0 0 auto}
+}
 .stab-arch{margin-left:auto}
 .song-actions a,.song-actions button{min-width:38px;min-height:38px;display:inline-flex;align-items:center;justify-content:center;font-size:1.15rem!important;border-radius:10px;text-decoration:none;background:#f3f6fa!important;border:none;margin:0;padding:0!important}
 .ueb-pill{border-radius:14px;padding:5px 11px;font-size:.78rem;cursor:pointer;font-weight:600}
@@ -1099,11 +1131,12 @@ html.dark a:focus-visible,html.dark button:focus-visible{outline-color:rgba(120,
     <div style="font-size:.72rem;color:#999;margin:-4px 0 8px 2px">Ohne Benutzername kann später kein Login-Konto für dieses Mitglied erstellt werden.</div>
     <button class="btn btn-primary" onclick="addMitglied()">＋ Mitglied hinzufügen</button>
   </div>
-  <div class="card">
+  <div class="card t-shell">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
       <span class="card-title" style="margin-bottom:0">👥 Mitglieder <span id="m-count" style="color:#aaa;font-weight:400;font-size:.85rem"></span></span>
     </div>
     <input type="text" class="search-box" id="m-search" placeholder="🔍 Suchen nach Name, E-Mail, Telefon…" oninput="renderMitglieder()">
+    <div id="m-filter" class="t-tabs" style="margin:10px 0 12px"></div>
     <div id="mitglieder-list"></div>
   </div>
   </div><!-- /mv-mitglieder -->
@@ -2979,7 +3012,7 @@ function renderStart(){
   // 🎂 Geburtstage der nächsten 7 Tage
   const _m3=html.length;
   const gToday=new Date(); gToday.setHours(0,0,0,0);
-  const gebs=(mitglieder||[]).filter(m=>m.geburtstag).map(m=>{
+  const gebs=(contactsLocked()?[]:(mitglieder||[])).filter(m=>m.geburtstag).map(m=>{
     const parts=String(m.geburtstag).split('.'); if(parts.length<2) return null;
     const d=parseInt(parts[0]), mo=parseInt(parts[1])-1;
     if(isNaN(d)||isNaN(mo)) return null;
@@ -3769,8 +3802,9 @@ function renderSongPicker(){
   // Nur Saisons des laufenden Jahres (Sommer/Winter/beides) + Repertoire — bei der Probenplanung sollen
   // nicht dutzende Lieder aus alten Archiv-Saisons zur Auswahl stehen. Fallback auf alles, falls es
   // (noch) keine Saison für das aktuelle Jahr gibt.
-  const hasCurrentYear=D.seasons.some(isCurrentYearSeason);
-  const relevantSeasons=hasCurrentYear ? D.seasons.filter(s=>isCurrentYearSeason(s)||s.type==='repertoire') : D.seasons;
+  // Laufende Saisons nach dem Zeitraum aus Konsole → Saisons (seasonActive), nicht mehr nach dem Kalenderjahr
+  const _act=activeSeasonIds();
+  const relevantSeasons=D.seasons.filter(s=>_act.has(s.id));
   relevantSeasons.forEach(s=>{
     const aktiv=(s.songs||[]).filter(x=>!x.archived);
     if(!aktiv.length)return;
@@ -3958,15 +3992,16 @@ function buildSongPickerInto(containerEl, selectedIds){
   // Wie renderSongPicker: nur aktuelles Jahr + Repertoire — ABER eine ältere Saison bleibt trotzdem
   // sichtbar, wenn eines ihrer Lieder bei dieser Probe schon ausgewählt ist (sonst würde eine bereits
   // eingetragene Probe beim Bearbeiten scheinbar "Lieder verlieren").
-  const hasCurrentYear=D.seasons.some(isCurrentYearSeason);
+  const _act=activeSeasonIds();
   const relevantSeasons=D.seasons.filter(s=>
-    !hasCurrentYear || isCurrentYearSeason(s) || s.type==='repertoire' || (s.songs||[]).some(song=>sel.has(song.id))
+    _act.has(s.id) || (s.songs||[]).some(song=>sel.has(song.id))
   );
   relevantSeasons.forEach(s=>{
-    if(!(s.songs||[]).length) return;
+    const _songs=(s.songs||[]).filter(song=>(!song.archived)||sel.has(song.id));
+    if(!_songs.length) return;
     const ic={sommer:'☀️',weihnachten:'🎄',repertoire:'📚'}[s.type]||'🎵';
     containerEl.innerHTML+=`<div style="width:100%;font-size:.7rem;font-weight:700;text-transform:uppercase;color:#999;margin:5px 0 3px">${ic} ${esc(s.name)}</div>`;
-    s.songs.forEach(song=>{
+    _songs.forEach(song=>{
       const ck=sel.has(song.id);
       containerEl.innerHTML+=`<label style="display:inline-flex;align-items:center;gap:5px;background:${ck?'#d6eaf8':'#f0f4f8'};border-radius:20px;padding:4px 11px;cursor:pointer;border:1.5px solid ${ck?'#2563b5':'transparent'};font-size:.82rem;user-select:none;margin-bottom:3px">
         <input type="checkbox" value="${song.id}" ${ck?'checked':''} onchange="this.parentElement.style.background=this.checked?'#d6eaf8':'#f0f4f8';this.parentElement.style.borderColor=this.checked?'#2563b5':'transparent'">
@@ -4020,6 +4055,7 @@ async function loadProbenstatus(){ const d=await dbGet('probenstatus',{}); if(d!
 // Läuft bei jedem App-Start eines angemeldeten Nutzers; dedupliziert über die Proben-ID.
 async function migrateVergangeneProben(){
   if(!currentUser || !D) return;
+  if(!canUseEditMode()) return; // schreibt in Chordaten – nur Leitung (Mitglieder dürfen dort nicht schreiben)
   const today=localToday();
   const past=(probenplan||[]).filter(p=>p.datum<today);
   if(!past.length) return;
@@ -4681,7 +4717,24 @@ function applyModules(){
   if(!moduleOn('organigramm')){ const ov=document.getElementById('mv-organigramm'); if(ov && ov.style.display!=='none') setMitgliederTab('mitglieder'); }
 }
 // Darf das angemeldete Mitglied dieses Feld bei Mitglied m sehen? (Leitung/Mitglieder-Recht und eigener Eintrag: immer)
+// Datenschutz: Neue Mitglieder sehen die Kontaktdaten der anderen (Handy, Telefon, E-Mail, Adresse, Geburtstag) erst
+// 30 Tage nach ihrem Beitritt. Beitrittsdatum = „beigetreten“ im eigenen Mitgliedseintrag, sonst Anlegedatum des Kontos.
+// Admins und Mitglieder mit Einzelrechten sind ausgenommen. (Anzeige-Sperre in der App, keine Sperre in der Datenbank.)
+const KONTAKT_SPERRE_TAGE=30;
+function kontaktdatenGesperrtBis(){
+  if(!currentUser||!currentUserProfile) return '';
+  if(adminMode||currentUserProfile.isAdmin||(Array.isArray(currentUserProfile.permissions)&&currentUserProfile.permissions.length)) return '';
+  const i=myMemberIndex(); const me=i>=0?mitglieder[i]:null;
+  let b=(me&&me.beigetreten)||''; if(!b&&currentUserProfile.erstellt) b=String(currentUserProfile.erstellt).slice(0,10);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(b)) return '';
+  const d=new Date(b+'T12:00:00'); d.setDate(d.getDate()+KONTAKT_SPERRE_TAGE);
+  const until=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  return until>localToday()?until:'';
+}
+function contactsLocked(){ return !!kontaktdatenGesperrtBis(); }
 function canSeeMemberField(f,m){
+  if(m && m.uid && currentUser && m.uid===currentUser.uid) return true; // eigene Daten immer
+  if(contactsLocked()) return false;
   if(regel('sichtbar_'+f,true)!==false) return true;
   if(adminMode || (currentUserProfile&&currentUserProfile.isAdmin) || hasPermission('mitglieder')) return true;
   return !!(m && m.uid && currentUser && m.uid===currentUser.uid);
@@ -5076,7 +5129,41 @@ function renderStatistik(){
     if(vItems.length) html+=`<div class="card" style="margin-top:12px"><div class="card-title">🎤 Anwesenheit pro Stimmgruppe</div>${_statBars(vItems,'#e67e22')}</div>`;
   }
 
+  html+=altersStatistikHtml();
   el.innerHTML=html;
+}
+
+// Alter im Chor: nur Zahlen und Altersgruppen (keine Namen), nur aktive Mitglieder mit Geburtsdatum
+function memberAge(m){
+  const p=String(m.geburtstag||'').split('.');
+  if(p.length<3) return null;
+  const d=parseInt(p[0]), mo=parseInt(p[1]); let y=parseInt(p[2]);
+  if(isNaN(d)||isNaN(mo)||isNaN(y)) return null;
+  const now=new Date();
+  if(y<100) y=(y<=now.getFullYear()%100)?2000+y:1900+y;
+  let age=now.getFullYear()-y;
+  if(now.getMonth()+1<mo || (now.getMonth()+1===mo && now.getDate()<d)) age--;
+  return (age>=0&&age<110)?age:null;
+}
+function altersStatistikHtml(){
+  const aktiv=(mitglieder||[]).filter(m=>!isPausedNow(m));
+  const list=aktiv.map(m=>({m,age:memberAge(m)})).filter(x=>x.age!=null);
+  if(list.length<3) return '';
+  const ages=list.map(x=>x.age).sort((a,b)=>a-b);
+  const avg=ages.reduce((s,a)=>s+a,0)/ages.length;
+  const mid=ages.length%2?ages[(ages.length-1)/2]:(ages[ages.length/2-1]+ages[ages.length/2])/2;
+  const tile=(n,l,c)=>`<div class="stat"><div class="stat-n" style="color:${c}">${n}</div><div class="stat-l">${l}</div></div>`;
+  const groups=[['unter 30',0,29],['30–39',30,39],['40–49',40,49],['50–59',50,59],['60–69',60,69],['70–79',70,79],['80 und älter',80,200]];
+  const gItems=groups.map(([l,a,b])=>{ const n=ages.filter(x=>x>=a&&x<=b).length; return {label:l,value:n,sub:n+' ('+Math.round(n/ages.length*100)+' %)'}; });
+  const vItems=['Sopran','Alt','Tenor','Bass'].map(v=>{ const as=list.filter(x=>x.m.stimme===v).map(x=>x.age); if(as.length<2) return null; const a=as.reduce((s,x)=>s+x,0)/as.length; return {label:v,value:Math.round(a),sub:'Ø '+a.toFixed(1).replace('.',',')+' Jahre ('+as.length+')'}; }).filter(Boolean);
+  const fmt1=n=>(Math.round(n*10)/10).toFixed(1).replace('.',',');
+  return `<div class="card" style="margin-top:12px"><div class="card-title">🎂 Alter im Chor</div>
+    <div style="font-size:.78rem;color:#888;margin:-6px 0 10px">Aktive Mitglieder mit Geburtsdatum: ${list.length} von ${aktiv.length}. Es werden nur Zahlen gezeigt, keine Namen.</div>
+    <div class="stats">${tile(fmt1(avg),'Ø Alter','#2563b5')}${tile(fmt1(mid),'Median','#27ae60')}${tile(ages[0],'Jüngste*r','#8e44ad')}${tile(ages[ages.length-1],'Älteste*r','#e67e22')}</div>
+    <div style="font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#999;margin:6px 0 8px">Altersgruppen</div>
+    ${_statBars(gItems,'#2563b5')}
+    ${vItems.length?`<div style="font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#999;margin:12px 0 8px">Ø Alter je Stimme</div>${_statBars(vItems,'#8e44ad')}`:''}
+  </div>`;
 }
 
 function localToday(){
@@ -5644,38 +5731,63 @@ function kalVor(dir){kalMonat+=dir;if(kalMonat>11){kalMonat=0;kalJahr++;}if(kalM
 function kalClick(iso){kalSel=kalSel===iso?null:iso;renderKalender();}
 
 // MITGLIEDER
+// ===== MITGLIEDER: schlanke Zeilen (Name, Stimme, Anrufen), Details zum Aufklappen, Filter nach Stimme =====
+let mFilter='alle';
+function setMFilter(f){ mFilter=f; renderMitglieder(); }
+function mToggle(key){ const r=document.getElementById('m-r-'+key); if(r) r.classList.toggle('open'); }
+function _mVoiceOf(m){ const s=String(m.stimme||'').toLowerCase(); return ['sopran','alt','tenor','bass'].includes(s)?s:'ohne'; }
 function renderMitglieder(){
   const q=(document.getElementById('m-search')?.value||'').toLowerCase();
-  const filtered=mitglieder.filter(m=>{
+  const matchQ=m=>{
     const s=(m.vorname+' '+m.nachname+(canSeeMemberField('email',m)?' '+m.email:'')+(canSeeMemberField('handy',m)?' '+m.handy+' '+m.telefon:'')).toLowerCase();
     return s.includes(q);
-  }).sort((a,b)=>a.nachname.localeCompare(b.nachname));
-  const cnt=document.getElementById('m-count');
+  };
+  // Filter-Leiste (Stimme) mit Zahlen – die Zahlen beziehen sich auf die aktiven Mitglieder
+  const aktiveAlle=mitglieder.filter(m=>!isPausedNow(m));
+  const cnt={alle:aktiveAlle.length,sopran:0,alt:0,tenor:0,bass:0,ohne:0};
+  aktiveAlle.forEach(m=>{ cnt[_mVoiceOf(m)]++; });
+  const fb=document.getElementById('m-filter');
+  if(fb) fb.innerHTML=[['alle','Alle'],['sopran','Sopran'],['alt','Alt'],['tenor','Tenor'],['bass','Bass'],['ohne','Ohne Stimme']]
+    .filter(([k])=>k==='alle'||cnt[k]>0||mFilter===k)
+    .map(([k,l])=>`<button class="stab stab-s${mFilter===k?' active':''}" onclick="setMFilter('${k}')">${l} (${cnt[k]})</button>`).join('');
+  const filtered=mitglieder.filter(m=>matchQ(m)&&(mFilter==='alle'||_mVoiceOf(m)===mFilter)).sort((a,b)=>a.nachname.localeCompare(b.nachname));
+  const cntEl=document.getElementById('m-count');
   const _np=filtered.filter(isPausedNow).length;
-  if(cnt) cnt.textContent='('+(filtered.length-_np)+' von '+mitglieder.filter(m=>!isPausedNow(m)).length+(_np?' · ⏸ '+_np+' länger abwesend':'')+')';
+  if(cntEl) cntEl.textContent='('+(filtered.length-_np)+' von '+aktiveAlle.length+(_np?' · ⏸ '+_np+' länger abwesend':'')+')';
   const el=document.getElementById('mitglieder-list');if(!el)return;
+  const colors=['#2563b5','#27ae60','#8e44ad','#e67e22','#c0392b','#16a085'];
+  const voiceBg={sopran:'#fdebd0',alt:'#d6eaf8',tenor:'#d5f5e3',bass:'#f9ebea'};
+  const tel=v=>String(v||'').replace(/[^+\d]/g,'');
   const _cardOf=m=>{
+    const key=String(m.nr||m.id);
     const initials=(m.vorname.charAt(0)+(m.nachname.charAt(0)||'')).toUpperCase();
-    const colors=['#2563b5','#27ae60','#8e44ad','#e67e22','#c0392b','#16a085'];
     const color=colors[(m.vorname.charCodeAt(0)||0)%colors.length];
-    return`<div class="mitglied-card">
-      <div class="mitglied-avatar" style="background:${color}">${initials}</div>
-      <div class="mitglied-info">
-        <div class="mitglied-name">${esc(m.vorname)} ${esc(m.nachname)}${isPausedNow(m)?(()=>{ const p=memberPauseAt(m,localToday()); return ` <span class="pause-chip">⏸ seit ${fmt(p.von)}${p.grund?' · '+esc(p.grund):''}</span>`; })():''}</div>
-        <div class="mitglied-detail">
-          ${m.stimme?`<span style="background:${{sopran:'#fdebd0',alt:'#d6eaf8',tenor:'#d5f5e3',bass:'#f9ebea'}[m.stimme.toLowerCase()]||'#f0f0f0'};color:#333;padding:1px 8px;border-radius:8px;font-size:.72rem;font-weight:600;margin-right:5px">${esc(m.stimme)}</span>`:''}
-          ${m.handy&&canSeeMemberField('handy',m)?`📱 <a href="tel:${m.handy}">${esc(m.handy)}</a> `:''}
-          ${m.telefon&&canSeeMemberField('handy',m)?`☎️ <a href="tel:${m.telefon}">${esc(m.telefon)}</a> `:''}
-          ${m.email&&canSeeMemberField('email',m)?`✉️ <a href="mailto:${m.email}">${esc(m.email)}</a> `:''}
-        </div>
-        ${(m.adresse||m.plz)&&canSeeMemberField('adresse',m)?`<div class="mitglied-detail">📍 ${esc(m.adresse||'')} ${esc(m.plz||'')}</div>`:''}
-        ${m.geburtstag&&canSeeMemberField('geburtstag',m)?`<div class="mitglied-detail">🎂 ${esc(m.geburtstag)}</div>`:''}
+    const seeH=canSeeMemberField('handy',m), seeE=canSeeMemberField('email',m);
+    const pause=isPausedNow(m)?(()=>{ const p=memberPauseAt(m,localToday()); return `<div style="margin-top:2px"><span class="pause-chip">⏸ seit ${fmt(p.von)}${p.grund?' · '+esc(p.grund):''}</span></div>`; })():'';
+    const call=(m.handy&&seeH)?`<a class="m-call" href="tel:${tel(m.handy)}" onclick="event.stopPropagation()" aria-label="${esc(m.vorname)} anrufen">📞</a>`:'';
+    const acts=[
+      (m.handy&&seeH)?`<a class="m-act" href="tel:${tel(m.handy)}">📱 ${esc(m.handy)}</a>`:'',
+      (m.telefon&&seeH)?`<a class="m-act" href="tel:${tel(m.telefon)}">☎️ ${esc(m.telefon)}</a>`:'',
+      (m.email&&seeE)?`<a class="m-act" href="mailto:${esc(m.email)}">✉️ ${esc(m.email)}</a>`:''
+    ].filter(Boolean).join('');
+    const adr=((m.adresse||m.plz)&&canSeeMemberField('adresse',m))?`<div class="m-line2">📍 ${esc(m.adresse||'')} ${esc(m.plz||'')}</div>`:'';
+    const geb=(m.geburtstag&&canSeeMemberField('geburtstag',m))?`<div class="m-line2">🎂 ${esc(m.geburtstag)}</div>`:'';
+    const admin=(uiEdit('mitglieder')||(currentUserProfile&&currentUserProfile.isAdmin&&m.username))?`<div class="m-adm">${uiEdit('mitglieder')?`<button class="btn btn-gray btn-sm" onclick="quickPause('${memberKey(m)}')">${isPausedNow(m)?'▶ Wieder aktiv':'⏸ Länger abwesend'}</button><button class="btn btn-gray btn-sm" onclick="openEditMitglied('${key}')">✏️ Bearbeiten</button><button class="btn btn-danger btn-sm" onclick="deleteMitglied('${key}')">✕ Löschen</button>`:''}${(currentUserProfile&&currentUserProfile.isAdmin&&m.username)?`<button class="btn btn-sm" style="background:#eef1f5;color:#1d4e96" title="Passwort auf Benutzername zurücksetzen" onclick="adminResetPassword('${esc(m.username)}')">🔑 Passwort</button>`:''}</div>`:'';
+    const hasDetails=acts||adr||geb||admin;
+    const sub=[m.stimme?esc(m.stimme):'', m.stimmfuehrer?'🎚️':''].filter(Boolean).join(' · ');
+    return `<div class="m-row" id="m-r-${key}">
+      <div class="m-line"${hasDetails?` onclick="mToggle('${key}')"`:''}>
+        <div class="mitglied-avatar" style="background:${color}">${initials}</div>
+        <div class="m-t"><b>${esc(m.vorname)} ${esc(m.nachname)}</b>${sub?`<small style="background:${voiceBg[String(m.stimme||'').toLowerCase()]||'#f0f0f0'}">${sub}</small>`:''}${pause}</div>
+        ${call}${hasDetails?'<span class="m-chev">▾</span>':''}
       </div>
-      ${(uiEdit('mitglieder')||(currentUserProfile&&currentUserProfile.isAdmin&&m.username))?`<div style="display:flex;flex-direction:column;gap:4px">${uiEdit('mitglieder')?`<button class="btn btn-gray btn-sm" title="${isPausedNow(m)?'Wieder aktiv':'Länger abwesend setzen'}" onclick="quickPause('${memberKey(m)}')">${isPausedNow(m)?'▶':'⏸'}</button>`:''}${uiEdit('mitglieder')?`<button class="btn btn-gray btn-sm" onclick="openEditMitglied('${m.nr||m.id}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteMitglied('${m.nr||m.id}')">✕</button>`:''}${(currentUserProfile&&currentUserProfile.isAdmin&&m.username)?`<button class="btn btn-sm" style="background:#eef1f5;color:#1d4e96" title="Passwort auf Benutzername zurücksetzen" onclick="adminResetPassword('${esc(m.username)}')">🔑</button>`:''}</div>`:''}
+      ${hasDetails?`<div class="m-det">${acts?`<div class="m-acts">${acts}</div>`:''}${adr}${geb}${admin}</div>`:''}
     </div>`;
   };
   const _akt=filtered.filter(m=>!isPausedNow(m)), _pau=filtered.filter(isPausedNow);
-  const memberHtml=_akt.map(_cardOf).join('')+(_pau.length?`<details class="pause-box" ${q?'open':''}><summary>⏸ Länger abwesend (${_pau.length}) – zählen nicht bei Anwesenheit &amp; Rückmeldungen</summary>${_pau.map(_cardOf).join('')}</details>`:'');
+  const _lk=kontaktdatenGesperrtBis();
+  const _lkHtml=_lk?`<div style="background:#fff8e7;border:1px solid #f0dca0;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:.84rem;color:#7d6608">🔒 <strong>Aus Datenschutzgründen</strong> siehst du die Kontaktdaten der anderen Mitglieder (Telefon, E-Mail, Adresse, Geburtstag) erst ab dem <strong>${fmt(_lk)}</strong> – 30 Tage nach deinem Beitritt. Die Namen siehst du schon jetzt.</div>`:'';
+  const memberHtml=_lkHtml+_akt.map(_cardOf).join('')+(_pau.length?`<details class="pause-box" ${q?'open':''}><summary>⏸ Länger abwesend (${_pau.length}) – zählen nicht bei Anwesenheit &amp; Rückmeldungen</summary>${_pau.map(_cardOf).join('')}</details>`:'');
   // Registrierte Nutzerkonten, die (noch) keinem Mitglied zugeordnet sind
   const extraUsers=Object.entries(userprofilesCache||{})
     .map(([k,v])=>(v&&typeof v==='object')?Object.assign({},v,{uid:v.uid||k}):null)
@@ -8126,6 +8238,7 @@ function renderGeburtstage(){
     return {...m, bdDate:bd, daysUntil:days};
   }
 
+  if(contactsLocked()){ el.innerHTML='<div class="empty">🔒 Die Geburtstage der anderen Mitglieder siehst du ab dem '+fmt(kontaktdatenGesperrtBis())+' (30 Tage nach deinem Beitritt, aus Datenschutzgründen).</div>'; return; }
   const all = mitglieder.filter(m=>m.geburtstag).map(bday).filter(Boolean);
 
   // Split: until next probe / after
@@ -9091,8 +9204,17 @@ function renderPinnwand(){
       ? `<details class="t-coll" style="margin-top:6px"><summary style="font-size:.74rem;color:#888">👁️ Gelesen von ${cnt}</summary><div style="font-size:.78rem;color:#777;padding-top:4px">${esc(gelNames.map(n=>prettyName(n)||n).join(', '))}</div></details>`
       : `<div style="font-size:.74rem;color:#bbb;margin-top:6px">Noch nicht gelesen</div>`);
     const del = editor ? `<button class="btn btn-danger btn-sm" style="opacity:1;position:static;margin-left:auto;padding:2px 8px" onclick="deletePinnwand('${e._key}')">✕</button>` : '';
+    // Lange Ankündigungen: erste Zeile = Überschrift, der Rest eingeklappt (mit Vorschau), damit die Startseite nicht zugestellt wird
+    const _ln=String(e.text).split('\n');
+    const _title=(_ln.length>1&&_ln[0].length<=90)?_ln[0]:'';
+    const _rest=_title?_ln.slice(1).join('\n').replace(/^\n+/,''):String(e.text);
+    const _txt=_rest.length>260
+      ? `<details class="pin-det"><summary>${esc(_rest.split('\n').slice(0,2).join(' · ').slice(0,170))}… <span class="pin-weiter">Weiterlesen</span></summary><div style="white-space:pre-wrap;font-size:.9rem;color:#333;margin-top:8px">${esc(_rest)}</div><a href="#" onclick="this.closest('details').open=false;return false" style="display:inline-block;margin-top:8px;font-size:.82rem;color:var(--primary);font-weight:700;text-decoration:none">▴ Weniger anzeigen</a></details>`
+      : `<div style="white-space:pre-wrap;font-size:.9rem;color:#333">${esc(_rest)}</div>`;
     return `<div class="pin-note">
-      <div style="white-space:pre-wrap;font-size:.9rem;color:#333">${esc(e.text)}</div>
+      ${(e.pdf&&e.pdf.b64)
+        ? `<div style="display:flex;align-items:flex-start;gap:8px"><div style="flex:1;min-width:0">${_title?`<div style="font-weight:800;font-size:.92rem;color:#1b3a6b;line-height:1.25">${esc(_title)}</div>`:''}<div style="white-space:pre-wrap;font-size:.8rem;color:#555;margin-top:2px">${esc(_rest)}</div></div><button class="btn btn-sm" style="flex-shrink:0;background:#1b3a6b;color:#fff;padding:8px 11px" onclick="openPinPdf('${e._key}')" aria-label="${esc(e.pdf.label||'PDF ansehen')}">📄 PDF</button></div>`
+        : `${_title?`<div style="font-weight:800;font-size:.98rem;color:#1b3a6b;margin-bottom:4px">${esc(_title)}</div>`:''}${_txt}`}
       <div style="display:flex;align-items:center;gap:8px;margin-top:6px;font-size:.72rem;color:#a06020">${esc(prettyName(e.autor)||e.autor||'Chorleitung')} · ${e.ts?fmt(new Date(e.ts).toISOString().split('T')[0]):''}${del}</div>
       ${gelHtml}
     </div>`;
@@ -9106,6 +9228,16 @@ function renderPinnwand(){
   </div>`;
   // Still als „gelesen" markieren (nur eigene Kennung)
   if(myk){ entries.forEach(e=>{ if(!(e.gelesen&&e.gelesen[myk])) markPinnwandRead(e._key); }); }
+}
+// Ankündigung mit angehängter PDF (klein, als Base64 im Eintrag): beim Antippen als Blob in neuem Tab öffnen
+function openPinPdf(key){
+  const e=(pinnwand||{})[key]; if(!e||!e.pdf||!e.pdf.b64) return;
+  try{
+    const bin=atob(e.pdf.b64), arr=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+    const url=URL.createObjectURL(new Blob([arr],{type:'application/pdf'}));
+    const a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),60000);
+  }catch(err){ showToast('PDF konnte nicht geöffnet werden','err'); }
 }
 function openPinnwandCompose(){
   const d=document.getElementById('pw-compose'); if(!d) return;
