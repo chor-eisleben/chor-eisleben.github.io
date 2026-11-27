@@ -132,10 +132,13 @@ let MODE = HAS_AUDIO ? 'gesang' : 'klavier';
 const AUD = {}; let audRef=null, audReady=false;
 // Aufnahmen von fremder Adresse (Firebase-Speicher der Mitgliederfassung) mit CORS laden - ohne gibt Web Audio nur Stille aus
 function xo(u){ try{ return new URL(u, location.href).origin!==location.origin; }catch(e){ return false; } }
+const PRE={};   // Aufnahmen sofort beim Seitenaufruf laden (nicht erst beim ersten Abspielen)
+function mkAud(key){ const el=new Audio(); el.preload='auto'; if(xo(SONG.audio[key])) el.crossOrigin='anonymous'; el.src=SONG.audio[key]; PRE[key]=el; return el; }
+if(HAS_AUDIO) SONG.voices.forEach(v=>{ try{ mkAud(v.key); }catch(e){} });
 function ensureAudio(){
   ensureCtx(); if(audReady) return; audReady=true;
   SONG.voices.forEach(v=>{
-    const el=new Audio(); if(xo(SONG.audio[v.key])) el.crossOrigin='anonymous'; el.src=SONG.audio[v.key]; el.preload='auto';
+    const el=PRE[v.key]||mkAud(v.key); if(el.getAttribute('src')!==SONG.audio[v.key]){ if(xo(SONG.audio[v.key])) el.crossOrigin='anonymous'; el.src=SONG.audio[v.key]; } el.preload='auto';
     el.preservesPitch=true; el.mozPreservesPitch=true; el.webkitPreservesPitch=true;   // langsamer ueben ohne tiefere Stimme
     ctx.createMediaElementSource(el).connect(voiceGain[v.key]);
     AUD[v.key]=el; if(!audRef) audRef=el;
@@ -143,14 +146,23 @@ function ensureAudio(){
     el.addEventListener('ended',()=>{ if(el===audRef && playing){ if(loop){ seekTo(0); } else { pause(); seekTo(0); } } });
   });
 }
+let audTok=0;
 function audioPlay(){
   ensureAudio();
-  Object.values(AUD).forEach(el=>{ el.playbackRate=tempo; try{ el.currentTime=startOffset; }catch(e){} el.play().catch(()=>{}); });
+  const tok=++audTok, els=Object.values(AUD), t0=Date.now();
+  els.forEach(el=>{ el.playbackRate=tempo; try{ el.currentTime=startOffset; }catch(e){} });
+  const go=()=>{   // erst starten, wenn alle Stimmen geladen und positioniert sind - dann gleichzeitig (kein Knacken durch Nachladen/Nachziehen)
+    if(tok!==audTok || !playing) return;
+    if(!els.every(el=>el.readyState>=3 && !el.seeking) && Date.now()-t0<20000){ document.getElementById('playBtn').textContent='⏳'; setTimeout(go,60); return; }
+    document.getElementById('playBtn').textContent='⏸';
+    els.forEach(el=>el.play().catch(()=>{}));
+  };
+  go();
 }
-function audioPause(){ Object.values(AUD).forEach(el=>el.pause()); }
+function audioPause(){ audTok++; Object.values(AUD).forEach(el=>el.pause()); }
 function audioSync(){   // Spuren gemeinsam halten (Abweichung > 40 ms nachziehen)
-  if(!audRef) return; const t=audRef.currentTime;
-  Object.values(AUD).forEach(el=>{ if(el!==audRef && Math.abs(el.currentTime-t)>0.04){ try{ el.currentTime=t; }catch(e){} } });
+  if(!audRef) return; if(Object.values(AUD).some(e=>e.paused||e.seeking||e.readyState<3)) return; const t=audRef.currentTime;
+  Object.values(AUD).forEach(el=>{ if(el!==audRef && Math.abs(el.currentTime-t)>0.09){ try{ el.currentTime=t; }catch(e){} } });
 }
 function anySolo(){ return SONG.voices.some(v=>VC[v.key].solo); }
 function effGain(key){
