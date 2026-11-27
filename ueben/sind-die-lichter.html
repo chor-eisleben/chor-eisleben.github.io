@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Stimmcoach — Sind die Lichter angezündet</title>
+<style>
+:root{--bg:#0e0c0a;--bg2:#181410;--bg3:#232018;--ink:#f0e8d8;--muted:#8a8070;--bd:#2e2922;
+  --S:#e8a060;--A:#5ec8a8;--T:#90a8e0;--B:#d09080;--acc:#e8a060}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink);
+  min-height:100vh;max-width:540px;margin:0 auto;padding-bottom:7rem}
+.hdr{padding:1rem 1.1rem .7rem;border-bottom:1px solid var(--bd);position:sticky;top:0;
+  background:rgba(14,12,10,.97);backdrop-filter:blur(10px);z-index:50}
+.hdr h1{font-size:1.15rem;font-weight:600}
+.backapp{display:inline-flex;align-items:center;gap:.3rem;margin-bottom:.45rem;padding:.35rem .7rem;border:1px solid var(--bd);border-radius:999px;background:var(--bg3);color:var(--ink);font-size:.75rem;text-decoration:none}
+.hdr .sub{font-size:.7rem;color:var(--muted);margin-top:2px}
+.mixer{padding:.9rem 1rem}
+.mlbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.7rem}
+.mrow{display:flex;align-items:center;gap:.55rem;margin-bottom:.7rem}
+.mbadge{width:2.1rem;height:2.1rem;border-radius:6px;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-size:.78rem;font-weight:700;color:#0e0c0a}
+.mbtns{display:flex;gap:.3rem;flex-shrink:0}
+.mbtn{width:2rem;height:2rem;border-radius:6px;border:1px solid var(--bd);background:var(--bg3);
+  color:var(--muted);font-size:.72rem;font-weight:600;cursor:pointer;transition:all .12s}
+.mbtn.on-m{background:#3a1a1a;color:#e06060;border-color:#5a2a2a}
+.mbtn.on-s{background:#1a3a2a;color:#50d090;border-color:#2a5a3a}
+.volwrap{flex:1;display:flex;align-items:center;gap:.5rem;min-width:0}
+input.vsl{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:100px;outline:none;background:var(--bd);cursor:pointer}
+input.vsl::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;cursor:pointer;background:var(--acc)}
+input.vsl::-moz-range-thumb{width:16px;height:16px;border-radius:50%;cursor:pointer;background:var(--acc);border:none}
+.vpct{font-size:.64rem;color:var(--muted);min-width:2.2rem;text-align:right}
+.transport{position:fixed;bottom:0;left:0;right:0;max-width:540px;margin:0 auto;background:var(--bg2);
+  border-top:1px solid var(--bd);padding:.7rem 1rem 1rem;z-index:60}
+.seekrow{display:flex;align-items:center;gap:.6rem;margin-bottom:.7rem}
+.time{font-size:.66rem;color:var(--muted);min-width:2.6rem}
+.tctrls{display:flex;align-items:center;justify-content:center;gap:.9rem;flex-wrap:wrap}
+.tctrls .play,.tctrls .tbtn{flex-shrink:0}
+.tbtn{background:var(--bg3);border:1px solid var(--bd);color:var(--ink);border-radius:8px;
+  padding:.5rem .7rem;font-size:.85rem;cursor:pointer}
+.play{width:3.2rem;height:3.2rem;border-radius:50%;background:var(--acc);color:#0e0c0a;border:none;
+  font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.tempo{display:flex;align-items:center;gap:.4rem;font-size:.7rem;color:var(--muted)}
+.tempo select{background:var(--bg3);border:1px solid var(--bd);color:var(--ink);border-radius:6px;padding:.3rem .4rem;font-size:.72rem}
+.loopbtn.on{background:#1a3a2a;color:#50d090;border-color:#2a5a3a}
+.hint{font-size:.68rem;color:var(--muted);padding:0 1rem 1rem;line-height:1.5}
+body.has-lyr{padding-bottom:12.5rem}
+.lyr{display:none;padding:.15rem 0 .65rem;border-bottom:1px solid var(--bd);margin-bottom:.6rem}
+body.has-lyr .lyr{display:block}
+.lyrtop{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.35rem}
+.lyrverse{font-size:.64rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.lyrtop select{background:var(--bg3);border:1px solid var(--bd);color:var(--ink);border-radius:6px;padding:.2rem .35rem;font-size:.68rem}
+.lyrline{font-size:1.18rem;line-height:1.45;min-height:1.7rem;font-weight:500}
+.lyrnext{font-size:.88rem;line-height:1.4;color:var(--muted);min-height:1.25rem;margin-top:.15rem}
+.lyrline .sy{transition:color .08s}
+.lyrline .sy.done{color:#b8ad98}
+.lyrline .sy.now{font-weight:700;text-decoration:underline;text-underline-offset:4px}
+.lyrline .sy.todo{color:#6f6658}
+.lyrline .hy,.lyrnext .hy{color:var(--muted);padding:0 .08em}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <a class="backapp" id="backApp" href="https://chor-eisleben.github.io/">← Zur Chor-App</a>
+  <h1>🎤 Sind die Lichter angezündet</h1>
+  <div class="sub">Entwurf: von Hand aus einem Foto abgelesen – bitte gegenhören · Stimmcoach zum Üben</div>
+  <div class="sub" id="memBadge" style="display:none">🔒 Mitgliederfassung mit Liedtext</div>
+</div>
+
+<div class="mixer">
+  <div class="mlbl">Stimmen — laut/leise · M = stumm · S = solo</div>
+  <div id="mix"></div>
+</div>
+<div class="hint">Tipp: Stelle deine eigene Stimme laut und die anderen leise – oder „Solo" für nur deine Stimme. Mit „Tempo" kannst du langsamer üben.</div>
+
+<div class="transport">
+  <div class="lyr" id="lyr">
+    <div class="lyrtop"><span class="lyrverse" id="lyrVerse"></span><label class="lyrverse">Text <select id="lyrSel"></select></label></div>
+    <div class="lyrline" id="lyrLine"></div>
+    <div class="lyrnext" id="lyrNext"></div>
+  </div>
+  <div class="seekrow">
+    <span class="time" id="cur">0:00</span>
+    <input class="vsl" id="seek" type="range" min="0" max="1000" value="0" style="flex:1">
+    <span class="time" id="dur">0:00</span>
+  </div>
+  <div class="tctrls">
+    <button class="tbtn loopbtn" id="loopBtn" title="Wiederholen">🔁</button>
+    <button class="tbtn" id="backBtn" title="Zum Anfang">⏮</button>
+    <button class="play" id="playBtn">▶</button>
+    <div class="tempo">Tempo
+      <select id="tempoSel">
+        <option value="0.5">50%</option><option value="0.6">60%</option>
+        <option value="0.75">75%</option><option value="0.9">90%</option>
+        <option value="1" selected>100%</option><option value="1.1">110%</option>
+      </select>
+    </div>
+    <button class="tbtn modebtn" id="modeBtn" style="display:none;width:auto;padding:0 .7rem;font-size:.72rem"></button>
+  </div>
+</div>
+
+<script>
+window.SONG = {"title":"Sind die Lichter angezündet","subtitle":"Entwurf: von Hand aus einem Foto abgelesen – bitte gegenhören","bpm":140,"duration":17.73,"voices":[{"key":"S","name":"Sopran","color":"#e8a060","notes":[{"m":66,"t":0,"d":0.407},{"m":67,"t":0.429,"d":0.204},{"m":69,"t":0.643,"d":0.407},{"m":69,"t":1.071,"d":0.204},{"m":67,"t":1.286,"d":0.407},{"m":66,"t":1.714,"d":0.204},{"m":64,"t":1.929,"d":0.407},{"m":64,"t":2.357,"d":0.204},{"m":62,"t":2.571,"d":0.407},{"m":64,"t":3,"d":0.204},{"m":66,"t":3.214,"d":0.407},{"m":66,"t":3.643,"d":0.204},{"m":67,"t":3.857,"d":0.407},{"m":66,"t":4.286,"d":0.204},{"m":64,"t":4.5,"d":0.611},{"m":66,"t":5.143,"d":0.407},{"m":67,"t":5.571,"d":0.204},{"m":69,"t":5.786,"d":0.407},{"m":69,"t":6.214,"d":0.204},{"m":71,"t":6.429,"d":0.204},{"m":72,"t":6.643,"d":0.204},{"m":74,"t":6.857,"d":0.204},{"m":69,"t":7.071,"d":0.407},{"m":66,"t":7.5,"d":0.204},{"m":71,"t":7.714,"d":0.204},{"m":72,"t":7.929,"d":0.204},{"m":74,"t":8.143,"d":0.204},{"m":69,"t":8.357,"d":0.407},{"m":66,"t":8.786,"d":0.204},{"m":69,"t":9,"d":0.204},{"m":67,"t":9.214,"d":0.204},{"m":66,"t":9.429,"d":0.204},{"m":64,"t":9.643,"d":0.611},{"m":62,"t":10.286,"d":0.407},{"m":62,"t":10.714,"d":0.204},{"m":69,"t":10.929,"d":0.407},{"m":69,"t":11.357,"d":0.204},{"m":74,"t":11.571,"d":0.407},{"m":74,"t":12,"d":0.204},{"m":73,"t":12.214,"d":0.611},{"m":71,"t":12.857,"d":0.407},{"m":74,"t":13.286,"d":0.204},{"m":69,"t":13.5,"d":0.611},{"m":67,"t":14.143,"d":0.407},{"m":69,"t":14.571,"d":0.204},{"m":66,"t":14.786,"d":0.407},{"m":62,"t":15.214,"d":0.204},{"m":64,"t":15.429,"d":0.611},{"m":64,"t":16.071,"d":0.611},{"m":62,"t":16.714,"d":1.018}]},{"key":"A","name":"Alt","color":"#5ec8a8","notes":[{"m":62,"t":0,"d":0.407},{"m":64,"t":0.429,"d":0.204},{"m":66,"t":0.643,"d":0.407},{"m":66,"t":1.071,"d":0.204},{"m":64,"t":1.286,"d":0.407},{"m":62,"t":1.714,"d":0.204},{"m":61,"t":1.929,"d":0.407},{"m":61,"t":2.357,"d":0.204},{"m":59,"t":2.571,"d":0.407},{"m":61,"t":3,"d":0.204},{"m":62,"t":3.214,"d":0.407},{"m":62,"t":3.643,"d":0.204},{"m":64,"t":3.857,"d":0.407},{"m":62,"t":4.286,"d":0.204},{"m":61,"t":4.5,"d":0.611},{"m":62,"t":5.143,"d":0.407},{"m":64,"t":5.571,"d":0.204},{"m":66,"t":5.786,"d":0.407},{"m":66,"t":6.214,"d":0.204},{"m":67,"t":6.429,"d":0.204},{"m":69,"t":6.643,"d":0.204},{"m":71,"t":6.857,"d":0.204},{"m":66,"t":7.071,"d":0.407},{"m":62,"t":7.5,"d":0.204},{"m":67,"t":7.714,"d":0.204},{"m":69,"t":7.929,"d":0.204},{"m":71,"t":8.143,"d":0.204},{"m":66,"t":8.357,"d":0.407},{"m":62,"t":8.786,"d":0.204},{"m":66,"t":9,"d":0.204},{"m":64,"t":9.214,"d":0.204},{"m":62,"t":9.429,"d":0.204},{"m":61,"t":9.643,"d":0.611},{"m":59,"t":10.286,"d":0.407},{"m":59,"t":10.714,"d":0.204},{"m":61,"t":10.929,"d":0.407},{"m":61,"t":11.357,"d":0.204},{"m":62,"t":11.571,"d":0.407},{"m":64,"t":12,"d":0.204},{"m":66,"t":12.214,"d":0.204},{"m":64,"t":12.429,"d":0.204},{"m":62,"t":12.643,"d":0.204},{"m":67,"t":12.857,"d":0.407},{"m":67,"t":13.286,"d":0.204},{"m":66,"t":13.5,"d":0.611},{"m":64,"t":14.143,"d":0.407},{"m":64,"t":14.571,"d":0.204},{"m":62,"t":14.786,"d":0.407},{"m":62,"t":15.214,"d":0.204},{"m":59,"t":15.429,"d":0.611},{"m":61,"t":16.071,"d":0.611},{"m":62,"t":16.714,"d":1.018}]},{"key":"M","name":"Männer","color":"#d09080","notes":[{"m":47,"t":10.286,"d":0.407},{"m":47,"t":10.714,"d":0.204},{"m":54,"t":10.929,"d":0.407},{"m":54,"t":11.357,"d":0.204},{"m":59,"t":11.571,"d":0.204},{"m":57,"t":11.786,"d":0.204},{"m":55,"t":12,"d":0.204},{"m":57,"t":12.214,"d":0.204},{"m":55,"t":12.429,"d":0.204},{"m":54,"t":12.643,"d":0.204},{"m":55,"t":12.857,"d":0.407},{"m":52,"t":13.286,"d":0.204},{"m":50,"t":13.5,"d":0.204},{"m":49,"t":13.714,"d":0.204},{"m":47,"t":13.929,"d":0.204},{"m":52,"t":14.143,"d":0.407},{"m":49,"t":14.571,"d":0.204},{"m":50,"t":14.786,"d":0.407},{"m":54,"t":15.214,"d":0.204},{"m":55,"t":15.429,"d":0.204},{"m":54,"t":15.643,"d":0.204},{"m":52,"t":15.857,"d":0.204},{"m":57,"t":16.071,"d":0.204},{"m":55,"t":16.286,"d":0.204},{"m":52,"t":16.5,"d":0.204},{"m":50,"t":16.714,"d":1.018}]}],"audio":{"S":"audio/sind-die-lichter/1.mp3?v=1795646820756","A":"audio/sind-die-lichter/2.mp3?v=1795646821724","M":"audio/sind-die-lichter/3.mp3?v=1795646822403"}};
+// erwartet: window.SONG = { title, subtitle, bpm, duration, voices:[{key,name,color,notes:[{m,t,d}]}] }
+const SONG = window.SONG;
+const VC = {};
+SONG.voices.forEach(v=>{ VC[v.key]={...v, vol:0.85, muted:false, solo:false}; });
+
+let ctx=null, master=null, voiceGain={}, synthIn={}, playing=false, scheduled=[], startCtxTime=0, startOffset=0, rafId=null, tempo=1, loop=false, timer=null, nextIdx={}, wave=null;
+const DUR = SONG.duration;
+const LOOKAHEAD = 1.2; // Noten nur ~1 s im Voraus anlegen (statt alle auf einmal)
+
+function ensureCtx(){
+  if(ctx) return;
+  ctx = new (window.AudioContext||window.webkitAudioContext)({latencyHint:'playback'});
+  // sanfter Begrenzer am Ende: mehrere Stimmen zusammen uebersteuern nicht mehr (kein Knacken)
+  const lim=ctx.createDynamicsCompressor(); lim.threshold.value=-12; lim.knee.value=8; lim.ratio.value=8; lim.attack.value=0.003; lim.release.value=0.25;
+  master = ctx.createGain(); master.gain.value=0.8; master.connect(lim); lim.connect(ctx.destination);
+  // weicher Ton: Grundton + wenige, schnell schwaecher werdende Obertoene - ein einziger Oszillator, kein Schweben/Brummen
+  const re=new Float32Array([0,1,0.45,0.2,0.1,0.05,0.025]), im=new Float32Array(re.length);
+  wave=ctx.createPeriodicWave(re,im);
+  // je Stimme: Lautstaerke -> Master; Klavierton zusaetzlich durch einen sanften Tiefpass (Gesangsaufnahmen nicht)
+  SONG.voices.forEach(v=>{
+    const g=ctx.createGain(), f=ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=3500; f.Q.value=0.5;
+    f.connect(g); g.connect(master); voiceGain[v.key]=g; synthIn[v.key]=f;
+  });
+  updateGains();
+}
+// ===== Gesangsaufnahmen (optional: SONG.audio = {Stimme: URL}) =====
+let HAS_AUDIO = !!(SONG.audio && SONG.voices.every(v=>SONG.audio[v.key]));
+let MODE = HAS_AUDIO ? 'gesang' : 'klavier';
+const AUD = {}; let audRef=null, audReady=false;
+// Aufnahmen von fremder Adresse (Firebase-Speicher der Mitgliederfassung) mit CORS laden - ohne gibt Web Audio nur Stille aus
+function xo(u){ try{ return new URL(u, location.href).origin!==location.origin; }catch(e){ return false; } }
+function ensureAudio(){
+  ensureCtx(); if(audReady) return; audReady=true;
+  SONG.voices.forEach(v=>{
+    const el=new Audio(); if(xo(SONG.audio[v.key])) el.crossOrigin='anonymous'; el.src=SONG.audio[v.key]; el.preload='auto';
+    el.preservesPitch=true; el.mozPreservesPitch=true; el.webkitPreservesPitch=true;   // langsamer ueben ohne tiefere Stimme
+    ctx.createMediaElementSource(el).connect(voiceGain[v.key]);
+    AUD[v.key]=el; if(!audRef) audRef=el;
+    el.addEventListener('error',()=>{ const b=document.getElementById('memBadge'); if(b){ b.textContent='⚠️ Aufnahme „'+v.name+'“ lädt nicht (Fehler '+((el.error&&el.error.code)||'?')+'). Bitte Seite neu laden – sonst Martin Bescheid sagen. Klavier geht weiter (🎹).'; b.style.display=''; } });
+    el.addEventListener('ended',()=>{ if(el===audRef && playing){ if(loop){ seekTo(0); } else { pause(); seekTo(0); } } });
+  });
+}
+function audioPlay(){
+  ensureAudio();
+  Object.values(AUD).forEach(el=>{ el.playbackRate=tempo; try{ el.currentTime=startOffset; }catch(e){} el.play().catch(()=>{}); });
+}
+function audioPause(){ Object.values(AUD).forEach(el=>el.pause()); }
+function audioSync(){   // Spuren gemeinsam halten (Abweichung > 40 ms nachziehen)
+  if(!audRef) return; const t=audRef.currentTime;
+  Object.values(AUD).forEach(el=>{ if(el!==audRef && Math.abs(el.currentTime-t)>0.04){ try{ el.currentTime=t; }catch(e){} } });
+}
+function anySolo(){ return SONG.voices.some(v=>VC[v.key].solo); }
+function effGain(key){
+  const v=VC[key]; const solo=anySolo();
+  let g = solo ? (v.solo?1:0) : (v.muted?0:1);
+  return g * v.vol;
+}
+function updateGains(){ if(!ctx) return; SONG.voices.forEach(v=>{ voiceGain[v.key].gain.setTargetAtTime(effGain(v.key), ctx.currentTime, 0.02); }); }
+
+function midiToFreq(m){ return 440*Math.pow(2,(m-69)/12); }
+// Klavierartiger Anschlag, danach gehalten (lange Noten bleiben hoerbar), weiches Ende - Huellkurve passt sich kurzen Noten an
+function scheduleNote(key, midi, at, dur){
+  const o=ctx.createOscillator(), ng=ctx.createGain();
+  o.setPeriodicWave(wave); o.frequency.value=midiToFreq(midi);
+  o.connect(ng); ng.connect(synthIn[key]);
+  const peak=0.26, hold=0.15, a=Math.min(0.012, dur*0.2), r=Math.min(0.09, dur*0.3), end=at+dur;
+  ng.gain.setValueAtTime(0, at);
+  ng.gain.linearRampToValueAtTime(peak, at+a);
+  ng.gain.setTargetAtTime(hold, at+a, 0.3);
+  ng.gain.setTargetAtTime(0, end-r, r/3);
+  o.start(at); o.stop(end+r*2);
+  o.onended=()=>{ try{ ng.disconnect(); }catch(e){} };
+  scheduled.push({o, ng, end:end+r*2});
+}
+function fadeOutAll(){
+  const now=ctx.currentTime;
+  scheduled.forEach(s=>{ try{
+    if(s.ng.gain.cancelAndHoldAtTime) s.ng.gain.cancelAndHoldAtTime(now); else s.ng.gain.cancelScheduledValues(now);
+    s.ng.gain.setTargetAtTime(0, now, 0.012); s.o.stop(now+0.08);
+  }catch(e){} });
+  scheduled=[];
+}
+function firstIdx(notes, t){ let lo=0, hi=notes.length; while(lo<hi){ const m=(lo+hi)>>1; if(notes[m].t+notes[m].d<=t) lo=m+1; else hi=m; } return lo; }
+function schedule(){
+  if(!playing) return;
+  const now=ctx.currentTime, horizon=now+LOOKAHEAD;
+  SONG.voices.forEach(v=>{
+    let i=nextIdx[v.key];
+    while(i<v.notes.length){
+      const n=v.notes[i], at=startCtxTime+(n.t-startOffset)/tempo;
+      if(at>horizon) break;
+      const dur=(n.d-Math.max(0, startOffset-n.t))/tempo;   // Note hat evtl. vor dem Startpunkt begonnen
+      if(dur>0.03) scheduleNote(v.key, n.m, Math.max(at, now+0.005), dur);
+      i++;
+    }
+    nextIdx[v.key]=i;
+  });
+  scheduled=scheduled.filter(s=>s.end>now);
+}
+
+function play(){
+  ensureCtx(); if(ctx.state==='suspended') ctx.resume();
+  playing=true; document.getElementById('playBtn').textContent='⏸';
+  if(MODE==='gesang'){ audioPlay(); updateGains(); tick(); return; }
+  startCtxTime=ctx.currentTime+0.06; // offset bleibt
+  SONG.voices.forEach(v=>{ nextIdx[v.key]=firstIdx(v.notes, startOffset); });
+  schedule(); clearInterval(timer); timer=setInterval(schedule, 150);
+  updateGains();
+  tick();
+}
+function pause(){ if(ctx) startOffset=currentTime(); playing=false; document.getElementById('playBtn').textContent='▶'; clearInterval(timer); if(MODE==='gesang') audioPause(); else if(ctx) fadeOutAll(); cancelAnimationFrame(rafId); }
+function currentTime(){ if(!playing||!ctx) return startOffset; if(MODE==='gesang') return audRef ? audRef.currentTime : startOffset; return startOffset+Math.max(0, ctx.currentTime-startCtxTime)*tempo; }
+function setMode(m){ const was=playing; if(was) pause(); MODE=m; const b=document.getElementById('modeBtn'); if(b){ b.textContent = m==='gesang' ? '🎤 Gesang' : '🎹 Klavier'; b.title = m==='gesang' ? 'Gesang (Chorstimmen) – umschalten auf Klavier' : 'Klavier – umschalten auf Gesang'; } if(was) play(); }
+function fmt(s){ s=Math.max(0,s); return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'); }
+// ===== Liedtext (optional: voice.lyr = je Note [silbe, neueZeile, strophe] oder 0) =====
+const LYRV={}; let follow=null, lyrShown='';
+function escH(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function buildLyr(){ Object.keys(LYRV).forEach(k=>delete LYRV[k]);
+SONG.voices.forEach(v=>{
+  if(!v.lyr) return;
+  const lines=[], map=new Array(v.notes.length).fill(null); let last=null;
+  v.lyr.forEach((s,i)=>{
+    if(!s) return;
+    const [w,br,vs]=s;
+    if(w==='_'){ map[i]=last; return; }
+    if(br||!lines.length) lines.push({vs, items:[]});
+    const L=lines.length-1, hy=w.endsWith('-');
+    lines[L].items.push({t:hy?w.slice(0,-1):w, hy});
+    last={l:L,k:lines[L].items.length-1}; map[i]=last;
+  });
+  LYRV[v.key]={lines,map,verses:Math.max(...lines.map(x=>x.vs))};
+});
+}
+buildLyr();
+function lineHtml(line,cur){
+  return line.items.map((it,k)=>{
+    const cls=cur==null?'':(k<cur?'done':k===cur?'now':'todo');
+    return `<span class="sy ${cls}">${escH(it.t.replace(/_/g,' '))}</span>`+(it.hy?'<span class="hy">-</span>':(k<line.items.length-1?' ':''));
+  }).join('');
+}
+function noteIdxAt(notes,t){ let lo=0,hi=notes.length-1,r=-1; while(lo<=hi){const m=(lo+hi)>>1; if(notes[m].t<=t+0.03){r=m;lo=m+1;}else hi=m-1;} return r; }
+function showLyrics(t){
+  const L=follow&&LYRV[follow]; if(!L) return;
+  const v=VC[follow]; let i=noteIdxAt(v.notes,t), pos=null;
+  for(let j=i;j>=0&&!pos;j--) pos=L.map[j];               // letzte Silbe bis jetzt
+  if(!pos){ for(let j=Math.max(0,i);j<L.map.length&&!pos;j++) if(L.map[j]) pos={l:L.map[j].l,k:null}; } // vor dem Einsatz: kommende Zeile
+  if(!pos) return;
+  const key=follow+'|'+pos.l+'|'+pos.k; if(key===lyrShown) return; lyrShown=key;
+  const line=L.lines[pos.l], next=L.lines[pos.l+1];
+  document.getElementById('lyrLine').innerHTML=lineHtml(line,pos.k);
+  document.getElementById('lyrNext').innerHTML=next?lineHtml(next,null):'';
+  document.getElementById('lyrVerse').textContent=L.verses>1?('Strophe '+line.vs):'';
+  document.getElementById('lyrLine').querySelectorAll('.sy.now').forEach(e=>e.style.color=v.color);
+}
+function setFollow(k){ if(!LYRV[k]) return; follow=k; lyrShown=''; document.getElementById('lyrSel').value=k; showLyrics(currentTime()); }
+function initLyrics(){
+  const ks=SONG.voices.filter(v=>LYRV[v.key]);
+  if(!ks.length) return;
+  document.body.classList.add('has-lyr');
+  const sel=document.getElementById('lyrSel');
+  sel.innerHTML=ks.map(v=>`<option value="${v.key}">${escH(v.name)}</option>`).join('');
+  sel.onchange=e=>setFollow(e.target.value);
+  setFollow(follow&&LYRV[follow]?follow:ks[0].key);
+}
+initLyrics();
+
+function tick(){
+  if(MODE==='gesang') audioSync();
+  const t=currentTime();
+  showLyrics(t);
+  document.getElementById('cur').textContent=fmt(t);
+  document.getElementById('seek').value=Math.min(1000, (t/DUR)*1000);
+  if(t>=DUR){ if(loop){ seekTo(0); } else { pause(); seekTo(0); return; } }
+  rafId=requestAnimationFrame(tick);
+}
+function seekTo(sec){ const was=playing; if(was) pause(); startOffset=Math.max(0,Math.min(DUR,sec)); document.getElementById('cur').textContent=fmt(startOffset); document.getElementById('seek').value=(startOffset/DUR)*1000; if(typeof showLyrics==='function') showLyrics(startOffset); if(was) play(); }
+
+// ===== UI =====
+function buildMixer(){
+  const el=document.getElementById('mix');
+  el.innerHTML=SONG.voices.map(v=>`
+    <div class="mrow">
+      <div class="mbadge" style="background:${v.color}" title="${v.name}">${v.key}</div>
+      <div class="mbtns">
+        <button class="mbtn" data-m="${v.key}">M</button>
+        <button class="mbtn" data-s="${v.key}">S</button>
+      </div>
+      <div class="volwrap">
+        <input class="vsl" type="range" min="0" max="100" value="85" data-v="${v.key}">
+        <span class="vpct" id="pct-${v.key}">85%</span>
+      </div>
+    </div>`).join('');
+  el.querySelectorAll('[data-v]').forEach(s=>s.oninput=e=>{ const k=e.target.dataset.v; VC[k].vol=e.target.value/100; document.getElementById('pct-'+k).textContent=e.target.value+'%'; updateGains(); });
+  el.querySelectorAll('[data-m]').forEach(b=>b.onclick=e=>{ const k=e.target.dataset.m; VC[k].muted=!VC[k].muted; e.target.classList.toggle('on-m',VC[k].muted); updateGains(); });
+  el.querySelectorAll('[data-s]').forEach(b=>b.onclick=e=>{ const k=e.target.dataset.s; VC[k].solo=!VC[k].solo; e.target.classList.toggle('on-s',VC[k].solo); updateGains(); if(VC[k].solo&&typeof setFollow==='function') setFollow(k); });
+}
+buildMixer();
+document.getElementById('dur').textContent=fmt(DUR);
+document.getElementById('playBtn').onclick=()=>{ playing?pause():play(); };
+document.getElementById('backBtn').onclick=()=>seekTo(0);
+document.getElementById('loopBtn').onclick=e=>{ loop=!loop; e.target.classList.toggle('on',loop); };
+document.getElementById('seek').oninput=e=>{ seekTo((e.target.value/1000)*DUR); };
+if(HAS_AUDIO){ const mb=document.getElementById('modeBtn'); mb.style.display=''; mb.onclick=()=>setMode(MODE==='gesang'?'klavier':'gesang'); setMode('gesang');
+  const h=document.querySelector('.hint'); if(h) h.textContent='Tipp: Stelle deine eigene Stimme laut und die anderen leise – oder „Solo" für nur deine Stimme. Mit „Tempo" langsamer üben; „🎤 Gesang / 🎹 Klavier" schaltet zwischen gesungenen Chorstimmen und Klavierton um.'; }
+// Zurueck zur Chor-App (wichtig auf dem iPhone: installierte App hat keine Zurueck-Taste)
+document.getElementById('backApp').onclick=e=>{
+  e.preventDefault(); if(playing) pause();
+  try{ if(window.opener && !window.opener.closed){ window.close(); } }catch(_){}
+  setTimeout(()=>{ if(history.length>1 && document.referrer.indexOf(location.origin)===0) history.back(); else location.href='https://chor-eisleben.github.io/'; }, 250);
+};
+
+// ===== Mitgliederfassung: Liedtext + Gesang mit Text NUR fuer angemeldete Chormitglieder =====
+// Oeffentlich bleibt die Seite ohne geschuetzten Text ("lu"). Ist man in der Chor-App angemeldet (gleiche Adresse,
+// gleiche Firebase-Anmeldung), kommen Text und Aufnahmen aus /stimmcoach/<id> (Lesen nur fuer Angemeldete).
+function applyMembers(d){
+  if(!d) return; const was=playing; if(was) pause();
+  if(Array.isArray(d.lyr)){ SONG.voices.forEach((v,i)=>{ if(d.lyr[i]) v.lyr=d.lyr[i]; }); buildLyr(); lyrShown=''; initLyrics(); }
+  if(Array.isArray(d.audio) && d.audio.length===SONG.voices.length){
+    SONG.audio={}; SONG.voices.forEach((v,i)=>{ SONG.audio[v.key]=d.audio[i]; if(AUD[v.key]){ if(xo(d.audio[i])) AUD[v.key].crossOrigin='anonymous'; AUD[v.key].src=d.audio[i]; AUD[v.key].load(); } });
+    if(!HAS_AUDIO){ HAS_AUDIO=true; const mb=document.getElementById('modeBtn'); mb.style.display=''; mb.onclick=()=>setMode(MODE==='gesang'?'klavier':'gesang'); }
+    setMode('gesang');
+  }
+  const b=document.getElementById('memBadge'); if(b) b.style.display='';
+  if(was) play();
+}
+(function(){
+  const id=decodeURIComponent((location.pathname.split('/').pop()||'').replace(/.html$/,'')); if(!id) return;
+  const CFG={apiKey:"AIzaSyCWcedNt0L08m4bQx6Yt-xtDMh9jWxKRP4",authDomain:"chor-eisleben.firebaseapp.com",databaseURL:"https://chor-eisleben-default-rtdb.europe-west1.firebasedatabase.app",projectId:"chor-eisleben"};
+  const load=src=>new Promise((ok,no)=>{ const sc=document.createElement('script'); sc.src=src; sc.onload=ok; sc.onerror=no; document.head.appendChild(sc); });
+  load('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js').then(()=>load('https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js')).then(()=>{
+    if(!firebase.apps.length) firebase.initializeApp(CFG);
+    const off=firebase.auth().onAuthStateChanged(async u=>{ off(); if(!u){ memHint(); return; }
+      try{ const tok=await u.getIdToken(); const r=await fetch(CFG.databaseURL+'/stimmcoach/'+encodeURIComponent(id)+'.json?auth='+tok, {cache:'no-store'});
+        if(!r.ok){ memStat('⚠️ Angemeldet, aber Mitgliederdaten nicht ladbar (Fehler '+r.status+')'); return; }
+        const d=await r.json(); if(d) applyMembers(d); else if(!HAS_AUDIO) memStat('Angemeldet – für dieses Lied gibt es noch keine Mitgliederfassung'); }
+      catch(e){ memStat('⚠️ Angemeldet, Mitgliederdaten-Fehler: '+(e&&e.message||e)); }
+    });
+  }).catch(()=>memStat('⚠️ Anmeldedienst nicht erreichbar – Klavier geht (🎹)'));
+})();
+// Statuszeile (Fehlersuche): Text + Stand der Seite
+function memStat(t){ const b=document.getElementById('memBadge'); if(!b) return; b.textContent=t+' · Seite vom '+document.lastModified.slice(0,16); b.style.display=''; }
+// Nicht angemeldet und kein oeffentlicher Gesang: Hinweis statt stummer Seite
+function memHint(){ if(HAS_AUDIO) return; const b=document.getElementById('memBadge'); if(!b) return;
+  b.innerHTML='🔒 Gesang mit Liedtext nur für angemeldete Chormitglieder – bitte in der <a href="https://chor-eisleben.github.io/" style="color:inherit">Chor-App</a> anmelden und die Übe-Seite von dort öffnen. Ohne Anmeldung: Klavier. · Seite vom '+document.lastModified.slice(0,16); b.style.display=''; }
+document.getElementById('tempoSel').onchange=e=>{ const was=playing; if(was)pause(); tempo=parseFloat(e.target.value); if(was)play(); };
+</script>
+</body>
+</html>
